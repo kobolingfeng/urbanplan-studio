@@ -5,6 +5,7 @@ import {
     type EvidenceItem,
 } from './evidence';
 import { markdownTableRow } from './markdown-table';
+import { SERVICE_DEMAND_ASSUMPTIONS } from './planning-assumptions';
 import { parseParcelIndicatorCsv } from './planning-csv';
 import { parseGeoJsonProject } from './planning-geojson';
 
@@ -203,7 +204,7 @@ export function buildScenarioComparisonReport(
             areaSum += parcelArea;
             valuesCount++;
         }
-        const residents = Math.round(residentialGfa / 33);
+        const residents = Math.round(residentialGfa / SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident);
         const avgFar = areaSum ? weightedFarSum / areaSum : 0;
         const avgGreen = areaSum ? weightedGreenSum / areaSum : 0;
         return {

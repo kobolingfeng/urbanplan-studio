@@ -7,6 +7,7 @@ import {
     createUpfDocument,
     parseUpfText,
 } from '../src/planning-analytics';
+import { SERVICE_DEMAND_ASSUMPTIONS } from '../src/planning-assumptions';
 import { buildUpfValidationReport, validateUpfDocument } from '../src/upf-validation';
 
 const ROOT = resolve(import.meta.dir, '..');
@@ -126,6 +127,7 @@ assert(qualityReport.includes('结构化证据覆盖率'), 'quality report shoul
 assert(qualityReport.includes('扣分项') && qualityReport.includes('出入口引用问题'), 'quality report should explain score deductions');
 const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
 assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
+assert(comparison.includes(String(Math.round(14000 / SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident))), 'scenario comparison should use shared resident assumptions');
 
 const schema = JSON.parse(readFileSync(join(schemas, 'upf-0.1.schema.json'), 'utf8'));
 assert(schema.title === 'Urban Planning Format 0.1', 'json schema title mismatch');
