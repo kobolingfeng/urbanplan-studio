@@ -79,6 +79,16 @@ assert(importedParcel?.scenarioValues?.update?.notes === 'quoted, note', 'CSV im
 const parsedViaUpf = parseUpfText(parcelCsv, fallback);
 assert(parsedViaUpf.activeScenarioId === 'update', 'UPF parser should accept parcel CSV');
 
+const multilineCsv = [
+    'parcel_id,scenario_id,far,notes',
+    'parcel_a,multiline,2.1,"line 1',
+    'line 2, with comma and ""quote"""',
+].join('\n');
+const parsedMultiline = parseParcelIndicatorCsv(multilineCsv, fallback);
+const multilineParcel = parsedMultiline?.project.objects.find(object => object.id === 'parcel_a');
+assert(parsedMultiline?.importSummary.rowCount === 1, 'CSV import should treat quoted newlines as one row');
+assert(multilineParcel?.scenarioValues?.multiline?.notes === 'line 1\nline 2, with comma and "quote"', 'CSV import should parse quoted multiline notes');
+
 const invalidValueCsv = [
     'parcel_id,scenario_id,far,building_coverage,green_ratio,residential_gfa_sqm',
     'parcel_a,stress,99,1.4,-0.1,not_a_number',

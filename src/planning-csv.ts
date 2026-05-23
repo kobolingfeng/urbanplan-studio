@@ -228,11 +228,10 @@ function csvCell(value: string | number): string {
 }
 
 function parseCsvTable(text: string): Array<Record<string, string>> {
-    const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim());
-    if (lines.length < 2) return [];
-    const headers = parseCsvLine(lines[0]).map(normalizeHeader);
-    return lines.slice(1).map((line) => {
-        const cells = parseCsvLine(line);
+    const records = parseCsvRecords(text);
+    if (records.length < 2) return [];
+    const headers = records[0].map(normalizeHeader);
+    return records.slice(1).filter(record => record.some(cell => cell.trim())).map((cells) => {
         return headers.reduce<Record<string, string>>((row, header, index) => {
             if (header) row[header] = cells[index]?.trim() ?? '';
             return row;
@@ -240,27 +239,40 @@ function parseCsvTable(text: string): Array<Record<string, string>> {
     });
 }
 
-function parseCsvLine(line: string): string[] {
-    const cells: string[] = [];
+function parseCsvRecords(text: string): string[][] {
+    const records: string[][] = [];
+    let row: string[] = [];
     let cell = '';
     let quoted = false;
-    for (let index = 0; index < line.length; index++) {
-        const char = line[index];
-        const next = line[index + 1];
+    const source = text.replace(/^\uFEFF/, '');
+
+    for (let index = 0; index < source.length; index++) {
+        const char = source[index];
+        const next = source[index + 1];
         if (char === '"' && quoted && next === '"') {
             cell += '"';
             index++;
         } else if (char === '"') {
             quoted = !quoted;
         } else if (char === ',' && !quoted) {
-            cells.push(cell);
+            row.push(cell);
             cell = '';
+        } else if ((char === '\n' || char === '\r') && !quoted) {
+            if (char === '\r' && next === '\n') index++;
+            pushRow();
         } else {
             cell += char;
         }
     }
-    cells.push(cell);
-    return cells;
+    pushRow();
+    return records;
+
+    function pushRow() {
+        row.push(cell);
+        cell = '';
+        if (row.some(value => value.trim())) records.push(row);
+        row = [];
+    }
 }
 
 function normalizeHeader(value: string): string {
