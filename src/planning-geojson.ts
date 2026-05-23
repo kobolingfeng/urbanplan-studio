@@ -264,24 +264,29 @@ function parseGeoJsonFeature(feature: unknown, activeScenarioId: string, index: 
         const points = polygonPoints(geometry);
         if (points.length < 3) return undefined;
         if (objectType === 'parcel') {
+            const far = numberInRange(properties.far, 1, 0, 15);
+            const buildingCoverage = numberInRange(properties.buildingCoverage, 0.25, 0, 1);
+            const greenRatio = numberInRange(properties.greenRatio, 0.30, 0, 1);
+            const residentialGfaSqm = numberInRange(properties.residentialGfaSqm, 0, 0, 5_000_000);
+            const publicServiceGfaSqm = numberInRange(properties.publicServiceGfaSqm, 0, 0, 5_000_000);
             return {
                 ...base,
                 points,
                 landUseCode: textOr(properties.landUseCode, '0701'),
                 landUseName: textOr(properties.landUseName, '城镇住宅用地'),
                 controls: {
-                    farMax: numberOr(properties.farMax, Math.max(4, numberOr(properties.far, 1))),
-                    buildingCoverageMax: numberOr(properties.buildingCoverageMax, Math.max(0.35, numberOr(properties.buildingCoverage, 0.25))),
-                    greenRatioMin: numberOr(properties.greenRatioMin, Math.min(0.30, numberOr(properties.greenRatio, 0.30))),
-                    heightMaxM: numberOr(properties.heightMaxM, 80),
+                    farMax: numberInRange(properties.farMax, Math.max(4, far), 0, 15),
+                    buildingCoverageMax: numberInRange(properties.buildingCoverageMax, Math.max(0.35, buildingCoverage), 0, 1),
+                    greenRatioMin: numberInRange(properties.greenRatioMin, Math.min(0.30, greenRatio), 0, 1),
+                    heightMaxM: numberInRange(properties.heightMaxM, 80, 0, 1000),
                 },
                 scenarioValues: {
                     [activeScenarioId]: {
-                        far: numberOr(properties.far, 1),
-                        buildingCoverage: numberOr(properties.buildingCoverage, 0.25),
-                        greenRatio: numberOr(properties.greenRatio, 0.30),
-                        residentialGfaSqm: numberOr(properties.residentialGfaSqm, 0),
-                        publicServiceGfaSqm: numberOr(properties.publicServiceGfaSqm, 0),
+                        far,
+                        buildingCoverage,
+                        greenRatio,
+                        residentialGfaSqm,
+                        publicServiceGfaSqm,
                         updateMode: textOr(properties.updateMode, '综合整治'),
                         notes: textOr(properties.notes, '由 GeoJSON 属性导入，请复核。'),
                     },
@@ -405,6 +410,11 @@ function numberOr(value: unknown, fallback: number): number {
         if (Number.isFinite(parsed)) return parsed;
     }
     return fallback;
+}
+
+function numberInRange(value: unknown, fallback: number, min: number, max: number): number {
+    const parsed = numberOr(value, fallback);
+    return parsed >= min && parsed <= max ? parsed : fallback;
 }
 
 function booleanOr(value: unknown, fallback: boolean): boolean {

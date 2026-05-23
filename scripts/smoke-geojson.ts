@@ -6,8 +6,17 @@ type ImportedObject = {
     id?: string;
     type?: string;
     points?: Array<{ x: number; y: number }>;
+    controls?: {
+        farMax?: number;
+        buildingCoverageMax?: number;
+        greenRatioMin?: number;
+        heightMaxM?: number;
+    };
     scenarioValues?: Record<string, {
         far?: number;
+        buildingCoverage?: number;
+        greenRatio?: number;
+        residentialGfaSqm?: number;
         publicServiceGfaSqm?: number;
     }>;
 };
@@ -129,5 +138,27 @@ const parsedWithMissingScenario = parseGeoJsonProject(JSON.parse(text), fallback
 assert(parsedWithMissingScenario?.project.scenarios.some(scenario => scenario.id === 'base'), 'GeoJSON import should add the active scenario when fallback scenarios do not include it');
 const preservedParcel = parsedWithMissingScenario?.project.objects.find(object => object.id === 'parcel_a');
 assert(preservedParcel?.scenarioValues?.base?.far === 2, 'GeoJSON import should keep active-scenario parcel values discoverable');
+
+const invalidNumberGeoJson = JSON.parse(text);
+invalidNumberGeoJson.features[0].properties = {
+    ...invalidNumberGeoJson.features[0].properties,
+    far: 99,
+    buildingCoverage: 1.5,
+    greenRatio: -0.2,
+    residentialGfaSqm: -100,
+    publicServiceGfaSqm: 8_000_000,
+    farMax: 20,
+    buildingCoverageMax: -1,
+    greenRatioMin: 2,
+    heightMaxM: 1200,
+};
+const parsedInvalidNumbers = parseGeoJsonProject(invalidNumberGeoJson, fallback);
+const safeParcel = parsedInvalidNumbers?.project.objects.find(object => object.id === 'parcel_a');
+assert(safeParcel?.scenarioValues?.base?.far === 1, 'GeoJSON import should ignore out-of-range FAR');
+assert(safeParcel?.scenarioValues?.base?.buildingCoverage === 0.25, 'GeoJSON import should ignore out-of-range building coverage');
+assert(safeParcel?.scenarioValues?.base?.greenRatio === 0.30, 'GeoJSON import should ignore out-of-range green ratio');
+assert(safeParcel?.scenarioValues?.base?.residentialGfaSqm === 0, 'GeoJSON import should ignore negative residential GFA');
+assert(safeParcel?.scenarioValues?.base?.publicServiceGfaSqm === 0, 'GeoJSON import should ignore excessive public service GFA');
+assert(safeParcel?.controls?.farMax === 4 && safeParcel.controls.heightMaxM === 80, 'GeoJSON import should keep parcel controls in valid ranges');
 
 console.log('geojson smoke passed');
