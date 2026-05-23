@@ -1,5 +1,16 @@
-import { buildGeoJsonFeatureCollection, buildGeoJsonText } from '../src/planning-geojson';
+import { parseUpfText } from '../src/planning-analytics';
+import { buildGeoJsonFeatureCollection, buildGeoJsonText, parseGeoJsonProject } from '../src/planning-geojson';
 import { UNIT_SYSTEM } from '../src/planning-geometry';
+
+type ImportedObject = {
+    id?: string;
+    type?: string;
+    points?: Array<{ x: number; y: number }>;
+    scenarioValues?: Record<string, {
+        far?: number;
+        publicServiceGfaSqm?: number;
+    }>;
+};
 
 function fail(message: string): never {
     console.error(`geojson smoke failed: ${message}`);
@@ -78,5 +89,36 @@ assert(facility?.geometry?.type === 'Point', 'facility should become point');
 
 const text = buildGeoJsonText(project, 'base', UNIT_SYSTEM);
 assert(text.includes('"FeatureCollection"') && text.includes('"parcel_a"'), 'GeoJSON text export mismatch');
+
+const fallback: {
+    format: string;
+    formatVersion: string;
+    project: { id: string; name: string; crs: string };
+    ruleset: { jurisdiction: string; version: string; basis: string[] };
+    scenarios: Array<{ id: string; name: string; description: string }>;
+    objects: ImportedObject[];
+} = {
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'fallback', name: 'Fallback', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: [] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Fixture scenario' }],
+    objects: [],
+};
+
+const parsed = parseGeoJsonProject(JSON.parse(text), fallback);
+assert(parsed?.activeScenarioId === 'base', 'GeoJSON active scenario should round-trip');
+if (!parsed) fail('GeoJSON parser should return a project');
+assert(parsed.project.objects.length === 3, 'GeoJSON import object count mismatch');
+const importedParcel = parsed.project.objects.find(object => object.id === 'parcel_a');
+assert(importedParcel?.type === 'parcel', 'GeoJSON polygon should import as parcel');
+if (!importedParcel) fail('GeoJSON imported parcel missing');
+assert(importedParcel.points?.length === 4, 'GeoJSON import should drop duplicate closing point');
+assert(importedParcel.scenarioValues?.base?.far === 2, 'GeoJSON import should preserve FAR');
+assert(importedParcel.scenarioValues?.base?.publicServiceGfaSqm === 500, 'GeoJSON import should preserve public service GFA');
+
+const parsedViaUpf = parseUpfText(text, fallback);
+assert(parsedViaUpf.activeScenarioId === 'base', 'UPF parser should accept GeoJSON active scenario');
+assert(parsedViaUpf.project.objects?.some(object => object.id === 'road_a'), 'UPF parser should accept GeoJSON features');
 
 console.log('geojson smoke passed');

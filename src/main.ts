@@ -2248,7 +2248,7 @@ async function loadUpf() {
         try {
             const target = await dialog.openFile({
                 filters: [
-                    { name: 'UPF / JSON', extensions: ['upf', 'json'] },
+                    { name: 'UPF / GeoJSON', extensions: ['upf', 'json', 'geojson'] },
                     { name: '所有文件', extensions: ['*'] },
                 ],
             });

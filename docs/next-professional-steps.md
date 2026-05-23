@@ -42,7 +42,7 @@ This backlog is ordered by product risk, not by excitement.
 
 ## P2: Data Adapters
 
-1. GeoJSON import and CRS transform support for exported FeatureCollections.
+1. CRS transform support for imported GeoJSON FeatureCollections.
 2. DXF import for parcel and road layers.
 3. CSV import for parcel indicators.
 4. POI import adapter.

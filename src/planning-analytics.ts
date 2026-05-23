@@ -4,6 +4,7 @@ import {
     isStructuredEvidence,
     type EvidenceItem,
 } from './evidence';
+import { parseGeoJsonProject } from './planning-geojson';
 
 type AnyRecord = Record<string, unknown>;
 
@@ -156,6 +157,9 @@ export function parseUpfText<TProject extends ProjectLike>(
             activeScenarioId,
         };
     }
+
+    const geoJson = parseGeoJsonProject(data, fallbackProject);
+    if (geoJson) return geoJson;
 
     throw new Error('不是可识别的 UPF 文件');
 }
