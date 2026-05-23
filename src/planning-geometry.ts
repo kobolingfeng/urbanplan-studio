@@ -115,6 +115,8 @@ export function segmentsIntersect(a: Point, b: Point, c: Point, d: Point): boole
 }
 
 function onSegment(a: Point, b: Point, p: Point): boolean {
+    const cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+    if (Math.abs(cross) > 0.0001) return false;
     return p.x >= Math.min(a.x, b.x) - 0.0001
         && p.x <= Math.max(a.x, b.x) + 0.0001
         && p.y >= Math.min(a.y, b.y) - 0.0001

@@ -25,6 +25,8 @@ assert(Math.abs(distance({ x: 0, y: 0 }, { x: 10, y: 0 }) - 10 * UNIT_SYSTEM.met
 assert(pointInPolygon({ x: 5, y: 5 }, square), 'point should be inside polygon');
 assert(pointInPolygon({ x: 10, y: 5 }, square), 'point on polygon boundary should count as inside');
 assert(!pointInPolygon({ x: 15, y: 5 }, square), 'point should be outside polygon');
+const slantedTriangle = [{ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }];
+assert(!pointInPolygon({ x: 6, y: 5 }, slantedTriangle), 'point inside a slanted edge bounding box should not count as boundary');
 const emptyCentroid = centroid([]);
 assert(emptyCentroid.x === 0 && emptyCentroid.y === 0, 'empty centroid should be stable');
 assert(polygonsOverlap(square, rect(8, 8, 10, 10)), 'polygons should overlap');
