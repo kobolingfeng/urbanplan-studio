@@ -20,6 +20,7 @@ The app shell provides native file dialogs, file read/write, clipboard, logging,
 src/
   main.ts                UI state, rendering, inspector, modal, native integration
   planning-assumptions.ts Shared demand assumptions for population and service-capacity estimation
+  planning-csv.ts        Scenario decision CSV export helpers
   planning-geometry.ts   Unit system and pure geometry helpers
   planning-geojson.ts    UPF semantic object to GeoJSON FeatureCollection import/export
   evidence.ts            EvidenceSource parsing, display, classification, and confidence scoring
@@ -44,8 +45,9 @@ src/
 5. Rule fixture smoke tests for rule-group regressions.
 6. Scenario evaluation smoke tests.
 7. GeoJSON import/export smoke tests.
-8. Full frontend + native build.
-9. Static build smoke tests.
+8. Scenario CSV smoke tests.
+9. Full frontend + native build.
+10. Static build smoke tests.
 
 Release verification:
 
