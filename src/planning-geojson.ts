@@ -131,9 +131,11 @@ export function parseGeoJsonProject<TProject extends ProjectLike>(
         fallbackProject.scenarios?.[0]?.id ?? 'scenario_geojson',
     );
     const fallbackScenarios = (fallbackProject.scenarios ?? []).filter(scenario => scenario.id && scenario.name);
-    const scenarios = fallbackScenarios.length
-        ? fallbackScenarios
-        : [{ id: activeScenarioId, name: 'GeoJSON 导入', description: '由 GeoJSON FeatureCollection 导入。' }];
+    const scenarios = ensureScenario(
+        fallbackScenarios.length ? fallbackScenarios : [],
+        activeScenarioId,
+        'GeoJSON 导入',
+    );
     const objects = collection.features
         .map((feature, index) => parseGeoJsonFeature(feature, activeScenarioId, index))
         .filter((object): object is PlanningObjectLike => Boolean(object));
@@ -156,6 +158,22 @@ export function parseGeoJsonProject<TProject extends ProjectLike>(
         } as TProject,
         activeScenarioId,
     };
+}
+
+function ensureScenario(
+    scenarios: Array<{ id: string; name: string; description?: string }>,
+    activeScenarioId: string,
+    fallbackName: string,
+): Array<{ id: string; name: string; description?: string }> {
+    if (scenarios.some(scenario => scenario.id === activeScenarioId)) return scenarios;
+    return [
+        ...scenarios,
+        {
+            id: activeScenarioId,
+            name: scenarios.length ? activeScenarioId : fallbackName,
+            description: '由 GeoJSON FeatureCollection 导入。',
+        },
+    ];
 }
 
 function geoJsonGeometry(object: PlanningObjectLike) {

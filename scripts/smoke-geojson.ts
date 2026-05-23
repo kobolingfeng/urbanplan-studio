@@ -121,4 +121,13 @@ const parsedViaUpf = parseUpfText(text, fallback);
 assert(parsedViaUpf.activeScenarioId === 'base', 'UPF parser should accept GeoJSON active scenario');
 assert(parsedViaUpf.project.objects?.some(object => object.id === 'road_a'), 'UPF parser should accept GeoJSON features');
 
+const fallbackWithoutActive = {
+    ...fallback,
+    scenarios: [{ id: 'other', name: 'Other', description: 'Existing scenario' }],
+};
+const parsedWithMissingScenario = parseGeoJsonProject(JSON.parse(text), fallbackWithoutActive);
+assert(parsedWithMissingScenario?.project.scenarios.some(scenario => scenario.id === 'base'), 'GeoJSON import should add the active scenario when fallback scenarios do not include it');
+const preservedParcel = parsedWithMissingScenario?.project.objects.find(object => object.id === 'parcel_a');
+assert(preservedParcel?.scenarioValues?.base?.far === 2, 'GeoJSON import should keep active-scenario parcel values discoverable');
+
 console.log('geojson smoke passed');
