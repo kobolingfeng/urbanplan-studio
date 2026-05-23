@@ -7,6 +7,10 @@ import {
     integerInRangeOr,
     numberInRangeOr,
 } from '../src/planning-ranges';
+import { readFileSync } from 'fs';
+import { join, resolve } from 'path';
+
+const ROOT = resolve(import.meta.dir, '..');
 
 function fail(message: string): never {
     console.error(`ranges smoke failed: ${message}`);
@@ -28,4 +32,28 @@ assert(integerInRangeOr(2.6, 1, ROAD_RANGES.lanes) === 3, 'integer range helper 
 assert(integerInRangeOr(20, 2, ROAD_RANGES.lanes) === 2, 'integer range helper should fallback after range rejection');
 assert(formatRange(FACILITY_RANGES.capacity) === '0-200000', 'range formatter should remain report-friendly');
 
+const schema = JSON.parse(readFileSync(join(ROOT, 'schemas', 'upf-0.1.schema.json'), 'utf8'));
+const parcelProperties = schema.$defs.parcel.allOf[1].properties;
+const parcelControls = parcelProperties.controls.properties;
+const parcelScenario = parcelProperties.scenarioValues.additionalProperties.properties;
+const roadProperties = schema.$defs.road.allOf[1].properties;
+const facilityProperties = schema.$defs.facility.allOf[1].properties;
+
+for (const [field, range] of Object.entries(PARCEL_SCENARIO_VALUE_RANGES)) {
+    assertSchemaRange(parcelScenario[field], range, `parcel scenario ${field}`);
+}
+for (const [field, range] of Object.entries(PARCEL_CONTROL_RANGES)) {
+    assertSchemaRange(parcelControls[field], range, `parcel control ${field}`);
+}
+for (const [field, range] of Object.entries(ROAD_RANGES)) {
+    assertSchemaRange(roadProperties[field], range, `road ${field}`);
+}
+for (const [field, range] of Object.entries(FACILITY_RANGES)) {
+    assertSchemaRange(facilityProperties[field], range, `facility ${field}`);
+}
+
 console.log('ranges smoke passed');
+
+function assertSchemaRange(schemaField: { minimum?: number; maximum?: number } | undefined, range: { min: number; max: number }, label: string) {
+    assert(schemaField?.minimum === range.min && schemaField.maximum === range.max, `schema range mismatch for ${label}`);
+}
