@@ -27,7 +27,7 @@ This backlog is ordered by product risk, not by excitement.
 2. Extend the import report with before/after normalized field diffs and rejected-object previews.
 3. Extend keyboard navigation with map panning, zoom, and command palette workflows.
 4. Add object search and filtering.
-5. Add export of scenario comparison tables.
+5. Extend scenario table exports with XLSX formatting and chart-ready long-form CSV.
 6. Add a proper rule catalog panel.
 
 ## P2: Engineering

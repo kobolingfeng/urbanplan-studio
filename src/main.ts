@@ -222,6 +222,7 @@ const ui = {
     btnEvaluation: $('btn-evaluation') as HTMLButtonElement,
     btnSensitivity: $('btn-sensitivity') as HTMLButtonElement,
     btnCompare: $('btn-compare') as HTMLButtonElement,
+    btnCsv: $('btn-csv') as HTMLButtonElement,
     btnQuality: $('btn-quality') as HTMLButtonElement,
     btnValidation: $('btn-validation') as HTMLButtonElement,
     btnReport: $('btn-report') as HTMLButtonElement,
@@ -2442,6 +2443,7 @@ function bindControls() {
     ui.btnEvaluation.addEventListener('click', () => showModal('方案综合评估', buildScenarioEvaluationReport(project, activeScenarioId, checks, recommendations), activeScenario().name, 'scenario-evaluation.md'));
     ui.btnSensitivity.addEventListener('click', () => showModal('权重敏感性分析', buildWeightSensitivityReport(), project.project.name, 'weight-sensitivity-report.md'));
     ui.btnCompare.addEventListener('click', () => showModal('方案决策矩阵', buildDecisionMatrixReport(), project.project.name, 'scenario-decision-matrix.md'));
+    ui.btnCsv.addEventListener('click', () => showModal('方案决策 CSV', buildScenarioDecisionCsv(collectScenarioDecisionRows()), project.project.name, 'scenario-decision-matrix.csv'));
     ui.btnQuality.addEventListener('click', () => showModal('数据质量诊断', buildQualityReport(), project.ruleset.version, 'data-quality-report.md'));
     ui.btnValidation.addEventListener('click', () => showModal('案例验证包', buildCaseValidationReport(), project.project.name, 'case-validation-pack.md'));
     ui.btnReport.addEventListener('click', () => showModal('规划诊断报告', buildReport(), activeScenario().name, 'planning-report.md'));

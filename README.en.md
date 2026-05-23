@@ -18,6 +18,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Parcel-level service population allocation in the evaluation report for kindergarten and elderly-service demand.
 - Weight-sensitivity analysis across balanced, public-service-first, conservation-first, and implementation-risk models.
 - Decision matrix that reruns checks and scoring across all scenarios and explains the recommended scenario.
+- Standalone scenario-decision CSV export for scores, population, floor area, and risk counts.
 - Case validation pack for research questions, data overview, scenario matrix, sensitivity results, experiment records, and CSV appendix.
 - Parcel score heatmap for quickly spotting priority intervention areas.
 - Object search and risk filters for quickly locating problematic parcels or facilities.
