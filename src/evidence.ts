@@ -62,8 +62,9 @@ export function normalizeEvidenceItem(value: unknown): EvidenceItem | undefined 
     copyText(record, item, 'license');
     copyText(record, item, 'url');
     copyText(record, item, 'note');
-    if (typeof record.confidence === 'number' && Number.isFinite(record.confidence)) {
-        item.confidence = clamp(record.confidence, 0, record.confidence > 1 ? 100 : 1);
+    const confidence = numberOrUndefined(record.confidence);
+    if (confidence !== undefined) {
+        item.confidence = clamp(confidence, 0, confidence > 1 ? 100 : 1);
     }
     return item;
 }
@@ -161,6 +162,15 @@ function copyText(source: AnyRecord, target: EvidenceSource, key: keyof Evidence
 
 function text(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string' && value.trim()) {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    return undefined;
 }
 
 function asRecord(value: unknown): AnyRecord | undefined {
