@@ -32,7 +32,7 @@ Expected:
 14. Click `对比`.
 15. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
 16. Click `质检`.
-17. Confirm a data quality score, rule catalog, evidence coverage, evidence type distribution, and prototype-rule notes appear.
+17. Confirm a data quality score, UPF structure validation report, rule catalog metadata, evidence coverage, evidence type distribution, and prototype-rule notes appear.
 18. Click `验证`.
 19. Confirm the report includes research questions, data overview, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
 20. Click `报告`.
@@ -73,7 +73,7 @@ Expected:
 4. Load `examples/luohu-case-v1.upf`.
 5. Confirm the project contains multiple parcels, roads, facilities, open space, heritage constraint, and three scenarios.
 6. Open `验证`; expected: validation pack reflects the loaded Luohu case.
-7. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, and dangling references are reported if present.
+7. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, UPF structure findings, and dangling references if present.
 8. Load `examples/invalid.upf`; expected: import error modal.
 
 ## Data Integrity

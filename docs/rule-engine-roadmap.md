@@ -2,6 +2,8 @@
 
 The active rule engine now lives in `src/planning-rules.ts`. More UI glue remains in `src/main.ts`, but rule execution has started moving toward pure modules.
 
+`src/planning-rules.ts` now also exposes `RULE_CATALOG`, which gives each rule a stable ID, domain, default severity, basis, formula, jurisdiction, and prototype flag. This is the current bridge between prototype logic and thesis-method documentation.
+
 ## Current Rule Groups
 
 - Parcel intensity rules
@@ -21,6 +23,9 @@ The active rule engine now lives in `src/planning-rules.ts`. More UI glue remain
   - Elderly service capacity gap
   - Community health capacity check
   - Parcel-level facility coverage gap
+- Data integrity rules
+  - Entrance references existing parcel
+  - Entrance references existing road
 
 ## Target Architecture
 
@@ -66,6 +71,18 @@ Every rule should eventually declare:
 - `confidence`
 - `fixHint`
 
+Current catalog fields already implemented:
+
+- `id`
+- `name`
+- `domain`
+- `defaultSeverity`
+- `jurisdiction`
+- `basis`
+- `clause`
+- `formula`
+- `prototype`
+
 ## Test Fixtures
 
 Needed fixtures:
@@ -86,5 +103,6 @@ Needed fixtures:
 3. Extract rule result type and rule runner. Partially done in `src/planning-rules.ts`.
 4. Move parcel rules out of `main.ts`. First pass done.
 5. Move entrance and facility rules out of `main.ts`. First pass done.
-6. Add fixture tests for each rule group.
+6. Add fixture tests for each rule group. In progress through `smoke-rules`.
 7. Add schema migration from UPF 0.1 to future versions.
+8. Split `RULE_CATALOG` into `src/rules/catalog.ts` once rule modules are separated.

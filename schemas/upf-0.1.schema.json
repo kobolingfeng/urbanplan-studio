@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kobolingfeng/urbanplan-studio/schemas/upf-0.1.schema.json",
+  "title": "Urban Planning Format 0.1",
+  "type": "object",
+  "required": ["format", "formatVersion", "project", "ruleset", "scenarios", "objects"],
+  "properties": {
+    "format": { "const": "UPF" },
+    "formatVersion": { "const": "0.1.0" },
+    "activeScenarioId": { "type": "string" },
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "city", "district", "planningType", "planningHorizon", "crs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "city": { "type": "string" },
+        "district": { "type": "string" },
+        "planningType": { "type": "string" },
+        "planningHorizon": { "type": "string" },
+        "crs": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "ruleset": {
+      "type": "object",
+      "required": ["jurisdiction", "version", "basis"],
+      "properties": {
+        "jurisdiction": { "type": "string" },
+        "version": { "type": "string" },
+        "basis": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "objects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/parcel" },
+          { "$ref": "#/$defs/road" },
+          { "$ref": "#/$defs/facility" },
+          { "$ref": "#/$defs/entrance" },
+          { "$ref": "#/$defs/openSpace" },
+          { "$ref": "#/$defs/constraint" }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "points": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/point" }
+    },
+    "objectBase": {
+      "type": "object",
+      "required": ["id", "type", "name", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "parcel": {
+      "allOf": [
+        { "$ref": "#/$defs/objectBase" },
+        {
+          "type": "object",
+          "required": ["points", "landUseCode", "landUseName", "controls", "scenarioValues"],
+          "properties": {
+            "type": { "const": "parcel" },
+            "points": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" } },
+            "landUseCode": { "type": "string" },
+            "landUseName": { "type": "string" },
+            "controls": {
+              "type": "object",
+              "required": ["farMax", "buildingCoverageMax", "greenRatioMin", "heightMaxM"],
+              "properties": {
+                "farMax": { "type": "number" },
+                "buildingCoverageMax": { "type": "number" },
+                "greenRatioMin": { "type": "number" },
+                "heightMaxM": { "type": "number" }
+              }
+            },
+            "scenarioValues": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["far", "buildingCoverage", "greenRatio", "residentialGfaSqm", "publicServiceGfaSqm", "updateMode"],
+                "properties": {
+                  "far": { "type": "number" },
+                  "buildingCoverage": { "type": "number" },
+                  "greenRatio": { "type": "number" },
+                  "residentialGfaSqm": { "type": "number" },
+                  "publicServiceGfaSqm": { "type": "number" },
+                  "updateMode": { "type": "string" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "road": {
+      "allOf": [
+        { "$ref": "#/$defs/objectBase" },
+        {
+          "type": "object",
+          "required": ["points", "level", "redLineWidthM", "lanes"],
+          "properties": {
+            "type": { "const": "road" },
+            "points": { "$ref": "#/$defs/points" },
+            "level": { "type": "string" },
+            "redLineWidthM": { "type": "number" },
+            "lanes": { "type": "number" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "facility": {
+      "allOf": [
+        { "$ref": "#/$defs/objectBase" },
+        {
+          "type": "object",
+          "required": ["point", "kind", "capacity", "serviceRadiusM", "planned"],
+          "properties": {
+            "type": { "const": "facility" },
+            "point": { "$ref": "#/$defs/point" },
+            "kind": { "type": "string" },
+            "capacity": { "type": "number" },
+            "serviceRadiusM": { "type": "number" },
+            "planned": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "entrance": {
+      "allOf": [
+        { "$ref": "#/$defs/objectBase" },
+        {
+          "type": "object",
+          "required": ["point", "entranceType", "parcelId", "roadId"],
+          "properties": {
+            "type": { "const": "entrance" },
+            "point": { "$ref": "#/$defs/point" },
+            "entranceType": { "type": "string" },
+            "parcelId": { "type": "string" },
+            "roadId": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "openSpace": {
+      "allOf": [
+        { "$ref": "#/$defs/objectBase" },
+        {
+          "type": "object",
+          "required": ["points", "kind"],
+          "properties": {
+            "type": { "const": "openSpace" },
+            "points": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" } },
+            "kind": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "constraint": {
+      "allOf": [
+        { "$ref": "#/$defs/objectBase" },
+        {
+          "type": "object",
+          "required": ["points", "kind"],
+          "properties": {
+            "type": { "const": "constraint" },
+            "points": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" } },
+            "kind": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  },
+  "additionalProperties": true
+}

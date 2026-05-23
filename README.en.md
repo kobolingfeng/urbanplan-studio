@@ -9,7 +9,9 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Parcel inspector for FAR, coverage, green ratio, residential GFA, public-service GFA, and renewal mode.
 - Editable evidence traces per object, feeding data-quality and confidence scoring.
 - Import audit for missing fields, compatibility fixes, and objects that need review.
+- UPF structure validation for required fields, object types, scenario completeness, and entrance references.
 - Rule checks for parcel intensity, green ratio, coverage, public-service gaps, entrance risks, and heritage overlay risks.
+- Rule catalog metadata for domain, default severity, basis, formula, and prototype status.
 - Multi-criteria scenario evaluation for compliance, public service, mobility, ecology, renewal value, and evidence confidence.
 - Weight-sensitivity analysis across balanced, public-service-first, conservation-first, and implementation-risk models.
 - Decision matrix that reruns checks and scoring across all scenarios and explains the recommended scenario.
@@ -58,6 +60,7 @@ Open `http://127.0.0.1:4173`.
 - `examples/luohu-demo.upf`
 - `examples/luohu-case-v1.upf`
 - `examples/invalid.upf`
+- `schemas/upf-0.1.schema.json`
 
 ## Review Docs
 

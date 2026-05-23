@@ -31,6 +31,22 @@ UPF is the internal semantic planning format used by UrbanPlan Studio. It is int
 - Prototype rules must remain distinguishable from statutory rules.
 - All imported files go through normalization before rendering.
 
+## Machine-Readable Schema
+
+The repository now includes a draft JSON Schema at `schemas/upf-0.1.schema.json`. The application also includes a lightweight runtime validator in `src/upf-validation.ts`.
+
+The runtime validator checks:
+
+- top-level format and version declarations;
+- required project, ruleset, scenario, and object fields;
+- supported object types;
+- parcel control indicators and scenario values;
+- point and polygon geometry shape;
+- entrance references to existing parcel and road IDs;
+- missing evidence and incomplete scenario descriptions.
+
+Validation findings are surfaced in the `质检` report and in import audit notes. The validator is intentionally conservative: it reports structural risks and evidence gaps, then the normalization layer may still repair compatible files for review.
+
 ## Current Object Types
 
 ### Parcel

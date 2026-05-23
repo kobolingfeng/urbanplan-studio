@@ -1,4 +1,4 @@
-import { runPlanningRules } from '../src/planning-rules';
+import { buildRuleCatalogReport, RULE_CATALOG, runPlanningRules } from '../src/planning-rules';
 
 function fail(message: string): never {
     console.error(`rules smoke failed: ${message}`);
@@ -113,6 +113,7 @@ const project = {
 
 const result = runPlanningRules(project, 's1');
 const ids = new Set(result.checks.map(check => check.ruleId));
+const catalogIds = new Set(RULE_CATALOG.map(rule => rule.id));
 
 for (const id of [
     'parcel_far_max',
@@ -125,8 +126,11 @@ for (const id of [
     'entrance_intersection_distance',
 ]) {
     assert(ids.has(id), `${id} did not trigger`);
+    assert(catalogIds.has(id), `${id} missing from rule catalog`);
 }
 
+assert(RULE_CATALOG.length >= 15, 'rule catalog should cover current rules');
+assert(buildRuleCatalogReport(result.checks).includes('规则目录与验证口径'), 'rule catalog report title mismatch');
 assert(result.recommendations.length > 0, 'recommendations should be generated');
 
 console.log('rules smoke passed');

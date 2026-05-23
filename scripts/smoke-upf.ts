@@ -7,9 +7,11 @@ import {
     createUpfDocument,
     parseUpfText,
 } from '../src/planning-analytics';
+import { buildUpfValidationReport, validateUpfDocument } from '../src/upf-validation';
 
 const ROOT = resolve(import.meta.dir, '..');
 const examples = join(ROOT, 'examples');
+const schemas = join(ROOT, 'schemas');
 
 function fail(message: string): never {
     console.error(`upf smoke failed: ${message}`);
@@ -30,6 +32,10 @@ const fallback = {
 };
 
 const minimalText = readFileSync(join(examples, 'minimal.upf'), 'utf8');
+const minimalRaw = JSON.parse(minimalText);
+const minimalIssues = validateUpfDocument(minimalRaw);
+assert(!minimalIssues.some(issue => issue.severity === 'error'), 'minimal should have no schema errors');
+assert(buildUpfValidationReport(minimalIssues).includes('UPF 结构校验报告'), 'validation report title mismatch');
 const minimal = parseUpfText(minimalText, fallback);
 assert(minimal.project.project?.id === 'minimal_demo', 'minimal project id mismatch');
 assert(minimal.activeScenarioId === 'scenario_base', 'minimal active scenario mismatch');
@@ -107,8 +113,14 @@ assert(buildDataQualityReport(analyticsFixture, [], []).includes('引用完整�
 const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
 assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
 
+const schema = JSON.parse(readFileSync(join(schemas, 'upf-0.1.schema.json'), 'utf8'));
+assert(schema.title === 'Urban Planning Format 0.1', 'json schema title mismatch');
+
 try {
-    parseUpfText(readFileSync(join(examples, 'invalid.upf'), 'utf8'), fallback);
+    const invalidText = readFileSync(join(examples, 'invalid.upf'), 'utf8');
+    const invalidIssues = validateUpfDocument(JSON.parse(invalidText));
+    assert(invalidIssues.some(issue => issue.severity === 'error'), 'invalid.upf should have validation errors');
+    parseUpfText(invalidText, fallback);
     fail('invalid.upf should be rejected');
 } catch (error) {
     assert(error instanceof Error && error.message.includes('不是可识别'), 'invalid error message mismatch');

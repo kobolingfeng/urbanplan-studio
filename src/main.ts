@@ -30,7 +30,8 @@ import {
     rect,
     type Point,
 } from './planning-geometry';
-import { runPlanningRules } from './planning-rules';
+import { buildRuleCatalogReport, RULE_CATALOG, runPlanningRules } from './planning-rules';
+import { buildUpfValidationReport, validateUpfDocument, type UpfValidationIssue } from './upf-validation';
 
 type Tool = 'select' | 'parcel' | 'facility' | 'entrance';
 type LayerKey = 'parcels' | 'roads' | 'facilities' | 'entrances' | 'openSpaces' | 'constraints';
@@ -1662,7 +1663,14 @@ function buildReport(): string {
 }
 
 function buildQualityReport(): string {
-    const lines = [buildDataQualityReport(project, checks, recommendations)];
+    const validationIssues = validateUpfDocument(project);
+    const lines = [
+        buildDataQualityReport(project, checks, recommendations),
+        '',
+        buildUpfValidationReport(validationIssues),
+        '',
+        buildRuleCatalogReport(checks),
+    ];
     if (importFindings.length) {
         lines.push(
             '',
@@ -1676,6 +1684,16 @@ function buildQualityReport(): string {
         lines.push('', '## 导入审计', '', '- 当前项目没有记录到导入兼容修复项。');
     }
     return lines.join('\n');
+}
+
+function schemaIssuesToImportFindings(issues: UpfValidationIssue[]): ImportFinding[] {
+    return issues
+        .filter(issue => issue.severity !== 'info')
+        .map(issue => ({
+            severity: issue.severity === 'error' ? 'warning' : 'info',
+            objectId: issue.path,
+            message: `UPF 结构校验：${issue.message}`,
+        }));
 }
 
 function collectScenarioDecisionRows() {
@@ -1704,6 +1722,8 @@ function buildCaseValidationReport(): string {
     const activeRow = decisionRows.find(row => row.scenario.id === activeScenarioId);
     const errors = checks.filter(check => check.severity === 'error');
     const warnings = checks.filter(check => check.severity === 'warning');
+    const triggeredRuleIds = new Set(checks.map(check => check.ruleId));
+    const prototypeRules = RULE_CATALOG.filter(rule => rule.prototype).length;
     const agreement = robustWinner ? robustWinner[1] / EVALUATION_WEIGHT_PROFILES.length : 0;
     const riskControlScore = Math.max(0, 100 - Math.min(45, errors.length * 12 + warnings.length * 4));
     const readiness = Math.round(
@@ -1784,7 +1804,15 @@ function buildCaseValidationReport(): string {
             ? checks.map(check => `| ${severityLabel(check.severity)} | ${check.objectName} | ${check.ruleId} | ${check.title}：${check.message} | ${check.source} |`)
             : ['| 通过 | 全局 | - | 当前没有规则问题 | - |']),
         '',
-        '## 七、论文实验记录表',
+        '## 七、规则目录与验证口径',
+        '',
+        `当前规则目录共 ${RULE_CATALOG.length} 条，其中原型启发式规则 ${prototypeRules} 条；本方案触发 ${triggeredRuleIds.size} 类规则。`,
+        '',
+        '| 规则 ID | 领域 | 默认等级 | 原型 | 本次触发 | 依据 |',
+        '|---|---|---|---:|---:|---|',
+        ...RULE_CATALOG.map(rule => `| ${rule.id} | ${rule.domain} | ${severityLabel(rule.defaultSeverity)} | ${rule.prototype ? '是' : '否'} | ${triggeredRuleIds.has(rule.id) ? '是' : '否'} | ${rule.basis} |`),
+        '',
+        '## 八、论文实验记录表',
         '',
         '| 验证任务 | 操作对象 | 记录指标 | 结果填写 |',
         '|---|---|---|---|',
@@ -1794,7 +1822,7 @@ function buildCaseValidationReport(): string {
         '| T4 权重敏感性 | 四类权重模型 | 推荐结果是否稳定 | 待记录 |',
         '| T5 报告导出 | 诊断、质检、验证包 | 是否能直接支撑论文材料整理 | 待记录 |',
         '',
-        '## 八、专家复核表',
+        '## 九、专家复核表',
         '',
         '| 复核项 | 1-5 分 | 主要意见 |',
         '|---|---:|---|',
@@ -1804,7 +1832,7 @@ function buildCaseValidationReport(): string {
         '| 数据质量诊断价值 |  |  |',
         '| 作为毕业设计原型的完整性 |  |  |',
         '',
-        '## 九、可复现材料清单',
+        '## 十、可复现材料清单',
         '',
         '- UPF 项目文件：保存按钮导出的 `.upf` 文件。',
         '- 规划诊断报告：报告按钮导出的 `planning-report.md`。',
@@ -1814,13 +1842,13 @@ function buildCaseValidationReport(): string {
         '- 数据质量诊断：质检按钮导出的 `data-quality-report.md`。',
         '- 本案例验证包：验证按钮导出的 `case-validation-pack.md`。',
         '',
-        '## 十、CSV 附录',
+        '## 十一、CSV 附录',
         '',
         '```csv',
         buildScenarioDecisionCsv(decisionRows),
         '```',
         '',
-        '## 十一、保守结论表达',
+        '## 十二、保守结论表达',
         '',
         `- 本案例中，系统将方案综合评分、规则问题、数据质量和权重敏感性放入同一证据链，验证就绪度为 ${readiness}/100。`,
         '- 该结果适合表述为“早期方案推演和毕业设计研究支持工具”，不宜表述为替代法定审查或替代专家判断。',
@@ -2181,8 +2209,12 @@ async function loadUpf() {
 }
 
 function loadUpfText(text: string) {
+    const raw = JSON.parse(text);
     const parsed = parseUpfText(text, project);
-    importFindings = auditImportedProject(parsed.project as UrbanPlanProject);
+    importFindings = [
+        ...schemaIssuesToImportFindings(validateUpfDocument(raw)),
+        ...auditImportedProject(parsed.project as UrbanPlanProject),
+    ].slice(0, 120);
     project = normalizeProject(parsed.project as UrbanPlanProject);
     activeScenarioId = project.scenarios.some(scenario => scenario.id === parsed.activeScenarioId)
         ? parsed.activeScenarioId

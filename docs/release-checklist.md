@@ -26,6 +26,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click evaluation and confirm the modal includes score, confidence, dimensions, parcel priorities, and risk register.
 - Click sensitivity and confirm four weight profiles produce a model comparison and scenario rankings.
 - Click validation and confirm the case validation pack includes research questions, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
+- Click quality and confirm it includes UPF structure validation, rule catalog metadata, evidence distribution, and import audit.
 - Click report and confirm sensitivity and data-quality summaries are included.
 - Use object search and high-risk filter to locate problem objects.
 - Apply public-service and ecology optimization presets on a duplicated scenario.
@@ -45,6 +46,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Deleting a parcel referenced by an entrance is blocked.
 - Scenario decision matrix lists all scenarios, scores, confidence, key metrics, and risk counts.
 - Data quality report exposes rule catalog, prototype rules, evidence coverage, evidence type distribution, and evidence gaps.
+- UPF smoke confirms `schemas/upf-0.1.schema.json` exists and runtime validation catches invalid files.
 - Data quality report exposes dangling entrance references when an entrance points to a missing parcel or road.
 - Evaluation smoke confirms six dimensions and parcel-level scoring.
 

@@ -1,0 +1,209 @@
+type AnyRecord = Record<string, unknown>;
+
+export type UpfValidationSeverity = 'error' | 'warning' | 'info';
+
+export type UpfValidationIssue = {
+    severity: UpfValidationSeverity;
+    path: string;
+    message: string;
+};
+
+const OBJECT_TYPES = new Set(['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint']);
+const PARCEL_NUMERIC_VALUES = ['far', 'buildingCoverage', 'greenRatio', 'residentialGfaSqm', 'publicServiceGfaSqm'];
+const PARCEL_CONTROL_VALUES = ['farMax', 'buildingCoverageMax', 'greenRatioMin', 'heightMaxM'];
+
+export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
+    const issues: UpfValidationIssue[] = [];
+    const add = (severity: UpfValidationSeverity, path: string, message: string) => {
+        issues.push({ severity, path, message });
+    };
+    const data = asRecord(input);
+    if (!data) {
+        return [{ severity: 'error', path: '$', message: 'UPF 文档必须是 JSON 对象。' }];
+    }
+
+    const manifest = asRecord(data.manifest);
+    const format = data.format ?? manifest?.format;
+    if (format !== 'UPF') add('error', 'format', '必须声明 format: UPF，或在 manifest.format 中声明 UPF。');
+    const formatVersion = String(data.formatVersion ?? manifest?.formatVersion ?? '');
+    if (formatVersion && formatVersion !== '0.1.0') add('info', 'formatVersion', `当前版本 ${formatVersion} 将按 0.1.0 兼容处理。`);
+    if (!formatVersion) add('warning', 'formatVersion', '缺少 formatVersion，导入时会按 0.1.0 兼容处理。');
+
+    const project = asRecord(data.project);
+    if (!project) add('error', 'project', '缺少 project 元数据。');
+    else {
+        for (const field of ['id', 'name', 'city', 'district', 'planningType', 'planningHorizon', 'crs']) {
+            if (!isNonEmptyString(project[field])) add(field === 'id' || field === 'name' ? 'error' : 'warning', `project.${field}`, `project.${field} 不能为空。`);
+        }
+    }
+
+    const ruleset = asRecord(data.ruleset);
+    if (!ruleset) add('warning', 'ruleset', '缺少 ruleset，规则来源和适用地区将不完整。');
+    else {
+        if (!isNonEmptyString(ruleset.jurisdiction)) add('warning', 'ruleset.jurisdiction', '缺少规则适用地区。');
+        if (!isNonEmptyString(ruleset.version)) add('warning', 'ruleset.version', '缺少规则版本。');
+        if (!Array.isArray(ruleset.basis) || !ruleset.basis.length) add('warning', 'ruleset.basis', '缺少规则依据清单。');
+    }
+
+    const scenarios = Array.isArray(data.scenarios) ? data.scenarios : [];
+    if (!scenarios.length) add('error', 'scenarios', '至少需要 1 个情景方案。');
+    const scenarioIds = new Set<string>();
+    scenarios.forEach((scenario, index) => {
+        const item = asRecord(scenario);
+        const path = `scenarios[${index}]`;
+        if (!item) {
+            add('error', path, '情景方案必须是对象。');
+            return;
+        }
+        if (!isNonEmptyString(item.id)) add('error', `${path}.id`, '情景方案缺少 id。');
+        else if (scenarioIds.has(item.id)) add('error', `${path}.id`, `情景方案 id 重复：${item.id}`);
+        else scenarioIds.add(item.id);
+        if (!isNonEmptyString(item.name)) add('error', `${path}.name`, '情景方案缺少名称。');
+        if (!isNonEmptyString(item.description)) add('info', `${path}.description`, '建议补充情景说明，便于论文解释方案差异。');
+    });
+
+    const activeScenarioId = String(data.activeScenarioId ?? manifest?.activeScenarioId ?? '');
+    if (activeScenarioId && !scenarioIds.has(activeScenarioId)) add('warning', 'activeScenarioId', `当前方案 ${activeScenarioId} 不在 scenarios 中。`);
+
+    const objects = Array.isArray(data.objects) ? data.objects : [];
+    if (!objects.length) add('error', 'objects', '至少需要 1 个规划对象。');
+    const objectIds = new Set<string>();
+    objects.forEach((object, index) => {
+        const item = asRecord(object);
+        const path = `objects[${index}]`;
+        if (!item) {
+            add('error', path, '规划对象必须是对象。');
+            return;
+        }
+        if (!isNonEmptyString(item.id)) add('error', `${path}.id`, '对象缺少 id。');
+        else if (objectIds.has(item.id)) add('error', `${path}.id`, `对象 id 重复：${item.id}`);
+        else objectIds.add(item.id);
+        if (!isNonEmptyString(item.name)) add('warning', `${path}.name`, '对象缺少名称。');
+        if (!Array.isArray(item.evidence) || !item.evidence.length) add('warning', `${path}.evidence`, '对象缺少证据来源，会降低可信度。');
+        if (!isNonEmptyString(item.type) || !OBJECT_TYPES.has(item.type)) {
+            add('error', `${path}.type`, `未知对象类型：${String(item.type ?? '')}`);
+            return;
+        }
+    });
+
+    const parcelIds = new Set(objects.map(asRecord).filter(item => item?.type === 'parcel').map(item => String(item!.id)).filter(Boolean));
+    const roadIds = new Set(objects.map(asRecord).filter(item => item?.type === 'road').map(item => String(item!.id)).filter(Boolean));
+
+    objects.forEach((object, index) => {
+        const item = asRecord(object);
+        if (!item || !OBJECT_TYPES.has(String(item.type))) return;
+        const path = `objects[${index}]`;
+        if (item.type === 'parcel') validateParcel(item, path, scenarioIds, add);
+        if (item.type === 'road') {
+            if (!hasPoints(item.points, 2)) add('error', `${path}.points`, '道路至少需要 2 个点。');
+            if (!isNonEmptyString(item.level)) add('warning', `${path}.level`, '道路缺少等级。');
+            if (!isFiniteNumber(item.redLineWidthM)) add('warning', `${path}.redLineWidthM`, '道路缺少红线宽度。');
+            if (!isFiniteNumber(item.lanes)) add('warning', `${path}.lanes`, '道路缺少车道数。');
+        }
+        if (item.type === 'facility') {
+            if (!isPoint(item.point)) add('error', `${path}.point`, '公共服务设施缺少有效点位。');
+            if (!isNonEmptyString(item.kind)) add('warning', `${path}.kind`, '公共服务设施缺少类型。');
+            if (!isFiniteNumber(item.capacity)) add('warning', `${path}.capacity`, '公共服务设施缺少服务能力。');
+            if (!isFiniteNumber(item.serviceRadiusM)) add('warning', `${path}.serviceRadiusM`, '公共服务设施缺少服务半径。');
+        }
+        if (item.type === 'entrance') {
+            if (!isPoint(item.point)) add('error', `${path}.point`, '出入口缺少有效点位。');
+            if (!isNonEmptyString(item.entranceType)) add('warning', `${path}.entranceType`, '出入口缺少类型。');
+            if (!isNonEmptyString(item.parcelId)) add('error', `${path}.parcelId`, '出入口缺少地块引用。');
+            else if (!parcelIds.has(item.parcelId)) add('error', `${path}.parcelId`, `出入口引用不存在的地块：${item.parcelId}`);
+            if (!isNonEmptyString(item.roadId)) add('error', `${path}.roadId`, '出入口缺少道路引用。');
+            else if (!roadIds.has(item.roadId)) add('error', `${path}.roadId`, `出入口引用不存在的道路：${item.roadId}`);
+        }
+        if (item.type === 'openSpace' || item.type === 'constraint') {
+            if (!hasPoints(item.points, 3)) add('error', `${path}.points`, '面状对象至少需要 3 个点。');
+            if (!isNonEmptyString(item.kind)) add('warning', `${path}.kind`, '面状对象缺少类型。');
+        }
+    });
+
+    return issues;
+}
+
+export function summarizeUpfValidation(issues: UpfValidationIssue[]) {
+    return {
+        errors: issues.filter(issue => issue.severity === 'error').length,
+        warnings: issues.filter(issue => issue.severity === 'warning').length,
+        infos: issues.filter(issue => issue.severity === 'info').length,
+    };
+}
+
+export function buildUpfValidationReport(issues: UpfValidationIssue[]): string {
+    const summary = summarizeUpfValidation(issues);
+    const lines = [
+        '# UPF 结构校验报告',
+        '',
+        `错误：${summary.errors}，警告：${summary.warnings}，提示：${summary.infos}`,
+        '',
+        '| 等级 | 路径 | 问题 |',
+        '|---|---|---|',
+        ...(issues.length
+            ? issues.map(issue => `| ${severityLabel(issue.severity)} | ${issue.path} | ${issue.message} |`)
+            : ['| 通过 | $ | 当前未发现结构问题 |']),
+    ];
+    return lines.join('\n');
+}
+
+function validateParcel(
+    item: AnyRecord,
+    path: string,
+    scenarioIds: Set<string>,
+    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+) {
+    if (!hasPoints(item.points, 3)) add('error', `${path}.points`, '地块至少需要 3 个点。');
+    if (!isNonEmptyString(item.landUseCode)) add('warning', `${path}.landUseCode`, '地块缺少用地代码。');
+    if (!isNonEmptyString(item.landUseName)) add('warning', `${path}.landUseName`, '地块缺少用地名称。');
+    const controls = asRecord(item.controls);
+    if (!controls) add('error', `${path}.controls`, '地块缺少控制指标。');
+    else {
+        for (const field of PARCEL_CONTROL_VALUES) {
+            if (!isFiniteNumber(controls[field])) add('error', `${path}.controls.${field}`, `控制指标 ${field} 必须是数字。`);
+        }
+    }
+    const values = asRecord(item.scenarioValues);
+    if (!values) {
+        add('error', `${path}.scenarioValues`, '地块缺少情景指标。');
+        return;
+    }
+    for (const scenarioId of scenarioIds) {
+        const value = asRecord(values[scenarioId]);
+        if (!value) {
+            add('warning', `${path}.scenarioValues.${scenarioId}`, `缺少 ${scenarioId} 的地块情景指标。`);
+            continue;
+        }
+        for (const field of PARCEL_NUMERIC_VALUES) {
+            if (!isFiniteNumber(value[field])) add('error', `${path}.scenarioValues.${scenarioId}.${field}`, `${field} 必须是数字。`);
+        }
+        if (!isNonEmptyString(value.updateMode)) add('warning', `${path}.scenarioValues.${scenarioId}.updateMode`, '缺少更新方式。');
+    }
+}
+
+function asRecord(value: unknown): AnyRecord | undefined {
+    return value && typeof value === 'object' && !Array.isArray(value) ? value as AnyRecord : undefined;
+}
+
+function isNonEmptyString(value: unknown): value is string {
+    return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isFiniteNumber(value: unknown): value is number {
+    return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isPoint(value: unknown): boolean {
+    const point = asRecord(value);
+    return !!point && isFiniteNumber(point.x) && isFiniteNumber(point.y);
+}
+
+function hasPoints(value: unknown, minLength: number): boolean {
+    return Array.isArray(value) && value.length >= minLength && value.every(isPoint);
+}
+
+function severityLabel(severity: UpfValidationSeverity): string {
+    if (severity === 'error') return '错误';
+    if (severity === 'warning') return '警告';
+    return '提示';
+}
