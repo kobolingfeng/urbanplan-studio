@@ -23,7 +23,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Confirm the top actions are visible: run check, evaluation, sensitivity, compare, quality, validation, report, UPF, save, load.
 - Click a parcel and edit FAR; status bar should show unsaved state.
 - Click UPF and confirm top-level `format` and `formatVersion` exist.
-- Click evaluation and confirm the modal includes score, confidence, dimensions, parcel priorities, and risk register.
+- Click evaluation and confirm the modal includes score, confidence, dimensions, parcel priorities, service population allocation, and risk register.
 - Click sensitivity and confirm four weight profiles produce a model comparison and scenario rankings.
 - Click validation and confirm the case validation pack includes research questions, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
 - Click quality and confirm it includes UPF structure validation, structured RuleSource metadata, evidence distribution, structured evidence coverage, and import audit.

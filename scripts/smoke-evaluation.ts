@@ -110,7 +110,9 @@ assert(evaluation.dimensions.length === 6, 'dimension count mismatch');
 assert(evaluation.dimensions.map(item => item.id).join(',') === 'compliance,publicService,mobility,ecology,renewalValue,evidence', 'dimension ids should be stable');
 assert(evaluation.parcels.length === 1, 'parcel evaluation mismatch');
 assert(evaluation.highlights.length >= 2, 'highlights should explain the result');
-assert(buildScenarioEvaluationReport(project, 'scenario_update', rules.checks, rules.recommendations).includes('方案综合评估'), 'report title mismatch');
+const evaluationReport = buildScenarioEvaluationReport(project, 'scenario_update', rules.checks, rules.recommendations);
+assert(evaluationReport.includes('方案综合评估'), 'report title mismatch');
+assert(evaluationReport.includes('服务人口分摊') && evaluationReport.includes('幼儿园需求'), 'report should expose parcel service allocation');
 
 for (const profile of EVALUATION_WEIGHT_PROFILES) {
     const profiled = evaluateScenario(project, 'scenario_update', rules.checks, rules.recommendations, profile);

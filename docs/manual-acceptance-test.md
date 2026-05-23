@@ -26,7 +26,7 @@ Expected:
 8. Confirm parcel fill colors reflect score bands: lower scoring parcels are warmer, stable parcels are cooler/green.
 9. Select a public facility and confirm its service-radius overlay appears on the map.
 10. Click `评估`.
-11. Confirm the modal includes dimension scores, parcel priorities, highlights, and risk register.
+11. Confirm the modal includes dimension scores, parcel priorities, service population allocation, highlights, and risk register.
 12. Click `敏感`.
 13. Confirm the modal compares at least four weight models and reports whether the recommended scheme is stable.
 14. Click `对比`.

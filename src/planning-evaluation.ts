@@ -107,6 +107,16 @@ export type ParcelEvaluation = {
     drivers: string[];
 };
 
+type ParcelServiceAllocation = {
+    name: string;
+    residents: number;
+    kindergartenNeed: number;
+    elderlyNeed: number;
+    publicServicePerThousand: number;
+    kindergartenCovered: boolean;
+    elderlyCovered: boolean;
+};
+
 export type ScenarioEvaluation = {
     scenarioId: string;
     scenarioName: string;
@@ -254,6 +264,7 @@ export function buildScenarioEvaluationReport(
 ): string {
     const evaluation = evaluateScenario(project, scenarioId, checks, recommendations);
     const projectName = project.project?.name ?? 'UrbanPlan';
+    const serviceRows = buildParcelServiceAllocation(project, scenarioId);
     const lines = [
         `# ${projectName} 方案综合评估`,
         '',
@@ -276,15 +287,23 @@ export function buildScenarioEvaluationReport(
         '|---|---:|---|---|',
         ...evaluation.parcels.map(parcel => `| ${parcel.name} | ${parcel.score} | ${parcel.band} | ${parcel.drivers.join('；')} |`),
         '',
-        '## 三、答辩可解释结论',
+        '## 三、服务人口分摊',
+        '',
+        '| 地块 | 估算人口 | 幼儿园需求 | 养老服务需求 | 公服建面/千人 | 幼儿园覆盖 | 养老覆盖 |',
+        '|---|---:|---:|---:|---:|---|---|',
+        ...(serviceRows.length
+            ? serviceRows.map(row => `| ${row.name} | ${row.residents} | ${row.kindergartenNeed} | ${row.elderlyNeed} | ${row.publicServicePerThousand.toFixed(0)} | ${row.kindergartenCovered ? '是' : '否'} | ${row.elderlyCovered ? '是' : '否'} |`)
+            : ['| 暂无 | 0 | 0 | 0 | 0 | - | - |']),
+        '',
+        '## 四、答辩可解释结论',
         '',
         ...evaluation.highlights.map(item => `- ${item}`),
         '',
-        '## 四、风险登记',
+        '## 五、风险登记',
         '',
         ...(evaluation.riskRegister.length ? evaluation.riskRegister.map(item => `- ${item}`) : ['- 当前基础规则未识别高优先级风险，可继续补充交通、消防、日照、市政承载等专项模型。']),
         '',
-        '## 五、方法说明',
+        '## 六、方法说明',
         '',
         '- 本模块采用可解释的多指标加权评分，不把评分包装成法定结论。',
         '- 评分维度包括控规符合性、公共服务、交通可达、生态开放空间、更新价值和证据可信度。',
@@ -506,6 +525,36 @@ function facilityScore(
     const coverageScore = totalResidents ? coveredResidents / totalResidents * 100 : 100;
     const capacityScore = demand ? Math.min(100, capacity / demand * 100) : 100;
     return average([coverageScore, capacityScore]);
+}
+
+function buildParcelServiceAllocation(project: ProjectLike, scenarioId: string): ParcelServiceAllocation[] {
+    const parcels = (project.objects ?? []).filter(isParcel);
+    const facilities = (project.objects ?? []).filter(isFacility);
+    return parcels.map((parcel) => {
+        const value = parcelValue(parcel, scenarioId);
+        const residents = parcelResidents(parcel, scenarioId);
+        const publicServiceGfa = number(value.publicServiceGfaSqm);
+        return {
+            name: String(parcel.name ?? parcel.id ?? '未命名地块'),
+            residents,
+            kindergartenNeed: Math.ceil(residents * 0.036),
+            elderlyNeed: Math.ceil(residents * 0.03),
+            publicServicePerThousand: residents ? publicServiceGfa / residents * 1000 : 0,
+            kindergartenCovered: parcelCoveredByFacility(parcel, facilities, '幼儿园'),
+            elderlyCovered: parcelCoveredByFacility(parcel, facilities, '社区养老'),
+        };
+    }).sort((a, b) => a.publicServicePerThousand - b.publicServicePerThousand || b.residents - a.residents);
+}
+
+function parcelCoveredByFacility(
+    parcel: PlanningObjectLike,
+    facilities: PlanningObjectLike[],
+    kind: FacilityKind,
+): boolean {
+    const center = centroid(parcel.points ?? []);
+    return facilities.some(facility => facility.kind === kind
+        && facility.point
+        && distance(center, facility.point) <= number(facility.serviceRadiusM));
 }
 
 function nearestRoadDistanceScore(point: Point, roads: PlanningObjectLike[]): number {
