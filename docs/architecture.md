@@ -20,6 +20,7 @@ The app shell provides native file dialogs, file read/write, clipboard, logging,
 src/
   main.ts                UI state, rendering, inspector, modal, native integration
   planning-geometry.ts   Unit system and pure geometry helpers
+  evidence.ts            EvidenceSource parsing, display, classification, and confidence scoring
   planning-rules.ts      Active rule runner and recommendations
   planning-evaluation.ts Multi-criteria scenario scoring and decision reports
   planning-analytics.ts  UPF import/export helpers, comparison, data quality reports
@@ -70,7 +71,7 @@ UPF/demo project
 - Rules have moved to `planning-rules.ts`, but rule metadata is not yet declarative.
 - Scenario evaluation uses transparent prototype weights and built-in sensitivity profiles; expert-calibrated AHP/entropy weights are future work.
 - Geometry uses a demo canvas unit system.
-- UPF validation now has a lightweight runtime validator and a draft JSON Schema, but full migration/version negotiation is still future work.
+- UPF validation now has a lightweight runtime validator and a draft JSON Schema. Evidence can be legacy strings or structured EvidenceSource objects, but full migration/version negotiation is still future work.
 - Facility coverage uses straight-line distance.
 - Reports are generated as Markdown text.
 

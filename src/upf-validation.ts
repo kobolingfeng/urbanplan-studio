@@ -1,3 +1,5 @@
+import { isStructuredEvidence, normalizeEvidenceItem } from './evidence';
+
 type AnyRecord = Record<string, unknown>;
 
 export type UpfValidationSeverity = 'error' | 'warning' | 'info';
@@ -79,7 +81,7 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         else if (objectIds.has(item.id)) add('error', `${path}.id`, `对象 id 重复：${item.id}`);
         else objectIds.add(item.id);
         if (!isNonEmptyString(item.name)) add('warning', `${path}.name`, '对象缺少名称。');
-        if (!Array.isArray(item.evidence) || !item.evidence.length) add('warning', `${path}.evidence`, '对象缺少证据来源，会降低可信度。');
+        validateEvidenceList(item.evidence, `${path}.evidence`, add);
         if (!isNonEmptyString(item.type) || !OBJECT_TYPES.has(item.type)) {
             add('error', `${path}.type`, `未知对象类型：${String(item.type ?? '')}`);
             return;
@@ -121,6 +123,38 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
     });
 
     return issues;
+}
+
+function validateEvidenceList(
+    value: unknown,
+    path: string,
+    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+) {
+    if (!Array.isArray(value) || !value.length) {
+        add('warning', path, '对象缺少证据来源，会降低可信度。');
+        return;
+    }
+    value.forEach((item, index) => {
+        const itemPath = `${path}[${index}]`;
+        const normalized = normalizeEvidenceItem(item);
+        if (!normalized) {
+            add('error', itemPath, '证据必须是非空字符串或 EvidenceSource 对象。');
+            return;
+        }
+        if (typeof normalized === 'string') {
+            add('info', itemPath, '当前为旧版字符串证据，建议升级为含 title/type/collectedAt/precision/confidence/license 的 EvidenceSource。');
+            return;
+        }
+        if (!isStructuredEvidence(normalized)) add('warning', itemPath, 'EvidenceSource 缺少 title。');
+        if (!isNonEmptyString(normalized.type)) add('warning', `${itemPath}.type`, 'EvidenceSource 建议声明来源类型。');
+        if (!isNonEmptyString(normalized.collectedAt)) add('warning', `${itemPath}.collectedAt`, 'EvidenceSource 建议声明获取或生效时间。');
+        if (!isNonEmptyString(normalized.precision)) add('info', `${itemPath}.precision`, '建议补充精度或适用尺度。');
+        if (!isNonEmptyString(normalized.license)) add('info', `${itemPath}.license`, '建议补充许可或使用约束。');
+        const raw = asRecord(item);
+        if (raw && raw.confidence !== undefined && (!isFiniteNumber(raw.confidence) || raw.confidence < 0 || raw.confidence > 100)) {
+            add('warning', `${itemPath}.confidence`, 'confidence 应为 0-1 或 0-100 区间数值。');
+        }
+    });
 }
 
 export function summarizeUpfValidation(issues: UpfValidationIssue[]) {

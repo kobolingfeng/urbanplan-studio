@@ -1,3 +1,10 @@
+import {
+    evidenceCompletenessScore,
+    evidenceKind,
+    isStructuredEvidence,
+    type EvidenceItem,
+} from './evidence';
+
 type AnyRecord = Record<string, unknown>;
 
 type ScenarioLike = {
@@ -26,7 +33,7 @@ type PlanningObjectLike = {
     id?: string;
     type?: string;
     name?: string;
-    evidence?: string[];
+    evidence?: EvidenceItem[];
     scenarioValues?: Record<string, {
         far?: number;
         residentialGfaSqm?: number;
@@ -243,11 +250,14 @@ export function buildDataQualityReport(
         '',
         `质量分：${quality.score}/100`,
         `证据覆盖率：${quality.evidenceCoverage.toFixed(1)}%`,
+        `结构化证据覆盖率：${quality.structuredEvidenceCoverage.toFixed(1)}%`,
+        `平均证据可信度：${quality.averageEvidenceConfidence}/100`,
         '',
         '## 检查项',
         '',
         `- 对象总数：${quality.objectCount}`,
         `- 缺少证据来源的对象：${quality.missingEvidence.length}`,
+        `- 含结构化 EvidenceSource 的对象：${quality.structuredEvidenceObjects}`,
         `- 规则依据条数：${quality.basisCount}`,
         `- 仍依赖原型规则的检查：${quality.prototypeRuleCount}`,
         `- 未绑定或悬挂引用的出入口：${quality.unboundEntrances.length}`,
@@ -292,6 +302,12 @@ export function calculateDataQuality(
     const objects = project.objects ?? [];
     const missingEvidence = objects.filter(object => !object.evidence?.length);
     const evidenceCoverage = objects.length ? (objects.length - missingEvidence.length) / objects.length * 100 : 100;
+    const structuredEvidenceObjects = objects.filter(object => object.evidence?.some(isStructuredEvidence)).length;
+    const structuredEvidenceCoverage = objects.length ? structuredEvidenceObjects / objects.length * 100 : 100;
+    const evidenceItems = objects.flatMap(object => object.evidence ?? []);
+    const averageEvidenceConfidence = evidenceItems.length
+        ? Math.round(average(evidenceItems.map(evidenceCompletenessScore)))
+        : 0;
     const evidenceTypeCounts = objects
         .flatMap(object => object.evidence ?? [])
         .reduce<Record<string, number>>((counts, item) => {
@@ -311,6 +327,7 @@ export function calculateDataQuality(
 
     const score = Math.max(0, Math.min(100, 100
         - missingEvidence.length * 8
+        - Math.max(0, objects.length - structuredEvidenceObjects) * 3
         - prototypeRuleCount * 4
         - entranceReferenceIssues.length * 12
         - parcelScenarioGaps.length * 10
@@ -320,6 +337,9 @@ export function calculateDataQuality(
         score,
         objectCount: objects.length,
         evidenceCoverage,
+        structuredEvidenceCoverage,
+        structuredEvidenceObjects,
+        averageEvidenceConfidence,
         evidenceTypeCounts,
         basisCount: project.ruleset?.basis?.length ?? 0,
         ruleCatalog,
@@ -370,13 +390,6 @@ function buildRuleCatalog(checks: CheckLike[]) {
         .map(rule => ({ ...rule, maxSeverity: label[rule.maxSeverity] ?? rule.maxSeverity }));
 }
 
-function evidenceKind(text: string): string {
-    if (/GB|CJJ|规范|标准|导则|指南|控规|法定|修订|条例/.test(text)) return '规范/规划依据';
-    if (/调研|实测|现场|访谈|问卷|遥感|手机信令|POI|路网/.test(text)) return '调研/空间数据';
-    if (/演示|样例|原型|兼容层|用户/.test(text)) return '原型/用户输入';
-    return '其他证据';
-}
-
 function heading(level: number): string {
     return '#'.repeat(Math.max(1, Math.min(6, level)));
 }
@@ -394,4 +407,8 @@ function polygonArea(points: Array<{ x: number; y: number }>): number {
         sum += a.x * b.y - b.x * a.y;
     }
     return Math.max(1, Math.abs(sum / 2));
+}
+
+function average(values: number[]): number {
+    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 }

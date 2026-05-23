@@ -23,6 +23,7 @@ UPF is the internal semantic planning format used by UrbanPlan Studio. It is int
 ## Required Principles
 
 - Every object has `id`, `type`, `name`, and `evidence`.
+- `evidence` accepts legacy strings and structured `EvidenceSource` objects; structured sources should include source type, timestamp/effective date, precision, license, and confidence.
 - The manifest records the software version and unit system used during export.
 - Every scenario has `id`, `name`, and `description`.
 - Every parcel must have scenario-scoped values.
@@ -43,11 +44,28 @@ The runtime validator checks:
 - parcel control indicators and scenario values;
 - point and polygon geometry shape;
 - entrance references to existing parcel and road IDs;
-- missing evidence and incomplete scenario descriptions.
+- missing evidence, unstructured evidence, incomplete EvidenceSource metadata, and incomplete scenario descriptions.
 
 Validation findings are surfaced in the `质检` report and in import audit notes. The validator is intentionally conservative: it reports structural risks and evidence gaps, then the normalization layer may still repair compatible files for review.
 
 ## Current Object Types
+
+### EvidenceSource
+
+Structured evidence is preferred for all object `evidence` arrays:
+
+```json
+{
+  "title": "控制指标：教学案例控规参数表 2026",
+  "type": "planning",
+  "collectedAt": "2026-05-23",
+  "precision": "地块级示意",
+  "confidence": 0.8,
+  "license": "project fixture"
+}
+```
+
+Legacy string entries remain valid for compatibility, but the validator reports them as upgrade hints and data quality scoring gives structured evidence more confidence.
 
 ### Parcel
 
@@ -151,7 +169,7 @@ The score currently uses prototype weights across compliance, public service, mo
 
 - `Intersection` should become an explicit object instead of being derived every run.
 - `RuleSource` should become an object with jurisdiction, version, effective date, source URL, and clause.
-- `EvidenceSource` should become structured instead of string arrays.
+- `EvidenceSource` should gain source registry IDs, attachments, reviewer status, and version history.
 - `ServiceArea` should support walking-network distance instead of straight-line distance.
 - `Indicator` should store scenario dashboard metrics.
 - Evaluation weights should become explicit `EvaluationModel` metadata.

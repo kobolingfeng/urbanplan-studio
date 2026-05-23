@@ -83,8 +83,39 @@
         "id": { "type": "string", "minLength": 1 },
         "type": { "type": "string" },
         "name": { "type": "string", "minLength": 1 },
-        "evidence": { "type": "array", "items": { "type": "string" } }
+        "evidence": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              { "$ref": "#/$defs/evidenceSource" }
+            ]
+          }
+        }
       }
+    },
+    "evidenceSource": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "description": "Suggested values: regulation, planning, survey, basemap, poi, remote_sensing, traffic, community, user_input, prototype, other."
+        },
+        "collectedAt": { "type": "string" },
+        "precision": { "type": "string" },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Use either 0-1 or 0-100 confidence scale."
+        },
+        "license": { "type": "string" },
+        "url": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": true
     },
     "parcel": {
       "allOf": [

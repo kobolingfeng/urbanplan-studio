@@ -8,6 +8,16 @@ import {
     type ResizeEdge,
 } from './api';
 import {
+    evidenceSearchText,
+    formatEvidenceForEditing,
+    isStructuredEvidence,
+    normalizeEvidenceList,
+    parseEvidenceText,
+    type EvidenceItem,
+    type EvidenceSource,
+    type EvidenceSourceType,
+} from './evidence';
+import {
     buildDataQualityReport,
     buildScenarioComparisonReport,
     calculateDataQuality,
@@ -48,7 +58,7 @@ type ObjectBase = {
     id: string;
     type: ObjectType;
     name: string;
-    evidence: string[];
+    evidence: EvidenceItem[];
 };
 
 type ParcelScenarioValue = {
@@ -254,6 +264,18 @@ const visibleLayers: Record<LayerKey, boolean> = {
     constraints: true,
 };
 
+function evidenceSource(
+    title: string,
+    type: EvidenceSourceType,
+    collectedAt: string,
+    precision = '教学案例级',
+    confidence = 0.72,
+    license = '课程演示',
+    note = '',
+): EvidenceSource {
+    return { title, type, collectedAt, precision, confidence, license, ...(note ? { note } : {}) };
+}
+
 function createDemoProject(): UrbanPlanProject {
     return {
         format: 'UPF',
@@ -287,7 +309,10 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'parcel_01',
                 type: 'parcel',
                 name: 'A-01 居住更新地块',
-                evidence: ['地块边界：演示测绘数据', '控制指标：深圳规则库样例'],
+                evidence: [
+                    evidenceSource('地块边界：演示测绘数据', 'basemap', '2026-05-01', '地块级示意', 0.74),
+                    evidenceSource('控制指标：深圳规则库样例', 'planning', '2026-05-01', '教学规则集', 0.70),
+                ],
                 points: rect(120, 110, 260, 170),
                 landUseCode: '0701',
                 landUseName: '城镇住宅用地',
@@ -302,7 +327,10 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'parcel_02',
                 type: 'parcel',
                 name: 'A-02 商住混合地块',
-                evidence: ['现状建筑轮廓：公开底图模拟', 'POI：商业和办公活动密集'],
+                evidence: [
+                    evidenceSource('现状建筑轮廓：公开底图模拟', 'basemap', '2026-05-01', '地块级示意', 0.68),
+                    evidenceSource('POI：商业和办公活动密集', 'poi', '2026-05-01', '片区级示意', 0.66),
+                ],
                 points: rect(410, 120, 220, 165),
                 landUseCode: '0901/0701',
                 landUseName: '商业商务与居住混合用地',
@@ -317,7 +345,10 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'parcel_03',
                 type: 'parcel',
                 name: 'B-01 老旧厂房地块',
-                evidence: ['夜间灯光：活跃度偏低', '产业空间：低效利用样例'],
+                evidence: [
+                    evidenceSource('夜间灯光：活跃度偏低', 'remote_sensing', '2026-05-01', '片区级示意', 0.62),
+                    evidenceSource('产业空间：低效利用样例', 'survey', '2026-05-01', '教学案例级', 0.70),
+                ],
                 points: rect(155, 335, 245, 150),
                 landUseCode: '1001',
                 landUseName: '工业用地',
@@ -332,7 +363,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'road_01',
                 type: 'road',
                 name: '东侧城市主干路',
-                evidence: ['道路等级：现状路网样例'],
+                evidence: [evidenceSource('道路等级：现状路网样例', 'traffic', '2026-05-01', '道路级示意', 0.72)],
                 points: [{ x: 740, y: 70 }, { x: 740, y: 560 }],
                 level: '主干路',
                 redLineWidthM: 40,
@@ -342,7 +373,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'road_02',
                 type: 'road',
                 name: '片区生活性支路',
-                evidence: ['道路红线：控规路网样例'],
+                evidence: [evidenceSource('道路红线：控规路网样例', 'planning', '2026-05-01', '道路级示意', 0.70)],
                 points: [{ x: 80, y: 315 }, { x: 860, y: 315 }],
                 level: '支路',
                 redLineWidthM: 18,
@@ -352,7 +383,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'road_03',
                 type: 'road',
                 name: '慢行共享街巷',
-                evidence: ['15 分钟生活圈：慢行补短板样例'],
+                evidence: [evidenceSource('15 分钟生活圈：慢行补短板样例', 'community', '2026-05-01', '片区级示意', 0.69)],
                 points: [{ x: 525, y: 90 }, { x: 525, y: 555 }],
                 level: '慢行街巷',
                 redLineWidthM: 12,
@@ -362,7 +393,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'facility_01',
                 type: 'facility',
                 name: '现状社区卫生服务站',
-                evidence: ['POI：社区卫生服务'],
+                evidence: [evidenceSource('POI：社区卫生服务', 'poi', '2026-05-01', '设施点位示意', 0.67)],
                 point: { x: 650, y: 226 },
                 kind: '社区卫生',
                 capacity: 6500,
@@ -373,7 +404,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'facility_02',
                 type: 'facility',
                 name: '规划社区养老服务点',
-                evidence: ['完整社区补短板推演'],
+                evidence: [evidenceSource('完整社区补短板推演', 'planning', '2026-05-01', '方案推演级', 0.71)],
                 point: { x: 438, y: 410 },
                 kind: '社区养老',
                 capacity: 120,
@@ -384,7 +415,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'facility_03',
                 type: 'facility',
                 name: '规划幼儿园',
-                evidence: ['居住人口推演'],
+                evidence: [evidenceSource('居住人口推演', 'planning', '2026-05-01', '方案推演级', 0.70)],
                 point: { x: 276, y: 242 },
                 kind: '幼儿园',
                 capacity: 180,
@@ -395,7 +426,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'entrance_01',
                 type: 'entrance',
                 name: 'A-01 机动车出入口',
-                evidence: ['方案绘制'],
+                evidence: [evidenceSource('方案绘制', 'user_input', '2026-05-01', '示意线位', 0.58)],
                 point: { x: 382, y: 232 },
                 entranceType: '机动车',
                 parcelId: 'parcel_01',
@@ -405,7 +436,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'entrance_02',
                 type: 'entrance',
                 name: 'A-02 机动车出入口',
-                evidence: ['方案绘制'],
+                evidence: [evidenceSource('方案绘制', 'user_input', '2026-05-01', '示意线位', 0.58)],
                 point: { x: 735, y: 205 },
                 entranceType: '机动车',
                 parcelId: 'parcel_02',
@@ -415,7 +446,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'open_01',
                 type: 'openSpace',
                 name: '中心口袋公园',
-                evidence: ['公共开放空间优化样例'],
+                evidence: [evidenceSource('公共开放空间优化样例', 'planning', '2026-05-01', '方案推演级', 0.70)],
                 points: rect(430, 330, 120, 95),
                 kind: '口袋公园',
             },
@@ -423,7 +454,7 @@ function createDemoProject(): UrbanPlanProject {
                 id: 'constraint_01',
                 type: 'constraint',
                 name: '历史风貌协调区',
-                evidence: ['保护控制线：演示数据'],
+                evidence: [evidenceSource('保护控制线：演示数据', 'planning', '2026-05-01', '片区级示意', 0.68)],
                 points: rect(90, 80, 330, 250),
                 kind: '历史风貌控制',
             },
@@ -501,7 +532,9 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
         const base = object as PlanObject;
         base.id = base.id || `object_${Date.now().toString(36)}`;
         base.name = base.name || base.id;
-        base.evidence = Array.isArray(base.evidence) ? base.evidence : ['导入数据缺少证据来源，已由兼容层标记'];
+        base.evidence = normalizeEvidenceList(base.evidence, [
+            evidenceSource('导入数据缺少证据来源，已由兼容层标记', 'user_input', '导入时', '待复核', 0.25, '用户导入'),
+        ]);
         if (base.type === 'parcel') {
             base.points = validPoints(base.points, rect(120, 120, 120, 90));
             base.controls = {
@@ -584,6 +617,7 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
         if (!object.id) findings.push({ severity: 'warning', objectId, message: '对象缺少 id，兼容层会生成临时 id。' });
         if (!object.name) findings.push({ severity: 'info', objectId, message: '对象缺少名称，兼容层会使用 id 代替。' });
         if (!object.evidence?.length) findings.push({ severity: 'warning', objectId, message: '对象缺少证据来源，会降低数据质量和可信度。' });
+        else if (!object.evidence.some(isStructuredEvidence)) findings.push({ severity: 'info', objectId, message: '对象证据仍是旧版字符串，建议升级为结构化 EvidenceSource。' });
         if (object.type === 'parcel') {
             const parcel = object as Partial<Parcel>;
             if (!Array.isArray(parcel.points) || parcel.points.length < 3) findings.push({ severity: 'warning', objectId, message: '地块几何点不足，兼容层会补默认矩形。' });
@@ -833,7 +867,7 @@ function objectMatchesListFilter(object: PlanObject): boolean {
             object.id,
             object.name,
             object.type,
-            object.evidence.join(' '),
+            evidenceSearchText(object.evidence),
             objectMeta(object),
         ].join(' ').toLowerCase();
         if (!haystack.includes(keyword)) return false;
@@ -1124,8 +1158,8 @@ function renderInspector() {
     if (object.type === 'constraint') renderReadonlyInspector(object, [['控制线类型', object.kind], ['覆盖面积', formatArea(areaSqm(object.points))]]);
 
     ui.inspector.append(fieldGrid([
-        textAreaField('证据来源（每行一条）', object.evidence.join('\n'), next => {
-            object.evidence = parseEvidenceList(next);
+        textAreaField('证据来源（每行一条）', formatEvidenceForEditing(object.evidence), next => {
+            object.evidence = parseEvidenceText(next);
             renderAll();
         }),
     ], true));
@@ -1136,14 +1170,8 @@ function renderInspector() {
         ['规则问题', objectChecks.length ? `${objectChecks.length} 条` : '暂无'],
         ['综合评分', parcelEvaluation ? `${parcelEvaluation.score}/100 · ${parcelEvaluation.band}` : '未纳入地块评分'],
         ['证据条数', `${object.evidence.length} 条`],
+        ['结构化证据', `${object.evidence.filter(isStructuredEvidence).length} 条`],
     ]));
-}
-
-function parseEvidenceList(text: string): string[] {
-    return text
-        .split(/\r?\n|；|;/)
-        .map(item => item.trim())
-        .filter(Boolean);
 }
 
 function renderParcelInspector(parcel: Parcel) {
@@ -1436,7 +1464,7 @@ function addObjectAt(point: Point) {
             id,
             type: 'parcel',
             name: `新建地块 ${countType('parcel') + 1}`,
-            evidence: ['用户在语义规划画布中新建'],
+            evidence: [evidenceSource('用户在语义规划画布中新建', 'user_input', '当前会话', '用户绘制', 0.50, '用户输入')],
             points: rect(point.x - 60, point.y - 45, 120, 90),
             landUseCode: '0701',
             landUseName: '城镇住宅用地',
@@ -1451,7 +1479,7 @@ function addObjectAt(point: Point) {
             id,
             type: 'facility',
             name: `新建公共设施 ${countType('facility') + 1}`,
-            evidence: ['用户在语义规划画布中新建'],
+            evidence: [evidenceSource('用户在语义规划画布中新建', 'user_input', '当前会话', '用户绘制', 0.50, '用户输入')],
             point,
             kind: '社区养老',
             capacity: 80,
@@ -1468,7 +1496,7 @@ function addObjectAt(point: Point) {
             id,
             type: 'entrance',
             name: `新建出入口 ${countType('entrance') + 1}`,
-            evidence: ['用户在语义规划画布中新建'],
+            evidence: [evidenceSource('用户在语义规划画布中新建', 'user_input', '当前会话', '用户绘制', 0.50, '用户输入')],
             point,
             entranceType: '机动车',
             parcelId: parcel?.id ?? '',
@@ -1645,6 +1673,7 @@ function buildReport(): string {
         '',
         `- 数据质量分：${quality.score}/100`,
         `- 证据覆盖率：${quality.evidenceCoverage.toFixed(1)}%`,
+        `- 结构化证据覆盖率：${quality.structuredEvidenceCoverage.toFixed(1)}%`,
         `- 导入审计：${importFindings.length} 项`,
         `- 规则依据：${quality.basisCount} 条`,
         '',
@@ -1752,7 +1781,7 @@ function buildCaseValidationReport(): string {
         `| RQ2：规则校核能否形成可解释问题清单 | ${checks.length} 条规则结果，${quality.ruleCatalog.length} 类规则触发 | ${errors.length ? '存在硬性风险' : '未发现硬性错误'} |`,
         `| RQ3：多方案比较能否支撑方案选择 | ${decisionRows.length} 个方案进入决策矩阵 | ${decisionRows.length >= 2 ? '可比较' : '需增加对照方案'} |`,
         `| RQ4：评价结果对权重变化是否稳健 | ${robustWinner ? `${robustWinner[0]} 获得 ${robustWinner[1]}/${EVALUATION_WEIGHT_PROFILES.length} 个模型第一` : '暂无稳健推荐'} | ${agreement >= 0.5 ? '可讨论稳健性' : '需说明价值偏好影响'} |`,
-        `| RQ5：数据来源是否足以支撑论文答辩 | 证据覆盖率 ${quality.evidenceCoverage.toFixed(1)}%，质量分 ${quality.score}/100 | ${quality.score >= 80 ? '较充分' : '需补充来源'} |`,
+        `| RQ5：数据来源是否足以支撑论文答辩 | 证据覆盖率 ${quality.evidenceCoverage.toFixed(1)}%，结构化覆盖率 ${quality.structuredEvidenceCoverage.toFixed(1)}%，质量分 ${quality.score}/100 | ${quality.score >= 80 ? '较充分' : '需补充来源'} |`,
         '',
         '## 二、数据与对象概况',
         '',

@@ -1,4 +1,9 @@
 import {
+    evidenceCompletenessScore,
+    isStructuredEvidence,
+    type EvidenceItem,
+} from './evidence';
+import {
     areaSqm,
     centroid,
     distance,
@@ -35,7 +40,7 @@ type PlanningObjectLike = {
     id?: string;
     type?: string;
     name?: string;
-    evidence?: string[];
+    evidence?: EvidenceItem[];
     points?: Point[];
     point?: Point;
     kind?: string;
@@ -414,12 +419,13 @@ function evidenceDimension(project: ProjectLike, checks: CheckLike[], recommenda
     const score = evidenceConfidence(project, checks, recommendations);
     const objects = project.objects ?? [];
     const evidenceObjects = objects.filter(object => object.evidence?.length).length;
+    const structuredObjects = objects.filter(object => object.evidence?.some(isStructuredEvidence)).length;
     return {
         id: 'evidence',
         name: '证据可信度',
         weight,
         score,
-        reason: `${evidenceObjects}/${objects.length || 1} 个对象有证据来源，规则依据 ${project.ruleset?.basis?.length ?? 0} 条`,
+        reason: `${evidenceObjects}/${objects.length || 1} 个对象有证据来源，${structuredObjects} 个对象含结构化 EvidenceSource，规则依据 ${project.ruleset?.basis?.length ?? 0} 条`,
     };
 }
 
@@ -436,7 +442,9 @@ function evaluateParcel(parcel: PlanningObjectLike, scenarioId: string, checks: 
     const farScore = farMax ? clamp(100 - Math.max(0, far - farMax) * 35 - Math.max(0, farMax * 0.45 - far) * 8) : 80;
     const greenScore = targetRatioScore(greenRatio, greenMin);
     const serviceScore = targetRatioScore(serviceRatio, 0.025);
-    const evidenceScore = parcel.evidence?.length ? 92 : 45;
+    const evidenceScore = parcel.evidence?.length
+        ? Math.max(60, average(parcel.evidence.map(evidenceCompletenessScore)))
+        : 45;
     const score = roundScore(compliance * 0.35 + greenScore * 0.20 + serviceScore * 0.20 + farScore * 0.15 + evidenceScore * 0.10);
     return {
         objectId: String(parcel.id ?? ''),
@@ -543,10 +551,15 @@ function evidenceConfidence(project: ProjectLike, checks: CheckLike[], recommend
     const evidenceCoverage = objects.length
         ? objects.filter(object => object.evidence?.length).length / objects.length * 100
         : 100;
+    const structuredEvidenceCoverage = objects.length
+        ? objects.filter(object => object.evidence?.some(isStructuredEvidence)).length / objects.length * 100
+        : 100;
+    const evidenceItems = objects.flatMap(object => object.evidence ?? []);
+    const evidenceQuality = evidenceItems.length ? average(evidenceItems.map(evidenceCompletenessScore)) : 45;
     const basisScore = Math.min(100, (project.ruleset?.basis?.length ?? 0) * 18 + 28);
     const prototypePenalty = checks.filter(check => String(check.source ?? '').includes('原型')).length * 3;
     const recommendationPenalty = Math.max(0, recommendations.length - 8) * 2;
-    return roundScore(average([evidenceCoverage, basisScore]) - prototypePenalty - recommendationPenalty);
+    return roundScore(average([evidenceCoverage, structuredEvidenceCoverage, evidenceQuality, basisScore]) - prototypePenalty - recommendationPenalty);
 }
 
 function parcelValue(parcel: PlanningObjectLike, scenarioId: string) {

@@ -28,7 +28,16 @@
       "id": "parcel_min_01",
       "type": "parcel",
       "name": "最小住宅地块",
-      "evidence": ["examples/minimal.upf"],
+      "evidence": [
+        {
+          "title": "examples/minimal.upf",
+          "type": "prototype",
+          "collectedAt": "2026-05-23",
+          "precision": "最小导入样例",
+          "confidence": 0.8,
+          "license": "project fixture"
+        }
+      ],
       "points": [
         { "x": 160, "y": 140 },
         { "x": 360, "y": 140 },

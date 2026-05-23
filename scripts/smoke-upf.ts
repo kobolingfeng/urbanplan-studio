@@ -39,6 +39,8 @@ assert(buildUpfValidationReport(minimalIssues).includes('UPF 结构校验报告'
 const minimal = parseUpfText(minimalText, fallback);
 assert(minimal.project.project?.id === 'minimal_demo', 'minimal project id mismatch');
 assert(minimal.activeScenarioId === 'scenario_base', 'minimal active scenario mismatch');
+const minimalObjects = minimal.project.objects as Array<{ evidence?: unknown[] }> | undefined;
+assert(typeof minimalObjects?.[0]?.evidence?.[0] === 'object', 'minimal evidence should demonstrate structured EvidenceSource');
 
 const roundTrip = createUpfDocument(minimal.project, minimal.activeScenarioId, [], [], {
     scenarioId: minimal.activeScenarioId,
@@ -69,7 +71,14 @@ const analyticsFixture: Parameters<typeof calculateDataQuality>[0] = {
             id: 'parcel_a',
             type: 'parcel',
             name: 'Parcel A',
-            evidence: ['fixture survey'],
+            evidence: [{
+                title: 'fixture survey',
+                type: 'survey',
+                collectedAt: '2026-05-23',
+                precision: 'parcel fixture',
+                confidence: 0.9,
+                license: 'test',
+            }],
             points: [
                 { x: 0, y: 0 },
                 { x: 100, y: 0 },
@@ -108,8 +117,12 @@ const analyticsFixture: Parameters<typeof calculateDataQuality>[0] = {
 };
 const quality = calculateDataQuality(analyticsFixture, [], []);
 assert(quality.score < 100, 'data quality should penalize missing scenario values and dangling references');
+assert(quality.structuredEvidenceCoverage > 0 && quality.structuredEvidenceCoverage < 100, 'mixed evidence should report partial structured coverage');
+assert(quality.averageEvidenceConfidence > 0, 'evidence confidence should be calculated');
 assert(quality.entranceReferenceIssues.length === 2, 'dangling entrance references should be reported');
-assert(buildDataQualityReport(analyticsFixture, [], []).includes('引用完整性问题'), 'quality report should expose reference issues');
+const qualityReport = buildDataQualityReport(analyticsFixture, [], []);
+assert(qualityReport.includes('引用完整性问题'), 'quality report should expose reference issues');
+assert(qualityReport.includes('结构化证据覆盖率'), 'quality report should expose structured evidence coverage');
 const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
 assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
 

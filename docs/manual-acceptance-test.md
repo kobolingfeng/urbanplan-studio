@@ -32,7 +32,7 @@ Expected:
 14. Click `对比`.
 15. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
 16. Click `质检`.
-17. Confirm a data quality score, UPF structure validation report, rule catalog metadata, evidence coverage, evidence type distribution, and prototype-rule notes appear.
+17. Confirm a data quality score, UPF structure validation report, rule catalog metadata, evidence coverage, structured evidence coverage, evidence type distribution, and prototype-rule notes appear.
 18. Click `验证`.
 19. Confirm the report includes research questions, data overview, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
 20. Click `报告`.
@@ -46,7 +46,7 @@ Expected:
 2. Click the canvas to create a new parcel.
 3. Confirm the tool returns to select mode.
 4. Edit the new parcel values in the inspector.
-5. Edit `证据来源（每行一条）`, then run quality check and confirm evidence counts update.
+5. Edit `证据来源（每行一条）` with one plain text line and one JSON EvidenceSource line, then run quality check and confirm evidence counts plus structured evidence coverage update.
 6. Use the object search and `高风险` filter; expected: the list narrows without changing the selected object.
 7. Press `Esc`; expected: select mode remains active.
 8. Press `Delete`; expected: selected deletable object is removed, unless it is referenced.

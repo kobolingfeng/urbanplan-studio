@@ -1,3 +1,4 @@
+import type { EvidenceItem } from './evidence';
 import {
     areaSqm,
     centroid,
@@ -15,7 +16,7 @@ type RuleObject = {
     id: string;
     type: string;
     name: string;
-    evidence?: string[];
+    evidence?: EvidenceItem[];
     points?: Point[];
     point?: Point;
     kind?: string;
