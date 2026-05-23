@@ -213,6 +213,17 @@ const RULE_CATALOG_DRAFT: RuleCatalogDraft[] = [
         prototype: false,
     },
     {
+        id: 'entrance_road_geometry_missing',
+        name: '出入口关联道路几何缺失',
+        domain: '数据完整性',
+        defaultSeverity: 'error',
+        jurisdiction: 'UPF 0.1',
+        basis: 'UPF 几何完整性规则',
+        clause: 'entrance.roadId 指向的 road 必须有可计算线位',
+        formula: 'roadIds.has(entrance.roadId) && !road.points.length',
+        prototype: false,
+    },
+    {
         id: 'entrance_arterial_risk',
         name: '机动车出入口主干路开口风险',
         domain: '交通组织',
@@ -458,7 +469,8 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
     }
 
-    const parcelIds = new Set(parcels.map(parcel => parcel.id));
+    const allParcelIds = new Set(project.objects.filter(object => object.type === 'parcel').map(parcel => parcel.id));
+    const allRoadIds = new Set(project.objects.filter(object => object.type === 'road').map(road => road.id));
     for (const road of roads) {
         const width = number(road.redLineWidthM);
         const minimum = roadRedLineMinimum(road);
@@ -476,7 +488,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
     }
 
     for (const entrance of project.objects.filter(object => object.type === 'entrance' && object.point)) {
-        if (!entrance.parcelId || !parcelIds.has(entrance.parcelId)) {
+        if (!entrance.parcelId || !allParcelIds.has(entrance.parcelId)) {
             add({
                 ruleId: 'entrance_dangling_parcel',
                 objectId: entrance.id,
@@ -488,7 +500,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
             });
         }
         const road = roads.find(item => item.id === entrance.roadId);
-        if (!road) {
+        if (!entrance.roadId || !allRoadIds.has(entrance.roadId)) {
             add({
                 ruleId: 'entrance_dangling_road',
                 objectId: entrance.id,
@@ -497,6 +509,18 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 title: '出入口道路引用缺失',
                 message: '出入口绑定的道路不存在，请重新选择关联道路。',
                 source: ruleSource('entrance_dangling_road', project.ruleset.version),
+            });
+            continue;
+        }
+        if (!road) {
+            add({
+                ruleId: 'entrance_road_geometry_missing',
+                objectId: entrance.id,
+                objectName: entrance.name,
+                severity: 'error',
+                title: '出入口关联道路缺少线位',
+                message: '出入口绑定的道路对象存在，但缺少可计算线位；请补齐道路 points 后再复核距离和交叉口间距。',
+                source: ruleSource('entrance_road_geometry_missing', project.ruleset.version),
             });
             continue;
         }

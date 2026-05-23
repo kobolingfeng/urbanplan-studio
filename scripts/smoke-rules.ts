@@ -133,6 +133,7 @@ for (const id of [
     assert(catalogIds.has(id), `${id} missing from rule catalog`);
 }
 
+assert(catalogIds.has('entrance_road_geometry_missing'), 'entrance road geometry rule missing from rule catalog');
 assert(RULE_CATALOG.length >= 15, 'rule catalog should cover current rules');
 assert(RULE_CATALOG.every(rule => rule.source?.jurisdiction && rule.source.title && rule.source.clause && rule.source.level), 'rule catalog should expose structured RuleSource');
 const catalogReport = buildRuleCatalogReport(result.checks);

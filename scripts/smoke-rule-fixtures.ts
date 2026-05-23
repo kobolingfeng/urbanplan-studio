@@ -27,6 +27,13 @@ function assertTriggers(name: string, objects: FixtureObject[], expectedRuleIds:
     }
 }
 
+function assertDoesNotTrigger(name: string, objects: FixtureObject[], unexpectedRuleIds: string[]) {
+    const ids = new Set(run(objects).map(check => check.ruleId));
+    for (const ruleId of unexpectedRuleIds) {
+        assert(!ids.has(ruleId), `${name} should not trigger ${ruleId}`);
+    }
+}
+
 function rect(x: number, y: number, width: number, height: number): Point[] {
     return [
         { x, y },
@@ -160,6 +167,27 @@ assertTriggers('entrance integrity and geometry', [
     'entrance_dangling_parcel',
     'entrance_dangling_road',
 ]);
+
+const entranceWithRoadMissingGeometry = [
+    badParcel,
+    {
+        id: 'road_without_geometry',
+        type: 'road',
+        name: 'Road Without Geometry',
+        level: '支路',
+    },
+    {
+        id: 'entrance_to_geometry_gap',
+        type: 'entrance',
+        name: 'Entrance To Geometry Gap',
+        entranceType: '机动车',
+        parcelId: 'parcel_bad_controls',
+        roadId: 'road_without_geometry',
+        point: { x: 20, y: 20 },
+    },
+];
+assertTriggers('entrance road geometry gap', entranceWithRoadMissingGeometry, ['entrance_road_geometry_missing']);
+assertDoesNotTrigger('entrance road geometry gap', entranceWithRoadMissingGeometry, ['entrance_dangling_road']);
 
 assertTriggers('road redline width', [
     {
