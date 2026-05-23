@@ -27,3 +27,14 @@ jobs:
 
       - name: Run verification suite
         run: bun run verify
+
+      - name: Run release verification
+        run: bun run verify:release
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: urbanplan-studio-release
+          path: |
+            release/*.zip
+            release/SHA256SUMS.txt

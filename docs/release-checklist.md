@@ -7,7 +7,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Run `bun run clean`.
 - Run `bun run verify`, including `smoke:rule-fixtures`.
 - Run `bun run verify:release`.
-- Confirm the GitHub Actions `Verify` workflow is green for the pushed commit.
+- Confirm the GitHub Actions `Verify` workflow is green for the pushed commit and contains the uploaded release artifact.
 - Confirm `dist` only contains:
   - `app.config.json`
   - `app.exe`

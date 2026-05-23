@@ -125,7 +125,7 @@ bun run verify:release
 - 新增 `upf-validation.ts`、规则目录元数据和 JSON Schema 草案，强化格式规范与规则可追溯性。
 - 新增结构化 EvidenceSource，UPF Schema、运行时校验、数据质量报告和综合评分会识别证据类型、时间、精度、许可和可信度。
 - 新增结构化 RuleSource，规则目录和规则结果会显式区分技术导则、格式约束和原型启发式来源。
-- 新增 GitHub Actions `Verify` 工作流，在 Windows runner 上安装 Bun、准备原生依赖并执行 `bun run verify`。
+- 新增 GitHub Actions `Verify` 工作流，在 Windows runner 上安装 Bun、准备原生依赖、执行 `verify`/`verify:release` 并上传发布包 artifact。
 
 ## 说明
 
