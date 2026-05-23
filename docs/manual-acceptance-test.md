@@ -49,6 +49,13 @@ Expected:
 7. Press `Esc`; expected: select mode remains active.
 8. Press `Delete`; expected: selected deletable object is removed, unless it is referenced.
 
+## Keyboard Flow
+
+1. Press `Ctrl+F`; expected: object search receives focus.
+2. Press `Ctrl+Enter`; expected: checks and evaluation rerun.
+3. Press `Ctrl+S`; expected: save dialog or browser download for UPF.
+4. Open a report modal, press `Ctrl+S`; expected: the modal content saves with its report filename.
+
 ## Scenario Optimization
 
 1. Duplicate the current scenario.

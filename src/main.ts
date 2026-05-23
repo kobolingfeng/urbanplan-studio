@@ -1973,7 +1973,35 @@ function bindControls() {
     window.addEventListener('keydown', (event) => {
         if (ui.modal.classList.contains('open')) {
             if (event.key === 'Escape') ui.modal.classList.remove('open');
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+                event.preventDefault();
+                void saveText(modalDefaultName, modalContent);
+            }
             return;
+        }
+        if (event.ctrlKey || event.metaKey) {
+            const key = event.key.toLowerCase();
+            if (key === 's') {
+                event.preventDefault();
+                void saveText(`${project.project.id}.upf`, buildUpf());
+                return;
+            }
+            if (key === 'o') {
+                event.preventDefault();
+                void loadUpf();
+                return;
+            }
+            if (key === 'f') {
+                event.preventDefault();
+                ui.objectSearch.focus();
+                ui.objectSearch.select();
+                return;
+            }
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                renderAll();
+                return;
+            }
         }
         if (event.key === 'Escape') {
             activeTool = 'select';
