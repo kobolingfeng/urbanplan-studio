@@ -119,7 +119,7 @@ bun run verify:release
 - 运行时校验会拒绝声明为 `EPSG:4490` 但坐标明显来自演示画布或投影坐标的混合 CRS 文件。
 - 历史风貌风险不再只看地块质心，改为判断地块与控制线是否重叠。
 - 删除对象时阻止产生出入口悬挂引用。
-- 新增 `smoke:geometry`、`smoke:upf`、`smoke:rules`、`smoke:rule-fixtures`、`smoke:static`、`smoke:release` 和 `verify` 脚本。
+- 新增 `smoke:geometry`、`smoke:upf`、`smoke:rules`、`smoke:rule-fixtures`、`smoke:geojson`、`smoke:static`、`smoke:release` 和 `verify` 脚本。
 - 新增 `planning-evaluation.ts` 与 `smoke:evaluation`，把多指标方案评价纳入自动验证。
 - 新增毕业设计方案与评价方法文档，便于把原型功能映射到论文研究问题、实验设计和答辩材料。
 - 新增案例验证包导出，把方案评分、敏感性、数据质量、实验记录和 CSV 附录整合为论文证据链。

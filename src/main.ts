@@ -41,6 +41,7 @@ import {
     rect,
     type Point,
 } from './planning-geometry';
+import { buildGeoJsonText } from './planning-geojson';
 import { buildRuleCatalogReport, RULE_CATALOG, runPlanningRules } from './planning-rules';
 import { buildUpfValidationReport, validateUpfDocument, type UpfValidationIssue } from './upf-validation';
 
@@ -1633,83 +1634,7 @@ function buildUpf(): string {
 }
 
 function buildGeoJson(): string {
-    const features = project.objects.map(object => ({
-        type: 'Feature',
-        id: object.id,
-        geometry: geoJsonGeometry(object),
-        properties: geoJsonProperties(object),
-    })).filter(feature => feature.geometry);
-    return JSON.stringify({
-        type: 'FeatureCollection',
-        name: project.project.name,
-        upf: {
-            formatVersion: project.formatVersion,
-            activeScenarioId,
-            crs: project.project.crs,
-            unitSystem: UNIT_SYSTEM,
-            note: 'Coordinates are exported in the UPF project coordinate space; transform before mixing with GIS layers.',
-        },
-        features,
-    }, null, 2);
-}
-
-function geoJsonGeometry(object: PlanObject) {
-    if (object.type === 'parcel' || object.type === 'openSpace' || object.type === 'constraint') {
-        return {
-            type: 'Polygon',
-            coordinates: [closedCoordinates(object.points)],
-        };
-    }
-    if (object.type === 'road') {
-        return {
-            type: 'LineString',
-            coordinates: object.points.map(point => [point.x, point.y]),
-        };
-    }
-    if (object.type === 'facility' || object.type === 'entrance') {
-        return {
-            type: 'Point',
-            coordinates: [object.point.x, object.point.y],
-        };
-    }
-    return null;
-}
-
-function geoJsonProperties(object: PlanObject): Record<string, unknown> {
-    const base: Record<string, unknown> = {
-        upfId: object.id,
-        upfType: object.type,
-        name: object.name,
-        evidenceCount: object.evidence.length,
-    };
-    if (object.type === 'parcel') {
-        const value = getParcelScenario(object);
-        return {
-            ...base,
-            landUseCode: object.landUseCode,
-            landUseName: object.landUseName,
-            areaSqm: Math.round(areaSqm(object.points)),
-            far: value.far,
-            buildingCoverage: value.buildingCoverage,
-            greenRatio: value.greenRatio,
-            residentialGfaSqm: value.residentialGfaSqm,
-            publicServiceGfaSqm: value.publicServiceGfaSqm,
-            updateMode: value.updateMode,
-        };
-    }
-    if (object.type === 'road') return { ...base, level: object.level, redLineWidthM: object.redLineWidthM, lanes: object.lanes };
-    if (object.type === 'facility') return { ...base, kind: object.kind, capacity: object.capacity, serviceRadiusM: object.serviceRadiusM, planned: object.planned };
-    if (object.type === 'entrance') return { ...base, entranceType: object.entranceType, parcelId: object.parcelId, roadId: object.roadId };
-    if (object.type === 'openSpace' || object.type === 'constraint') return { ...base, kind: object.kind, areaSqm: Math.round(areaSqm(object.points)) };
-    return base;
-}
-
-function closedCoordinates(points: Point[]): number[][] {
-    const coordinates = points.map(point => [point.x, point.y]);
-    const first = coordinates[0];
-    const last = coordinates[coordinates.length - 1];
-    if (first && last && (first[0] !== last[0] || first[1] !== last[1])) coordinates.push([...first]);
-    return coordinates;
+    return buildGeoJsonText(project, activeScenarioId, UNIT_SYSTEM);
 }
 
 function buildReport(): string {

@@ -21,6 +21,7 @@ src/
   main.ts                UI state, rendering, inspector, modal, native integration
   planning-assumptions.ts Shared demand assumptions for population and service-capacity estimation
   planning-geometry.ts   Unit system and pure geometry helpers
+  planning-geojson.ts    UPF semantic object to GeoJSON FeatureCollection export
   evidence.ts            EvidenceSource parsing, display, classification, and confidence scoring
   planning-rules.ts      Active rule runner and recommendations
   planning-evaluation.ts Multi-criteria scenario scoring and decision reports
@@ -42,8 +43,9 @@ src/
 4. Rule smoke tests.
 5. Rule fixture smoke tests for rule-group regressions.
 6. Scenario evaluation smoke tests.
-7. Full frontend + native build.
-8. Static build smoke tests.
+7. GeoJSON export smoke tests.
+8. Full frontend + native build.
+9. Static build smoke tests.
 
 Release verification:
 
