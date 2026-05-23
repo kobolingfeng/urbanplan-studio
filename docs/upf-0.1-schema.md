@@ -43,6 +43,7 @@ The runtime validator checks:
 - supported object types;
 - parcel control indicators and scenario values;
 - point and polygon geometry shape;
+- CRS consistency for `EPSG:4490` coordinates;
 - entrance references to existing parcel and road IDs;
 - missing evidence, unstructured evidence, incomplete EvidenceSource metadata, and incomplete scenario descriptions.
 

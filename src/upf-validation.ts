@@ -122,6 +122,8 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         }
     });
 
+    validateCoordinateReference(project, manifest, objects, add);
+
     return issues;
 }
 
@@ -155,6 +157,49 @@ function validateEvidenceList(
             add('warning', `${itemPath}.confidence`, 'confidence 应为 0-1 或 0-100 区间数值。');
         }
     });
+}
+
+function validateCoordinateReference(
+    project: AnyRecord | undefined,
+    manifest: AnyRecord | undefined,
+    objects: unknown[],
+    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+) {
+    const crs = String(project?.crs ?? '').trim();
+    const unitSystem = asRecord(manifest?.unitSystem);
+    const unitName = String(unitSystem?.name ?? '').trim();
+    if (crs && unitName && crs !== unitName && unitName === 'DemoCanvasMetric') {
+        add('warning', 'project.crs', `project.crs 为 ${crs}，但 manifest.unitSystem 为 ${unitName}，请确认是否混用了真实 CRS 与演示画布单位。`);
+    }
+    if (crs !== 'EPSG:4490') return;
+    for (const item of collectObjectPoints(objects)) {
+        const { point, path } = item;
+        if (point.x < -180 || point.x > 180 || point.y < -90 || point.y > 90) {
+            add('error', path, `EPSG:4490 应使用经纬度坐标，当前点 (${point.x}, ${point.y}) 超出范围，疑似混入画布或投影坐标。`);
+            return;
+        }
+    }
+}
+
+function collectObjectPoints(objects: unknown[]): Array<{ path: string; point: { x: number; y: number } }> {
+    const points: Array<{ path: string; point: { x: number; y: number } }> = [];
+    objects.forEach((object, index) => {
+        const item = asRecord(object);
+        if (!item) return;
+        const point = asRecord(item.point);
+        if (point && isFiniteNumber(point.x) && isFiniteNumber(point.y)) {
+            points.push({ path: `objects[${index}].point`, point: { x: point.x, y: point.y } });
+        }
+        if (Array.isArray(item.points)) {
+            item.points.forEach((candidate, pointIndex) => {
+                const next = asRecord(candidate);
+                if (next && isFiniteNumber(next.x) && isFiniteNumber(next.y)) {
+                    points.push({ path: `objects[${index}].points[${pointIndex}]`, point: { x: next.x, y: next.y } });
+                }
+            });
+        }
+    });
+    return points;
 }
 
 export function summarizeUpfValidation(issues: UpfValidationIssue[]) {

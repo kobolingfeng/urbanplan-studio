@@ -287,7 +287,7 @@ function createDemoProject(): UrbanPlanProject {
             district: '罗湖区',
             planningType: '城市更新片区 / 控规辅助审查',
             planningHorizon: '2026-2035',
-            crs: 'EPSG:4490',
+            crs: 'DemoCanvasMetric',
         },
         ruleset: {
             jurisdiction: 'CN-GD-SZ',

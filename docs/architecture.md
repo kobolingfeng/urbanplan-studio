@@ -72,7 +72,7 @@ UPF/demo project
 - Rules have moved to `planning-rules.ts`, but rule metadata is not yet declarative.
 - Scenario evaluation uses transparent prototype weights and built-in sensitivity profiles; expert-calibrated AHP/entropy weights are future work.
 - Geometry uses a demo canvas unit system.
-- UPF validation now has a lightweight runtime validator and a draft JSON Schema. Evidence can be legacy strings or structured EvidenceSource objects, but full migration/version negotiation is still future work.
+- UPF validation now has a lightweight runtime validator and a draft JSON Schema. Evidence can be legacy strings or structured EvidenceSource objects, and EPSG:4490 imports with canvas-scale coordinates are rejected as mixed CRS data. Full CRS transforms and migration/version negotiation are still future work.
 - Facility coverage uses straight-line distance.
 - Reports are generated as Markdown text.
 

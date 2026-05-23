@@ -6,7 +6,7 @@ This backlog is ordered by product risk, not by excitement.
 
 1. Add a real UPF JSON Schema and schema-version migration.
 2. Replace demo canvas units with real projected coordinates.
-3. Add CRS transform support and reject mixed-coordinate imports.
+3. Add CRS transform support for accepted projected/geographic imports.
 4. Extend structured `EvidenceSource` into a reusable source registry with attachments and review status.
 5. Extend structured `RuleSource` with verified URLs, effective dates, attachments, and expert review status.
 6. Split prototype rules from statutory rules visually and structurally.

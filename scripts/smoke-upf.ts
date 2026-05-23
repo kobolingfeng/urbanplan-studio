@@ -129,6 +129,41 @@ assert(comparison.includes('参与地块') && comparison.includes('Update 缺失
 const schema = JSON.parse(readFileSync(join(schemas, 'upf-0.1.schema.json'), 'utf8'));
 assert(schema.title === 'Urban Planning Format 0.1', 'json schema title mismatch');
 
+const mixedCoordinateIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: {
+        id: 'mixed_crs',
+        name: 'Mixed CRS',
+        city: '深圳市',
+        district: '罗湖区',
+        planningType: 'CRS smoke',
+        planningHorizon: '2026-2035',
+        crs: 'EPSG:4490',
+    },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'CRS fixture' }],
+    objects: [{
+        id: 'parcel_bad_crs',
+        type: 'parcel',
+        name: 'Bad CRS Parcel',
+        evidence: ['fixture'],
+        points: [
+            { x: 160, y: 140 },
+            { x: 360, y: 140 },
+            { x: 360, y: 280 },
+            { x: 160, y: 280 },
+        ],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: 3.5, buildingCoverageMax: 0.35, greenRatioMin: 0.3, heightMaxM: 80 },
+        scenarioValues: {
+            base: { far: 3, buildingCoverage: 0.3, greenRatio: 0.31, residentialGfaSqm: 10000, publicServiceGfaSqm: 300, updateMode: '综合整治' },
+        },
+    }],
+});
+assert(mixedCoordinateIssues.some(issue => issue.severity === 'error' && issue.message.includes('疑似混入')), 'EPSG:4490 mixed canvas coordinates should be rejected');
+
 try {
     const invalidText = readFileSync(join(examples, 'invalid.upf'), 'utf8');
     const invalidIssues = validateUpfDocument(JSON.parse(invalidText));

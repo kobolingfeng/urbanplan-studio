@@ -34,6 +34,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Save a `.upf`, then load it back.
 - Load `examples/minimal.upf`.
 - Load `examples/luohu-case-v1.upf` and confirm three scenarios and multiple planning object types appear.
+- Try a UPF declaring `EPSG:4490` with canvas-scale coordinates and confirm validation reports mixed CRS data.
 - Confirm quality report includes import audit when compatibility fixes were applied.
 - Try `examples/invalid.upf`; it should show an import error.
 
