@@ -19,7 +19,7 @@ This backlog is ordered by product risk, not by excitement.
 4. Extend land-use compatibility rules to mixed-use ratios, negative uses, and scenario-scoped use changes.
 5. Add road access hierarchy and entrance spacing rules by road class.
 6. Add scenario-scoped facilities and open spaces.
-7. Add facility demand by age structure assumptions.
+7. Extend service-demand assumptions with age structure, household size, and local calibration profiles.
 
 ## P1: Product Experience
 

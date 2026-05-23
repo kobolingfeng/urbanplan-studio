@@ -16,6 +16,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Structured RuleSource metadata for jurisdiction, source title, clause, version, and source level.
 - Multi-criteria scenario evaluation for compliance, public service, mobility, ecology, renewal value, and evidence confidence.
 - Parcel-level service population allocation in the evaluation report for kindergarten and elderly-service demand.
+- Shared service-demand assumptions are reused by rules and evaluation reports.
 - Weight-sensitivity analysis across balanced, public-service-first, conservation-first, and implementation-risk models.
 - Decision matrix that reruns checks and scoring across all scenarios and explains the recommended scenario.
 - Standalone scenario-decision CSV export for scores, population, floor area, and risk counts.

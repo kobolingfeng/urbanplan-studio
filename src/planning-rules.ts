@@ -1,4 +1,5 @@
 import type { EvidenceItem } from './evidence';
+import { SERVICE_DEMAND_ASSUMPTIONS } from './planning-assumptions';
 import {
     areaSqm,
     centroid,
@@ -93,7 +94,7 @@ export type PlanningRecommendation = {
     basis: string;
 };
 
-const SQM_PER_RESIDENT = 33;
+const SQM_PER_RESIDENT = SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident;
 
 type RuleCatalogDraft = Omit<PlanningRuleDefinition, 'source'>;
 
@@ -358,7 +359,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 source: ruleSource('parcel_coverage_max', project.ruleset.version),
             });
         }
-        if (number(value.publicServiceGfaSqm) < parcelArea * 0.015 && residents > 800) {
+        if (number(value.publicServiceGfaSqm) < parcelArea * SERVICE_DEMAND_ASSUMPTIONS.parcelPublicServiceGfaRatio && residents > 800) {
             add({
                 ruleId: 'parcel_public_service_ratio',
                 objectId: parcel.id,
@@ -485,8 +486,8 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
     }
 
     const residents = parcels.reduce((sum, parcel) => sum + parcelResidents(parcel, scenarioId), 0);
-    const kindergartenDemand = Math.ceil(residents * 0.036);
-    const elderlyDemand = Math.ceil(residents * 0.03);
+    const kindergartenDemand = Math.ceil(residents * SERVICE_DEMAND_ASSUMPTIONS.kindergartenSeatsPerResident);
+    const elderlyDemand = Math.ceil(residents * SERVICE_DEMAND_ASSUMPTIONS.elderlyServiceCapacityPerResident);
     const healthDemand = residents;
     const capacity = (kind: FacilityKind) => facilities
         .filter(facility => facility.kind === kind)

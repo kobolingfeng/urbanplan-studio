@@ -19,6 +19,7 @@ The app shell provides native file dialogs, file read/write, clipboard, logging,
 ```text
 src/
   main.ts                UI state, rendering, inspector, modal, native integration
+  planning-assumptions.ts Shared demand assumptions for population and service-capacity estimation
   planning-geometry.ts   Unit system and pure geometry helpers
   evidence.ts            EvidenceSource parsing, display, classification, and confidence scoring
   planning-rules.ts      Active rule runner and recommendations

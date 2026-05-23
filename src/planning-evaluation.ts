@@ -3,6 +3,7 @@ import {
     isStructuredEvidence,
     type EvidenceItem,
 } from './evidence';
+import { SERVICE_DEMAND_ASSUMPTIONS, serviceDemandAssumptionText } from './planning-assumptions';
 import {
     areaSqm,
     centroid,
@@ -149,7 +150,7 @@ export type EvaluationWeightProfile = {
     weights: EvaluationWeightSet;
 };
 
-const SQM_PER_RESIDENT = 33;
+const SQM_PER_RESIDENT = SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident;
 export const DEFAULT_EVALUATION_WEIGHTS: EvaluationWeightSet = {
     compliance: 0.24,
     publicService: 0.22,
@@ -307,6 +308,7 @@ export function buildScenarioEvaluationReport(
         '',
         '- 本模块采用可解释的多指标加权评分，不把评分包装成法定结论。',
         '- 评分维度包括控规符合性、公共服务、交通可达、生态开放空间、更新价值和证据可信度。',
+        `- 服务人口分摊假设：${serviceDemandAssumptionText()}。`,
         '- 每个维度均保留文字原因，便于在硕士论文中对应“指标体系、权重、计算过程、案例验证”。',
         '- 当前权重为原型默认权重，后续可通过专家打分、AHP 或熵权法校准。',
     ];
@@ -537,8 +539,8 @@ function buildParcelServiceAllocation(project: ProjectLike, scenarioId: string):
         return {
             name: String(parcel.name ?? parcel.id ?? '未命名地块'),
             residents,
-            kindergartenNeed: Math.ceil(residents * 0.036),
-            elderlyNeed: Math.ceil(residents * 0.03),
+            kindergartenNeed: Math.ceil(residents * SERVICE_DEMAND_ASSUMPTIONS.kindergartenSeatsPerResident),
+            elderlyNeed: Math.ceil(residents * SERVICE_DEMAND_ASSUMPTIONS.elderlyServiceCapacityPerResident),
             publicServicePerThousand: residents ? publicServiceGfa / residents * 1000 : 0,
             kindergartenCovered: parcelCoveredByFacility(parcel, facilities, '幼儿园'),
             elderlyCovered: parcelCoveredByFacility(parcel, facilities, '社区养老'),

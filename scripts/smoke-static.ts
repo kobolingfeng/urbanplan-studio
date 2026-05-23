@@ -30,7 +30,7 @@ assert(html.includes('UrbanPlan Studio'), 'index.html misses app title');
 for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare', 'btn-csv', 'btn-quality', 'btn-validation', 'btn-report', 'btn-upf', 'btn-geojson', 'object-search', 'object-filter', 'optimize-preset', 'evaluation-list', 'plan-canvas']) {
     assert(html.includes(`id="${id}"`), `index.html misses ${id}`);
 }
-for (const token of ['方案综合评估', '服务人口分摊', '权重敏感性分析', '方案决策 CSV', '案例验证包', '验证就绪度', 'UPF 结构校验报告', '规则目录与验证口径', '结构化 RuleSource', '用地兼容', 'DemoCanvasMetric', 'GeoJSON 数据', '导入报告', 'ArrowDown', '导入审计', 'service-radius-shape', '方案对比', '数据质量诊断', '结构化证据覆盖率', '不是可识别的 UPF 文件', '引用完整性保护']) {
+for (const token of ['方案综合评估', '服务人口分摊', '服务人口分摊假设', '权重敏感性分析', '方案决策 CSV', '案例验证包', '验证就绪度', 'UPF 结构校验报告', '规则目录与验证口径', '结构化 RuleSource', '用地兼容', 'DemoCanvasMetric', 'GeoJSON 数据', '导入报告', 'ArrowDown', '导入审计', 'service-radius-shape', '方案对比', '数据质量诊断', '结构化证据覆盖率', '不是可识别的 UPF 文件', '引用完整性保护']) {
     assert(js.includes(token), `main bundle misses ${token}`);
 }
 

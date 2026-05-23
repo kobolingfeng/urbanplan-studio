@@ -17,6 +17,7 @@ import {
     type EvidenceSource,
     type EvidenceSourceType,
 } from './evidence';
+import { SERVICE_DEMAND_ASSUMPTIONS } from './planning-assumptions';
 import {
     buildDataQualityReport,
     buildScenarioComparisonReport,
@@ -172,7 +173,7 @@ type UrbanPlanProject = {
     objects: PlanObject[];
 };
 
-const SQM_PER_RESIDENT = 33;
+const SQM_PER_RESIDENT = SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const DEFAULT_SCENARIO_VALUE: ParcelScenarioValue = {
     far: 1,
