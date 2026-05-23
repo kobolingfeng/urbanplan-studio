@@ -75,6 +75,7 @@ export function distanceToPolyline(point: Point, points: Point[]): number {
 }
 
 export function pointInPolygon(point: Point, points: Point[]): boolean {
+    if (points.length < 3) return false;
     for (let index = 0; index < points.length; index++) {
         if (onSegment(points[index], points[(index + 1) % points.length], point)) return true;
     }
