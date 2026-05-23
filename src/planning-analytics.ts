@@ -71,6 +71,7 @@ export function createUpfDocument<TProject extends ProjectLike>(
     activeScenarioId: string,
     checks: CheckLike[],
     recommendations: RecommendationLike[],
+    evaluation?: unknown,
 ) {
     return {
         format: project.format ?? 'UPF',
@@ -97,6 +98,7 @@ export function createUpfDocument<TProject extends ProjectLike>(
         objects: project.objects,
         checks,
         recommendations,
+        evaluation,
     };
 }
 
@@ -222,15 +224,21 @@ export function buildDataQualityReport(
         `# ${project.project?.name ?? 'UrbanPlan'} 数据质量诊断`,
         '',
         `质量分：${quality.score}/100`,
+        `证据覆盖率：${quality.evidenceCoverage.toFixed(1)}%`,
         '',
         '## 检查项',
         '',
         `- 对象总数：${quality.objectCount}`,
         `- 缺少证据来源的对象：${quality.missingEvidence.length}`,
+        `- 规则依据条数：${quality.basisCount}`,
         `- 仍依赖原型规则的检查：${quality.prototypeRuleCount}`,
         `- 未绑定地块或道路的出入口：${quality.unboundEntrances.length}`,
         `- 地块方案值缺口：${quality.parcelScenarioGaps.length}`,
         `- 智能建议数量：${recommendations.length}`,
+        '',
+        '## 证据类型分布',
+        '',
+        ...Object.entries(quality.evidenceTypeCounts).map(([kind, count]) => `- ${kind}：${count}`),
         '',
         '## 专业化要求',
         '',
@@ -256,6 +264,14 @@ export function calculateDataQuality(
 ) {
     const objects = project.objects ?? [];
     const missingEvidence = objects.filter(object => !object.evidence?.length);
+    const evidenceCoverage = objects.length ? (objects.length - missingEvidence.length) / objects.length * 100 : 100;
+    const evidenceTypeCounts = objects
+        .flatMap(object => object.evidence ?? [])
+        .reduce<Record<string, number>>((counts, item) => {
+            const kind = evidenceKind(item);
+            counts[kind] = (counts[kind] ?? 0) + 1;
+            return counts;
+        }, {});
     const prototypeRuleCount = checks.filter(check => String(check.source ?? '').includes('原型')).length;
     const unboundEntrances = objects.filter(object => object.type === 'entrance' && (!object.parcelId || !object.roadId));
     const scenarioIds = new Set((project.scenarios ?? []).map(scenario => scenario.id));
@@ -273,11 +289,21 @@ export function calculateDataQuality(
     return {
         score,
         objectCount: objects.length,
+        evidenceCoverage,
+        evidenceTypeCounts,
+        basisCount: project.ruleset?.basis?.length ?? 0,
         missingEvidence,
         prototypeRuleCount,
         unboundEntrances,
         parcelScenarioGaps,
     };
+}
+
+function evidenceKind(text: string): string {
+    if (/GB|CJJ|规范|标准|导则|指南|控规|法定|修订|条例/.test(text)) return '规范/规划依据';
+    if (/调研|实测|现场|访谈|问卷|遥感|手机信令|POI|路网/.test(text)) return '调研/空间数据';
+    if (/演示|样例|原型|兼容层|用户/.test(text)) return '原型/用户输入';
+    return '其他证据';
 }
 
 function number(value: number): string {

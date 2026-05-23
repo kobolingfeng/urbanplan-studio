@@ -20,9 +20,10 @@ Use this before handing UrbanPlan Studio to another person for review.
 
 - Launch `dist/app.exe`.
 - Confirm the title is UrbanPlan Studio.
-- Confirm the top actions are visible: run check, compare, quality, report, UPF, save, load.
+- Confirm the top actions are visible: run check, evaluation, compare, quality, report, UPF, save, load.
 - Click a parcel and edit FAR; status bar should show unsaved state.
 - Click UPF and confirm top-level `format` and `formatVersion` exist.
+- Click evaluation and confirm the modal includes score, confidence, dimensions, parcel priorities, and risk register.
 - Save a `.upf`, then load it back.
 - Load `examples/minimal.upf`.
 - Try `examples/invalid.upf`; it should show an import error.
@@ -34,8 +35,9 @@ Use this before handing UrbanPlan Studio to another person for review.
 - A vehicle entrance on a trunk road creates a warning.
 - A parcel overlapping heritage control and marked as demolition/rebuild creates a warning.
 - Deleting a parcel referenced by an entrance is blocked.
-- Scenario comparison lists all scenarios and key metrics.
-- Data quality report exposes prototype rules and evidence gaps.
+- Scenario decision matrix lists all scenarios, scores, confidence, key metrics, and risk counts.
+- Data quality report exposes prototype rules, evidence coverage, evidence type distribution, and evidence gaps.
+- Evaluation smoke confirms six dimensions and parcel-level scoring.
 
 ## Known Limits
 

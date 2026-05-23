@@ -15,6 +15,11 @@ import {
     parseUpfText,
 } from './planning-analytics';
 import {
+    buildScenarioEvaluationReport,
+    evaluateScenario,
+    type ScenarioEvaluation,
+} from './planning-evaluation';
+import {
     UNIT_SYSTEM,
     areaSqm,
     centroid,
@@ -181,6 +186,8 @@ const ui = {
     metricsStrip: $('metrics-strip'),
     checkList: $('check-list'),
     checkCount: $('check-count'),
+    evaluationList: $('evaluation-list'),
+    evaluationScore: $('evaluation-score'),
     recommendationList: $('recommendation-list'),
     suggestionCount: $('suggestion-count'),
     inspector: $('inspector'),
@@ -192,6 +199,7 @@ const ui = {
     modalMeta: $('modal-meta'),
     fileInput: $('file-input') as HTMLInputElement,
     btnRun: $('btn-run') as HTMLButtonElement,
+    btnEvaluation: $('btn-evaluation') as HTMLButtonElement,
     btnCompare: $('btn-compare') as HTMLButtonElement,
     btnQuality: $('btn-quality') as HTMLButtonElement,
     btnReport: $('btn-report') as HTMLButtonElement,
@@ -214,7 +222,9 @@ let selectedId = 'parcel_01';
 let activeTool: Tool = 'select';
 let checks: CheckResult[] = [];
 let recommendations: Recommendation[] = [];
+let evaluation: ScenarioEvaluation = evaluateScenario(project, activeScenarioId, checks, recommendations);
 let modalContent = '';
+let modalDefaultName = 'project.upf';
 let currentFilePath = '';
 let dirty = false;
 let autosaveTimer: number | undefined;
@@ -565,6 +575,11 @@ function formatArea(value: number): string {
     return `${formatNumber(value)} 平方米`;
 }
 
+function formatCompactArea(value: number): string {
+    if (value >= 10000) return `${formatNumber(value / 10000, 1)}万㎡`;
+    return `${formatNumber(value)}㎡`;
+}
+
 function parcelResidents(parcel: Parcel): number {
     const value = getParcelScenario(parcel);
     return Math.round(value.residentialGfaSqm / SQM_PER_RESIDENT);
@@ -595,6 +610,20 @@ function checkClass(severity: Severity): string {
     return 'info';
 }
 
+function scoreClass(score: number): string {
+    if (score >= 85) return 'ok';
+    if (score >= 70) return 'info';
+    if (score >= 55) return 'warn';
+    return 'error';
+}
+
+function parcelScoreColor(score: number): string {
+    if (score >= 85) return '#dbe9e5';
+    if (score >= 70) return '#e4eef8';
+    if (score >= 55) return '#f6d9a9';
+    return '#f3c3bd';
+}
+
 function severityLabel(severity: Severity): string {
     if (severity === 'error') return '错误';
     if (severity === 'warning') return '警告';
@@ -606,7 +635,8 @@ function runRuleChecks(): void {
     const result = runPlanningRules(project, activeScenarioId);
     checks = result.checks as CheckResult[];
     recommendations = result.recommendations as Recommendation[];
-    setStatus('规则检查完成', `${checks.filter(check => check.severity === 'error').length} 错误 · ${checks.filter(check => check.severity === 'warning').length} 警告`);
+    evaluation = evaluateScenario(project, activeScenarioId, checks, recommendations);
+    setStatus('规则检查完成', `${evaluation.score}/100 · ${checks.filter(check => check.severity === 'error').length} 错误 · ${checks.filter(check => check.severity === 'warning').length} 警告`);
     return;
 }
 
@@ -619,6 +649,7 @@ function renderAll() {
     renderCanvas();
     renderMetrics();
     renderChecks();
+    renderEvaluation();
     renderRecommendations();
     renderInspector();
 }
@@ -730,7 +761,7 @@ function renderCanvas() {
     }
     renderLabels();
     ui.canvasHint.textContent = activeTool === 'select'
-        ? '选择对象查看规则、指标和证据链。'
+        ? '选择对象查看规则、指标和证据链；地块颜色按综合评分热力显示。'
         : `在画布上点击即可新增${activeTool === 'parcel' ? '地块' : activeTool === 'facility' ? '设施' : '出入口'}对象。`;
     ui.canvasMeta.textContent = `${project.project.crs} · 1 unit≈${UNIT_SYSTEM.metersPerCanvasUnit}m · ${activeScenario().name} · ${activeTool}`;
 }
@@ -743,7 +774,10 @@ function syncToolButtons() {
 
 function renderParcel(parcel: Parcel) {
     const value = getParcelScenario(parcel);
-    const color = value.greenRatio < parcel.controls.greenRatioMin
+    const parcelEvaluation = evaluation.parcels.find(item => item.objectId === parcel.id);
+    const color = parcelEvaluation
+        ? parcelScoreColor(parcelEvaluation.score)
+        : value.greenRatio < parcel.controls.greenRatioMin
         ? '#f3c3bd'
         : value.far > parcel.controls.farMax
             ? '#f6d9a9'
@@ -851,11 +885,12 @@ function renderMetrics() {
     const errors = checks.filter(check => check.severity === 'error').length;
     const warnings = checks.filter(check => check.severity === 'warning').length;
     ui.metricsStrip.replaceChildren(
+        metric('综合评分', `${evaluation.score}/100`),
         metric('规划面积', formatArea(totalArea())),
-        metric('住宅建面', `${formatNumber(totalResidentialGfa())} 平方米`),
-        metric('估算人口', `${formatNumber(totalResidents())} 人`),
-        metric('规则风险', `${errors} 错误 / ${warnings} 警告`),
-        metric('数据质量', `${calculateDataQuality(project, checks, recommendations).score}/100`),
+        metric('住宅建面', formatCompactArea(totalResidentialGfa())),
+        metric('估算人口', `${formatNumber(totalResidents())}人`),
+        metric('规则风险', `${errors}错/${warnings}警`),
+        metric('可信度', `${evaluation.confidence}/100`),
     );
 }
 
@@ -871,6 +906,39 @@ function renderChecks() {
         });
         row.append(pill(severityLabel(check.severity), checkClass(check.severity)), rowText(check.title, `${check.objectName} · ${check.message}`));
         ui.checkList.append(row);
+    }
+}
+
+function renderEvaluation() {
+    ui.evaluationScore.textContent = `${evaluation.score}`;
+    ui.evaluationScore.className = `pill ${scoreClass(evaluation.score)}`;
+    ui.evaluationList.replaceChildren();
+    const summary = document.createElement('div');
+    summary.className = 'evaluation-row';
+    summary.append(
+        pill(evaluation.band, scoreClass(evaluation.score)),
+        rowText('方案综合评分', `${evaluation.score}/100 · 证据可信度 ${evaluation.confidence}/100`),
+    );
+    ui.evaluationList.append(summary);
+    for (const dimension of evaluation.dimensions) {
+        const row = document.createElement('button');
+        row.className = 'evaluation-row';
+        row.addEventListener('click', () => showModal('方案综合评估', buildScenarioEvaluationReport(project, activeScenarioId, checks, recommendations), activeScenario().name, 'scenario-evaluation.md'));
+        const main = document.createElement('span');
+        main.className = 'evaluation-main';
+        const title = document.createElement('strong');
+        title.textContent = `${dimension.name} · ${dimension.score}/100`;
+        const reason = document.createElement('span');
+        reason.textContent = dimension.reason;
+        const bar = document.createElement('span');
+        bar.className = 'dimension-bar';
+        const fill = document.createElement('i');
+        fill.style.width = `${dimension.score}%`;
+        fill.style.background = dimension.score >= 85 ? 'var(--green)' : dimension.score >= 70 ? 'var(--teal)' : dimension.score >= 55 ? 'var(--amber)' : 'var(--red)';
+        bar.append(fill);
+        main.append(title, reason, bar);
+        row.append(pill(`${(dimension.weight * 100).toFixed(0)}%`, 'info'), main);
+        ui.evaluationList.append(row);
     }
 }
 
@@ -920,8 +988,10 @@ function renderInspector() {
     if (object.type === 'constraint') renderReadonlyInspector(object, [['控制线类型', object.kind], ['覆盖面积', formatArea(areaSqm(object.points))]]);
 
     const objectChecks = checks.filter(check => check.objectId === object.id);
+    const parcelEvaluation = evaluation.parcels.find(item => item.objectId === object.id);
     ui.inspector.append(kvList([
         ['规则问题', objectChecks.length ? `${objectChecks.length} 条` : '暂无'],
+        ['综合评分', parcelEvaluation ? `${parcelEvaluation.score}/100 · ${parcelEvaluation.band}` : '未纳入地块评分'],
         ['证据来源', object.evidence.join('；')],
     ]));
 }
@@ -1336,7 +1406,7 @@ function deleteSelected() {
 }
 
 function buildUpf(): string {
-    return JSON.stringify(createUpfDocument(project, activeScenarioId, checks, recommendations), null, 2);
+    return JSON.stringify(createUpfDocument(project, activeScenarioId, checks, recommendations, evaluation), null, 2);
 }
 
 function buildReport(): string {
@@ -1351,28 +1421,114 @@ function buildReport(): string {
         '',
         '## 一、核心指标',
         '',
+        `- 综合评分：${evaluation.score}/100（${evaluation.band}）`,
+        `- 证据可信度：${evaluation.confidence}/100`,
         `- 规划地块面积：${formatArea(totalArea())}`,
         `- 住宅建筑面积：${formatNumber(totalResidentialGfa())} 平方米`,
         `- 估算居住人口：${formatNumber(totalResidents())} 人`,
         `- 规则问题：${errors.length} 个错误，${warnings.length} 个警告，${checks.length} 条总提示`,
         '',
-        '## 二、主要问题',
+        '## 二、综合评估',
+        '',
+        '| 维度 | 权重 | 得分 | 解释 |',
+        '|---|---:|---:|---|',
+        ...evaluation.dimensions.map(dimension => `| ${dimension.name} | ${(dimension.weight * 100).toFixed(0)}% | ${dimension.score} | ${dimension.reason} |`),
+        '',
+        '## 三、地块优先级',
+        '',
+        '| 地块 | 得分 | 状态 | 主要原因 |',
+        '|---|---:|---|---|',
+        ...evaluation.parcels.map(parcel => `| ${parcel.name} | ${parcel.score} | ${parcel.band} | ${parcel.drivers.join('；')} |`),
+        '',
+        '## 四、主要问题',
         '',
         ...checks.map(check => `- [${severityLabel(check.severity)}] ${check.objectName}：${check.title}。${check.message} 来源：${check.source}`),
         '',
-        '## 三、智能建议',
+        '## 五、智能建议',
         '',
         ...recommendations.map(recommendation => `- ${recommendation.title}：${recommendation.message} 依据：${recommendation.basis}`),
         '',
-        '## 四、说明',
+        '## 六、答辩说明',
+        '',
+        ...evaluation.highlights.map(item => `- ${item}`),
+        '',
+        '## 七、说明',
         '',
         '本报告来自 UPF 0.1 原型规则引擎，是规划辅助判断，不替代法定审查、专项交通影响评价、消防审查或正式控规成果。',
     ];
     return lines.join('\n');
 }
 
-function showModal(title: string, text: string, meta = 'UrbanPlan Studio') {
+function buildDecisionMatrixReport(): string {
+    const rows = project.scenarios.map((scenario) => {
+        const ruleResult = runPlanningRules(project, scenario.id);
+        const scenarioEvaluation = evaluateScenario(project, scenario.id, ruleResult.checks, ruleResult.recommendations);
+        const errors = ruleResult.checks.filter(check => check.severity === 'error').length;
+        const warnings = ruleResult.checks.filter(check => check.severity === 'warning').length;
+        return {
+            scenario,
+            evaluation: scenarioEvaluation,
+            residents: scenarioResidents(scenario.id),
+            residentialGfa: scenarioResidentialGfa(scenario.id),
+            publicServiceGfa: scenarioPublicServiceGfa(scenario.id),
+            errors,
+            warnings,
+        };
+    });
+    const best = [...rows].sort((a, b) => b.evaluation.score - a.evaluation.score)[0];
+    const lines = [
+        `# ${project.project.name} 方案决策矩阵`,
+        '',
+        `推荐方案：${best?.scenario.name ?? '暂无'}${best ? `（${best.evaluation.score}/100，${best.evaluation.band}）` : ''}`,
+        `生成时间：${new Date().toLocaleString('zh-CN')}`,
+        '',
+        '## 一、综合对比',
+        '',
+        '| 方案 | 综合评分 | 可信度 | 估算人口 | 住宅建面 | 公服建面 | 规则错误 | 规则警告 | 判断 |',
+        '|---|---:|---:|---:|---:|---:|---:|---:|---|',
+        ...rows.map(row => `| ${row.scenario.name} | ${row.evaluation.score} | ${row.evaluation.confidence} | ${formatNumber(row.residents)} | ${formatNumber(row.residentialGfa)} | ${formatNumber(row.publicServiceGfa)} | ${row.errors} | ${row.warnings} | ${row.evaluation.band} |`),
+        '',
+        '## 二、推荐理由',
+        '',
+        ...(best?.evaluation.highlights.map(item => `- ${item}`) ?? ['- 当前缺少可评价方案。']),
+        '',
+        '## 三、风险对照',
+        '',
+        ...rows.flatMap(row => [
+            `### ${row.scenario.name}`,
+            ...(row.evaluation.riskRegister.length ? row.evaluation.riskRegister.map(item => `- ${item}`) : ['- 基础规则未识别主要风险。']),
+            '',
+        ]),
+        '## 四、原始指标表',
+        '',
+        buildScenarioComparisonReport(project, activeScenarioId),
+    ];
+    return lines.join('\n');
+}
+
+function scenarioResidentialGfa(scenarioId: string): number {
+    return project.objects
+        .filter((object): object is Parcel => object.type === 'parcel')
+        .reduce((sum, parcel) => sum + parcelScenario(parcel, scenarioId).residentialGfaSqm, 0);
+}
+
+function scenarioPublicServiceGfa(scenarioId: string): number {
+    return project.objects
+        .filter((object): object is Parcel => object.type === 'parcel')
+        .reduce((sum, parcel) => sum + parcelScenario(parcel, scenarioId).publicServiceGfaSqm, 0);
+}
+
+function scenarioResidents(scenarioId: string): number {
+    return Math.round(scenarioResidentialGfa(scenarioId) / SQM_PER_RESIDENT);
+}
+
+function parcelScenario(parcel: Parcel, scenarioId: string): ParcelScenarioValue {
+    return parcel.scenarioValues[scenarioId] ?? Object.values(parcel.scenarioValues)[0] ?? DEFAULT_SCENARIO_VALUE;
+}
+
+function showModal(title: string, text: string, meta = 'UrbanPlan Studio', defaultName = 'urbanplan-output.txt') {
     modalContent = text;
+    modalDefaultName = defaultName;
     ui.modalTitle.textContent = title;
     ui.modalText.textContent = text;
     ui.modalMeta.textContent = meta;
@@ -1479,10 +1635,11 @@ function bindControls() {
         addObjectAt(canvasPoint(event));
     });
     ui.btnRun.addEventListener('click', renderAll);
-    ui.btnCompare.addEventListener('click', () => showModal('方案对比', buildScenarioComparisonReport(project, activeScenarioId), project.project.name));
-    ui.btnQuality.addEventListener('click', () => showModal('数据质量诊断', buildDataQualityReport(project, checks, recommendations), project.ruleset.version));
-    ui.btnReport.addEventListener('click', () => showModal('规划诊断报告', buildReport(), activeScenario().name));
-    ui.btnUpf.addEventListener('click', () => showModal('UPF 数据', buildUpf(), `${project.format} ${project.formatVersion}`));
+    ui.btnEvaluation.addEventListener('click', () => showModal('方案综合评估', buildScenarioEvaluationReport(project, activeScenarioId, checks, recommendations), activeScenario().name, 'scenario-evaluation.md'));
+    ui.btnCompare.addEventListener('click', () => showModal('方案决策矩阵', buildDecisionMatrixReport(), project.project.name, 'scenario-decision-matrix.md'));
+    ui.btnQuality.addEventListener('click', () => showModal('数据质量诊断', buildDataQualityReport(project, checks, recommendations), project.ruleset.version, 'data-quality-report.md'));
+    ui.btnReport.addEventListener('click', () => showModal('规划诊断报告', buildReport(), activeScenario().name, 'planning-report.md'));
+    ui.btnUpf.addEventListener('click', () => showModal('UPF 数据', buildUpf(), `${project.format} ${project.formatVersion}`, `${project.project.id}.upf`));
     ui.btnSave.addEventListener('click', () => void saveText(`${project.project.id}.upf`, buildUpf()));
     ui.btnLoad.addEventListener('click', () => void loadUpf());
     ui.btnRestore.addEventListener('click', restoreAutosave);
@@ -1503,7 +1660,7 @@ function bindControls() {
         if (event.target === ui.modal) ui.modal.classList.remove('open');
     });
     ui.modalCopy.addEventListener('click', () => void copyModal());
-    ui.modalSave.addEventListener('click', () => void saveText(ui.modalTitle.textContent === '规划诊断报告' ? 'planning-report.md' : 'project.upf', modalContent));
+    ui.modalSave.addEventListener('click', () => void saveText(modalDefaultName, modalContent));
     ui.fileInput.addEventListener('change', () => {
         const file = ui.fileInput.files?.[0];
         if (!file) return;

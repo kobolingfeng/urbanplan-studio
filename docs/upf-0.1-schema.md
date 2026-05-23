@@ -15,7 +15,8 @@ UPF is the internal semantic planning format used by UrbanPlan Studio. It is int
   "activeScenarioId": "scenario_id",
   "objects": [],
   "checks": [],
-  "recommendations": []
+  "recommendations": [],
+  "evaluation": {}
 }
 ```
 
@@ -26,6 +27,7 @@ UPF is the internal semantic planning format used by UrbanPlan Studio. It is int
 - Every scenario has `id`, `name`, and `description`.
 - Every parcel must have scenario-scoped values.
 - Rule results must reference the object, rule, source, and severity.
+- Scenario evaluation is exported as derived data and can be recalculated from objects, checks, and recommendations.
 - Prototype rules must remain distinguishable from statutory rules.
 - All imported files go through normalization before rendering.
 
@@ -114,6 +116,21 @@ Required fields:
 
 Current heritage risk rules use polygon overlap instead of centroid-only checks.
 
+## Derived Evaluation
+
+`evaluation` stores the latest scenario score generated during export. It is not a statutory approval result. It is a transparent decision-support summary with:
+
+- `scenarioId`
+- `score`
+- `band`
+- `confidence`
+- `dimensions`
+- `parcels`
+- `highlights`
+- `riskRegister`
+
+The score currently uses prototype weights across compliance, public service, mobility, ecology, renewal value, and evidence confidence. Future versions should store the weight source and support expert-calibrated AHP or entropy-weight alternatives.
+
 ## Known Schema Gaps
 
 - `Intersection` should become an explicit object instead of being derived every run.
@@ -121,4 +138,5 @@ Current heritage risk rules use polygon overlap instead of centroid-only checks.
 - `EvidenceSource` should become structured instead of string arrays.
 - `ServiceArea` should support walking-network distance instead of straight-line distance.
 - `Indicator` should store scenario dashboard metrics.
+- Evaluation weights should become explicit `EvaluationModel` metadata.
 - Geometry should support real projected coordinates and CRS transforms.

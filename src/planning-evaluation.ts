@@ -1,0 +1,546 @@
+import {
+    areaSqm,
+    centroid,
+    distance,
+    distanceToPolyline,
+    type Point,
+} from './planning-geometry';
+
+type Severity = 'error' | 'warning' | 'info' | 'ok';
+type FacilityKind = '幼儿园' | '社区养老' | '社区卫生' | '文化活动' | '便民商业';
+
+type ScenarioLike = {
+    id: string;
+    name: string;
+    description?: string;
+};
+
+type CheckLike = {
+    severity?: Severity | string;
+    ruleId?: string;
+    objectId?: string;
+    objectName?: string;
+    title?: string;
+    message?: string;
+    source?: string;
+};
+
+type RecommendationLike = {
+    title?: string;
+    message?: string;
+    basis?: string;
+};
+
+type PlanningObjectLike = {
+    id?: string;
+    type?: string;
+    name?: string;
+    evidence?: string[];
+    points?: Point[];
+    point?: Point;
+    kind?: string;
+    level?: string;
+    redLineWidthM?: number;
+    lanes?: number;
+    controls?: {
+        farMax?: number;
+        buildingCoverageMax?: number;
+        greenRatioMin?: number;
+        heightMaxM?: number;
+    };
+    scenarioValues?: Record<string, {
+        far?: number;
+        buildingCoverage?: number;
+        greenRatio?: number;
+        residentialGfaSqm?: number;
+        publicServiceGfaSqm?: number;
+        updateMode?: string;
+        notes?: string;
+    }>;
+    entranceType?: string;
+    parcelId?: string;
+    roadId?: string;
+    serviceRadiusM?: number;
+    capacity?: number;
+    planned?: boolean;
+};
+
+type ProjectLike = {
+    project?: {
+        id?: string;
+        name?: string;
+        city?: string;
+        district?: string;
+        planningType?: string;
+        planningHorizon?: string;
+        crs?: string;
+    };
+    ruleset?: {
+        jurisdiction?: string;
+        version?: string;
+        basis?: string[];
+    };
+    scenarios?: ScenarioLike[];
+    objects?: PlanningObjectLike[];
+};
+
+export type EvaluationBand = '优秀' | '良好' | '需优化' | '高风险';
+
+export type DimensionScore = {
+    id: string;
+    name: string;
+    score: number;
+    weight: number;
+    reason: string;
+};
+
+export type ParcelEvaluation = {
+    objectId: string;
+    name: string;
+    score: number;
+    band: EvaluationBand;
+    drivers: string[];
+};
+
+export type ScenarioEvaluation = {
+    scenarioId: string;
+    scenarioName: string;
+    score: number;
+    band: EvaluationBand;
+    confidence: number;
+    dimensions: DimensionScore[];
+    parcels: ParcelEvaluation[];
+    highlights: string[];
+    riskRegister: string[];
+};
+
+const SQM_PER_RESIDENT = 33;
+const SCORE_WEIGHTS = {
+    compliance: 0.24,
+    publicService: 0.22,
+    mobility: 0.16,
+    ecology: 0.16,
+    renewalValue: 0.12,
+    evidence: 0.10,
+};
+
+export function evaluateScenario(
+    project: ProjectLike,
+    scenarioId: string,
+    checks: CheckLike[] = [],
+    recommendations: RecommendationLike[] = [],
+): ScenarioEvaluation {
+    const objects = project.objects ?? [];
+    const parcels = objects.filter(isParcel);
+    const roads = objects.filter(isRoad);
+    const facilities = objects.filter(isFacility);
+    const openSpaces = objects.filter(isOpenSpace);
+    const entrances = objects.filter(isEntrance);
+    const scenario = (project.scenarios ?? []).find(item => item.id === scenarioId);
+    const totals = summarizeParcels(parcels, scenarioId);
+
+    const dimensions: DimensionScore[] = [
+        complianceDimension(checks),
+        publicServiceDimension(parcels, facilities, scenarioId, totals.residents, totals.residentialGfa),
+        mobilityDimension(parcels, roads, entrances, checks),
+        ecologyDimension(parcels, openSpaces, scenarioId, totals.residents),
+        renewalValueDimension(project, parcels, scenarioId),
+        evidenceDimension(project, checks, recommendations),
+    ];
+
+    const totalWeight = dimensions.reduce((sum, item) => sum + item.weight, 0);
+    const score = roundScore(dimensions.reduce((sum, item) => sum + item.score * item.weight, 0) / totalWeight);
+    const parcelScores = parcels
+        .map(parcel => evaluateParcel(parcel, scenarioId, checks))
+        .sort((a, b) => a.score - b.score);
+    const confidence = evidenceConfidence(project, checks);
+
+    return {
+        scenarioId,
+        scenarioName: scenario?.name ?? scenarioId,
+        score,
+        band: scoreBand(score),
+        confidence,
+        dimensions,
+        parcels: parcelScores,
+        highlights: buildHighlights(dimensions, parcelScores, recommendations),
+        riskRegister: buildRiskRegister(checks, parcelScores),
+    };
+}
+
+export function buildScenarioEvaluationReport(
+    project: ProjectLike,
+    scenarioId: string,
+    checks: CheckLike[] = [],
+    recommendations: RecommendationLike[] = [],
+): string {
+    const evaluation = evaluateScenario(project, scenarioId, checks, recommendations);
+    const projectName = project.project?.name ?? 'UrbanPlan';
+    const lines = [
+        `# ${projectName} 方案综合评估`,
+        '',
+        `当前方案：${evaluation.scenarioName}`,
+        `综合评分：${evaluation.score}/100（${evaluation.band}）`,
+        `证据可信度：${evaluation.confidence}/100`,
+        `规则版本：${project.ruleset?.version ?? '未声明'}`,
+        '',
+        '## 一、维度评分',
+        '',
+        '| 维度 | 权重 | 得分 | 解释 |',
+        '|---|---:|---:|---|',
+        ...evaluation.dimensions.map(item => `| ${item.name} | ${(item.weight * 100).toFixed(0)}% | ${item.score} | ${item.reason} |`),
+        '',
+        '## 二、地块优先级',
+        '',
+        '| 地块 | 评分 | 状态 | 主要驱动因素 |',
+        '|---|---:|---|---|',
+        ...evaluation.parcels.map(parcel => `| ${parcel.name} | ${parcel.score} | ${parcel.band} | ${parcel.drivers.join('；')} |`),
+        '',
+        '## 三、答辩可解释结论',
+        '',
+        ...evaluation.highlights.map(item => `- ${item}`),
+        '',
+        '## 四、风险登记',
+        '',
+        ...(evaluation.riskRegister.length ? evaluation.riskRegister.map(item => `- ${item}`) : ['- 当前基础规则未识别高优先级风险，可继续补充交通、消防、日照、市政承载等专项模型。']),
+        '',
+        '## 五、方法说明',
+        '',
+        '- 本模块采用可解释的多指标加权评分，不把评分包装成法定结论。',
+        '- 评分维度包括控规符合性、公共服务、交通可达、生态开放空间、更新价值和证据可信度。',
+        '- 每个维度均保留文字原因，便于在硕士论文中对应“指标体系、权重、计算过程、案例验证”。',
+        '- 当前权重为原型默认权重，后续可通过专家打分、AHP 或熵权法校准。',
+    ];
+    return lines.join('\n');
+}
+
+function complianceDimension(checks: CheckLike[]): DimensionScore {
+    const score = clamp(100 - checks.reduce((sum, check) => sum + severityPenalty(check.severity), 0));
+    const errors = checks.filter(check => check.severity === 'error').length;
+    const warnings = checks.filter(check => check.severity === 'warning').length;
+    return {
+        id: 'compliance',
+        name: '控规符合性',
+        weight: SCORE_WEIGHTS.compliance,
+        score,
+        reason: errors || warnings
+            ? `${errors} 个错误、${warnings} 个警告拉低得分`
+            : '当前规则集未发现明显红线问题',
+    };
+}
+
+function publicServiceDimension(
+    parcels: PlanningObjectLike[],
+    facilities: PlanningObjectLike[],
+    scenarioId: string,
+    residents: number,
+    residentialGfa: number,
+): DimensionScore {
+    const publicServiceGfa = parcels.reduce((sum, parcel) => sum + number(parcelValue(parcel, scenarioId).publicServiceGfaSqm), 0);
+    const publicRatioScore = targetRatioScore(residentialGfa ? publicServiceGfa / residentialGfa : 0, 0.025);
+    const kindergarten = facilityScore(parcels, facilities, scenarioId, '幼儿园', residents * 0.036);
+    const elderly = facilityScore(parcels, facilities, scenarioId, '社区养老', residents * 0.03);
+    const health = facilityScore(parcels, facilities, scenarioId, '社区卫生', residents);
+    const score = roundScore(average([publicRatioScore, kindergarten, elderly, health]));
+    return {
+        id: 'publicService',
+        name: '公共服务',
+        weight: SCORE_WEIGHTS.publicService,
+        score,
+        reason: `公服建面/住宅建面约 ${asPercent(residentialGfa ? publicServiceGfa / residentialGfa : 0)}，并综合幼儿园、养老、卫生覆盖`,
+    };
+}
+
+function mobilityDimension(
+    parcels: PlanningObjectLike[],
+    roads: PlanningObjectLike[],
+    entrances: PlanningObjectLike[],
+    checks: CheckLike[],
+): DimensionScore {
+    const areaHa = Math.max(0.1, parcels.reduce((sum, parcel) => sum + areaSqm(parcel.points ?? []), 0) / 10000);
+    const roadDensity = roads.reduce((sum, road) => sum + polylineLength(road.points ?? []), 0) / areaHa;
+    const densityScore = targetRatioScore(roadDensity, 140);
+    const accessScore = parcels.length
+        ? average(parcels.map(parcel => nearestRoadDistanceScore(centroid(parcel.points ?? []), roads)))
+        : 100;
+    const entranceRiskCount = checks.filter(check => String(check.ruleId ?? '').startsWith('entrance_')).length;
+    const entranceScore = clamp(100 - entranceRiskCount * 12 - Math.max(0, entrances.length - parcels.length * 2) * 6);
+    const score = roundScore(average([densityScore, accessScore, entranceScore]));
+    return {
+        id: 'mobility',
+        name: '交通组织',
+        weight: SCORE_WEIGHTS.mobility,
+        score,
+        reason: `路网密度约 ${roadDensity.toFixed(0)} m/ha，叠加出入口风险和地块到路网距离`,
+    };
+}
+
+function ecologyDimension(
+    parcels: PlanningObjectLike[],
+    openSpaces: PlanningObjectLike[],
+    scenarioId: string,
+    residents: number,
+): DimensionScore {
+    const parcelArea = parcels.reduce((sum, parcel) => sum + areaSqm(parcel.points ?? []), 0);
+    const greenScore = parcelArea
+        ? parcels.reduce((sum, parcel) => {
+            const area = areaSqm(parcel.points ?? []);
+            const value = parcelValue(parcel, scenarioId);
+            const target = Math.max(0.01, number(parcel.controls?.greenRatioMin, 0.3));
+            return sum + targetRatioScore(number(value.greenRatio), target) * area;
+        }, 0) / parcelArea
+        : 100;
+    const openSpaceSqm = openSpaces.reduce((sum, space) => sum + areaSqm(space.points ?? []), 0);
+    const openSpacePerCapitaScore = targetRatioScore(residents ? openSpaceSqm / residents : openSpaceSqm, 4);
+    const score = roundScore(average([greenScore, openSpacePerCapitaScore]));
+    return {
+        id: 'ecology',
+        name: '生态与开放空间',
+        weight: SCORE_WEIGHTS.ecology,
+        score,
+        reason: `综合地块绿地率达标度和人均开放空间，开放空间约 ${Math.round(openSpaceSqm).toLocaleString('zh-CN')} 平方米`,
+    };
+}
+
+function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike[], scenarioId: string): DimensionScore {
+    const baselineId = (project.scenarios ?? []).find(scenario => scenario.id.includes('baseline'))?.id;
+    const fitScores = parcels.map(parcel => {
+        const value = parcelValue(parcel, scenarioId);
+        const farMax = number(parcel.controls?.farMax, 4);
+        const far = number(value.far);
+        const ratio = farMax ? far / farMax : 0;
+        const fit = ratio > 1 ? 100 - (ratio - 1) * 180 : ratio < 0.45 ? 72 + ratio * 32 : 100 - Math.abs(0.82 - ratio) * 32;
+        const modeBonus = value.updateMode === '拆除重建' ? -4 : value.updateMode === '综合整治' ? 4 : 0;
+        return clamp(fit + modeBonus);
+    });
+    const upliftScores = baselineId
+        ? parcels.map(parcel => {
+            const current = number(parcelValue(parcel, scenarioId).publicServiceGfaSqm);
+            const baseline = number(parcelValue(parcel, baselineId).publicServiceGfaSqm);
+            return clamp(70 + Math.min(30, (current - baseline) / 40));
+        })
+        : [];
+    const score = roundScore(average([...fitScores, ...upliftScores]));
+    return {
+        id: 'renewalValue',
+        name: '更新价值',
+        weight: SCORE_WEIGHTS.renewalValue,
+        score,
+        reason: baselineId
+            ? '比较现状基准与当前方案的强度适配和公服增量'
+            : '根据强度适配、更新方式和公共性增益估算',
+    };
+}
+
+function evidenceDimension(project: ProjectLike, checks: CheckLike[], recommendations: RecommendationLike[]): DimensionScore {
+    const score = evidenceConfidence(project, checks, recommendations);
+    const objects = project.objects ?? [];
+    const evidenceObjects = objects.filter(object => object.evidence?.length).length;
+    return {
+        id: 'evidence',
+        name: '证据可信度',
+        weight: SCORE_WEIGHTS.evidence,
+        score,
+        reason: `${evidenceObjects}/${objects.length || 1} 个对象有证据来源，规则依据 ${project.ruleset?.basis?.length ?? 0} 条`,
+    };
+}
+
+function evaluateParcel(parcel: PlanningObjectLike, scenarioId: string, checks: CheckLike[]): ParcelEvaluation {
+    const value = parcelValue(parcel, scenarioId);
+    const parcelChecks = checks.filter(check => check.objectId === parcel.id);
+    const controls = parcel.controls ?? {};
+    const far = number(value.far);
+    const farMax = number(controls.farMax, 4);
+    const greenRatio = number(value.greenRatio);
+    const greenMin = number(controls.greenRatioMin, 0.3);
+    const serviceRatio = number(value.residentialGfaSqm) ? number(value.publicServiceGfaSqm) / number(value.residentialGfaSqm) : 0;
+    const compliance = clamp(100 - parcelChecks.reduce((sum, check) => sum + severityPenalty(check.severity), 0));
+    const farScore = farMax ? clamp(100 - Math.max(0, far - farMax) * 35 - Math.max(0, farMax * 0.45 - far) * 8) : 80;
+    const greenScore = targetRatioScore(greenRatio, greenMin);
+    const serviceScore = targetRatioScore(serviceRatio, 0.025);
+    const evidenceScore = parcel.evidence?.length ? 92 : 45;
+    const score = roundScore(compliance * 0.35 + greenScore * 0.20 + serviceScore * 0.20 + farScore * 0.15 + evidenceScore * 0.10);
+    return {
+        objectId: String(parcel.id ?? ''),
+        name: String(parcel.name ?? parcel.id ?? '未命名地块'),
+        score,
+        band: scoreBand(score),
+        drivers: parcelDrivers(parcelChecks, far, farMax, greenRatio, greenMin, serviceRatio, parcel.evidence?.length ?? 0),
+    };
+}
+
+function buildHighlights(
+    dimensions: DimensionScore[],
+    parcels: ParcelEvaluation[],
+    recommendations: RecommendationLike[],
+): string[] {
+    const weakest = [...dimensions].sort((a, b) => a.score - b.score)[0];
+    const strongest = [...dimensions].sort((a, b) => b.score - a.score)[0];
+    const priorityParcel = parcels[0];
+    const highlights = [
+        `最强维度是“${strongest.name}”（${strongest.score}/100），可以作为方案论证的稳定支撑。`,
+        `最弱维度是“${weakest.name}”（${weakest.score}/100），适合作为下一轮优化和论文实验的主变量。`,
+    ];
+    if (priorityParcel) {
+        highlights.push(`优先复核地块为“${priorityParcel.name}”（${priorityParcel.score}/100），主要原因：${priorityParcel.drivers.join('；')}。`);
+    }
+    if (recommendations.length) {
+        highlights.push(`系统生成 ${recommendations.length} 条可追溯建议，可作为“规则引擎辅助规划判断”的展示材料。`);
+    }
+    return highlights;
+}
+
+function buildRiskRegister(checks: CheckLike[], parcels: ParcelEvaluation[]): string[] {
+    const ruleRisks = checks
+        .filter(check => check.severity === 'error' || check.severity === 'warning')
+        .slice(0, 8)
+        .map(check => `${check.objectName ?? check.objectId ?? '项目'}：${check.title ?? check.ruleId}。${check.message ?? ''}`.trim());
+    const parcelRisks = parcels
+        .filter(parcel => parcel.score < 70)
+        .slice(0, 4)
+        .map(parcel => `${parcel.name} 评分偏低，需要优先处理 ${parcel.drivers[0] ?? '指标短板'}`);
+    return [...new Set([...ruleRisks, ...parcelRisks])];
+}
+
+function facilityScore(
+    parcels: PlanningObjectLike[],
+    facilities: PlanningObjectLike[],
+    scenarioId: string,
+    kind: FacilityKind,
+    demand: number,
+): number {
+    const matched = facilities.filter(facility => facility.kind === kind && facility.point);
+    const capacity = matched.reduce((sum, facility) => sum + number(facility.capacity), 0);
+    const totalResidents = parcels.reduce((sum, parcel) => sum + parcelResidents(parcel, scenarioId), 0);
+    const coveredResidents = parcels.reduce((sum, parcel) => {
+        const center = centroid(parcel.points ?? []);
+        const covered = matched.some(facility => distance(center, facility.point!) <= number(facility.serviceRadiusM, 0));
+        return sum + (covered ? parcelResidents(parcel, scenarioId) : 0);
+    }, 0);
+    const coverageScore = totalResidents ? coveredResidents / totalResidents * 100 : 100;
+    const capacityScore = demand ? Math.min(100, capacity / demand * 100) : 100;
+    return average([coverageScore, capacityScore]);
+}
+
+function nearestRoadDistanceScore(point: Point, roads: PlanningObjectLike[]): number {
+    if (!roads.length) return 40;
+    const best = Math.min(...roads.map(road => distanceToPolyline(point, road.points ?? [])));
+    if (!Number.isFinite(best)) return 40;
+    return clamp(100 - Math.max(0, best - 45) * 1.6);
+}
+
+function summarizeParcels(parcels: PlanningObjectLike[], scenarioId: string) {
+    return parcels.reduce((sum, parcel) => {
+        const value = parcelValue(parcel, scenarioId);
+        return {
+            residents: sum.residents + parcelResidents(parcel, scenarioId),
+            residentialGfa: sum.residentialGfa + number(value.residentialGfaSqm),
+        };
+    }, { residents: 0, residentialGfa: 0 });
+}
+
+function parcelDrivers(
+    parcelChecks: CheckLike[],
+    far: number,
+    farMax: number,
+    greenRatio: number,
+    greenMin: number,
+    serviceRatio: number,
+    evidenceCount: number,
+): string[] {
+    const drivers = parcelChecks
+        .filter(check => check.severity === 'error' || check.severity === 'warning')
+        .slice(0, 3)
+        .map(check => String(check.title ?? check.ruleId));
+    if (far > farMax) drivers.push(`FAR 超控制值 ${farMax.toFixed(1)}`);
+    if (greenRatio < greenMin) drivers.push(`绿地率低于 ${(greenMin * 100).toFixed(0)}%`);
+    if (serviceRatio < 0.02) drivers.push('公共服务空间偏少');
+    if (!evidenceCount) drivers.push('缺少证据来源');
+    if (!drivers.length) drivers.push('指标较均衡，适合进入专项深化');
+    return [...new Set(drivers)].slice(0, 4);
+}
+
+function evidenceConfidence(project: ProjectLike, checks: CheckLike[], recommendations: RecommendationLike[] = []): number {
+    const objects = project.objects ?? [];
+    const evidenceCoverage = objects.length
+        ? objects.filter(object => object.evidence?.length).length / objects.length * 100
+        : 100;
+    const basisScore = Math.min(100, (project.ruleset?.basis?.length ?? 0) * 18 + 28);
+    const prototypePenalty = checks.filter(check => String(check.source ?? '').includes('原型')).length * 3;
+    const recommendationPenalty = Math.max(0, recommendations.length - 8) * 2;
+    return roundScore(average([evidenceCoverage, basisScore]) - prototypePenalty - recommendationPenalty);
+}
+
+function parcelValue(parcel: PlanningObjectLike, scenarioId: string) {
+    return parcel.scenarioValues?.[scenarioId] ?? Object.values(parcel.scenarioValues ?? {})[0] ?? {};
+}
+
+function parcelResidents(parcel: PlanningObjectLike, scenarioId: string): number {
+    return Math.round(number(parcelValue(parcel, scenarioId).residentialGfaSqm) / SQM_PER_RESIDENT);
+}
+
+function polylineLength(points: Point[]): number {
+    return points.slice(1).reduce((sum, point, index) => sum + distance(points[index], point), 0);
+}
+
+function targetRatioScore(value: number, target: number): number {
+    if (target <= 0) return 100;
+    return clamp(value / target * 100);
+}
+
+function severityPenalty(severity: unknown): number {
+    if (severity === 'error') return 18;
+    if (severity === 'warning') return 9;
+    if (severity === 'info') return 3;
+    return 0;
+}
+
+function average(values: number[]): number {
+    const valid = values.filter(value => Number.isFinite(value));
+    if (!valid.length) return 100;
+    return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+}
+
+function roundScore(value: number): number {
+    return Math.round(clamp(value));
+}
+
+function clamp(value: number): number {
+    if (!Number.isFinite(value)) return 0;
+    return Math.max(0, Math.min(100, value));
+}
+
+function scoreBand(score: number): EvaluationBand {
+    if (score >= 85) return '优秀';
+    if (score >= 70) return '良好';
+    if (score >= 55) return '需优化';
+    return '高风险';
+}
+
+function number(value: unknown, fallback = 0): number {
+    return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function asPercent(value: number): string {
+    return `${(value * 100).toFixed(1)}%`;
+}
+
+function isParcel(object: PlanningObjectLike): boolean {
+    return object.type === 'parcel' && Boolean(object.points?.length);
+}
+
+function isRoad(object: PlanningObjectLike): boolean {
+    return object.type === 'road' && Boolean(object.points?.length);
+}
+
+function isFacility(object: PlanningObjectLike): boolean {
+    return object.type === 'facility' && Boolean(object.point);
+}
+
+function isEntrance(object: PlanningObjectLike): boolean {
+    return object.type === 'entrance' && Boolean(object.point);
+}
+
+function isOpenSpace(object: PlanningObjectLike): boolean {
+    return object.type === 'openSpace' && Boolean(object.points?.length);
+}

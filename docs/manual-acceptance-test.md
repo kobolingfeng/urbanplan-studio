@@ -11,7 +11,7 @@ D:\projects\urbanplan-studio\dist\app.exe
 Expected:
 
 - Window title is UrbanPlan Studio.
-- Top actions include: run check, compare, quality, report, UPF, save, load.
+- Top actions include: run check, evaluation, compare, quality, report, UPF, save, load.
 - Central canvas shows parcels, roads, facilities, entrances, open space, and a heritage overlay.
 
 ## Core Planning Flow
@@ -21,12 +21,16 @@ Expected:
 3. Confirm status bar indicates unsaved changes.
 4. Click `运行检查`.
 5. Confirm rule count updates.
-6. Click `对比`.
-7. Confirm all scenarios appear in a comparison table.
-8. Click `质检`.
-9. Confirm a data quality score and evidence/prototype-rule notes appear.
-10. Click `UPF`.
-11. Confirm exported JSON has top-level `format`, `formatVersion`, and `manifest.software.version`.
+6. Confirm the bottom `综合评估` section shows six dimension rows and a scenario score.
+7. Confirm parcel fill colors reflect score bands: lower scoring parcels are warmer, stable parcels are cooler/green.
+8. Click `评估`.
+9. Confirm the modal includes dimension scores, parcel priorities, highlights, and risk register.
+10. Click `对比`.
+11. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
+12. Click `质检`.
+13. Confirm a data quality score, evidence coverage, evidence type distribution, and prototype-rule notes appear.
+14. Click `UPF`.
+15. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, and `evaluation`.
 
 ## Object Editing
 
@@ -60,6 +64,6 @@ bun run verify:release
 Expected:
 
 - Typecheck passes.
-- Geometry, UPF, rules, static, and release smoke checks pass.
+- Geometry, UPF, rules, evaluation, static, and release smoke checks pass.
 - `release/UrbanPlan Studio-0.1.0-portable.zip` exists.
 - `release/SHA256SUMS.txt` matches the generated zip.
