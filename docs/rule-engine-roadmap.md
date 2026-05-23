@@ -109,6 +109,6 @@ Needed fixtures:
 3. Extract rule result type and rule runner. Partially done in `src/planning-rules.ts`.
 4. Move parcel rules out of `main.ts`. First pass done.
 5. Move entrance and facility rules out of `main.ts`. First pass done.
-6. Add fixture tests for each rule group. In progress through `smoke-rules`.
+6. Add fixture tests for each rule group. First pass done in `smoke:rule-fixtures`.
 7. Add schema migration from UPF 0.1 to future versions.
 8. Split `RULE_CATALOG` into `src/rules/catalog.ts` once rule modules are separated.

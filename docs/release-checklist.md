@@ -5,7 +5,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 ## Build Hygiene
 
 - Run `bun run clean`.
-- Run `bun run verify`.
+- Run `bun run verify`, including `smoke:rule-fixtures`.
 - Run `bun run verify:release`.
 - Confirm `dist` only contains:
   - `app.config.json`

@@ -39,9 +39,10 @@ src/
 2. Geometry smoke tests.
 3. UPF parse/export smoke tests.
 4. Rule smoke tests.
-5. Scenario evaluation smoke tests.
-6. Full frontend + native build.
-7. Static build smoke tests.
+5. Rule fixture smoke tests for rule-group regressions.
+6. Scenario evaluation smoke tests.
+7. Full frontend + native build.
+8. Static build smoke tests.
 
 Release verification:
 
