@@ -166,6 +166,28 @@ const mixedCoordinateIssues = validateUpfDocument({
 });
 assert(mixedCoordinateIssues.some(issue => issue.severity === 'error' && issue.message.includes('疑似混入')), 'EPSG:4490 mixed canvas coordinates should be rejected');
 
+const degeneratePolygonIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'degenerate', name: 'Degenerate', city: '深圳市', district: '罗湖区', planningType: 'Geometry smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Geometry fixture' }],
+    objects: [{
+        id: 'parcel_line',
+        type: 'parcel',
+        name: 'Line Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 20, y: 20 }],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: 3, buildingCoverageMax: 0.35, greenRatioMin: 0.3, heightMaxM: 80 },
+        scenarioValues: {
+            base: { far: 2, buildingCoverage: 0.3, greenRatio: 0.31, residentialGfaSqm: 10000, publicServiceGfaSqm: 300, updateMode: '综合整治' },
+        },
+    }],
+});
+assert(degeneratePolygonIssues.some(issue => issue.severity === 'error' && issue.message.includes('面积接近 0')), 'degenerate parcel polygons should be rejected');
+
 try {
     const invalidText = readFileSync(join(examples, 'invalid.upf'), 'utf8');
     const invalidIssues = validateUpfDocument(JSON.parse(invalidText));

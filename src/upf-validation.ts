@@ -118,6 +118,7 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         }
         if (item.type === 'openSpace' || item.type === 'constraint') {
             if (!hasPoints(item.points, 3)) add('error', `${path}.points`, '面状对象至少需要 3 个点。');
+            else validatePolygonGeometry(item.points, `${path}.points`, '面状对象', add);
             if (!isNonEmptyString(item.kind)) add('warning', `${path}.kind`, '面状对象缺少类型。');
         }
     });
@@ -233,6 +234,7 @@ function validateParcel(
     add: (severity: UpfValidationSeverity, path: string, message: string) => void,
 ) {
     if (!hasPoints(item.points, 3)) add('error', `${path}.points`, '地块至少需要 3 个点。');
+    else validatePolygonGeometry(item.points, `${path}.points`, '地块', add);
     if (!isNonEmptyString(item.landUseCode)) add('warning', `${path}.landUseCode`, '地块缺少用地代码。');
     if (!isNonEmptyString(item.landUseName)) add('warning', `${path}.landUseName`, '地块缺少用地名称。');
     const controls = asRecord(item.controls);
@@ -258,6 +260,35 @@ function validateParcel(
         }
         if (!isNonEmptyString(value.updateMode)) add('warning', `${path}.scenarioValues.${scenarioId}.updateMode`, '缺少更新方式。');
     }
+}
+
+function validatePolygonGeometry(
+    value: unknown,
+    path: string,
+    label: string,
+    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+) {
+    if (!Array.isArray(value)) return;
+    const points = value.flatMap((item) => {
+        const point = asRecord(item);
+        return point && isFiniteNumber(point.x) && isFiniteNumber(point.y) ? [{ x: point.x, y: point.y }] : [];
+    });
+    const uniquePoints = new Set(points.map(point => `${point.x},${point.y}`));
+    if (uniquePoints.size < 3) {
+        add('error', path, `${label} 至少需要 3 个不重复坐标点。`);
+        return;
+    }
+    if (Math.abs(rawPolygonArea(points)) < 0.0001) add('error', path, `${label} 面积接近 0，可能存在共线或重复点。`);
+}
+
+function rawPolygonArea(points: Array<{ x: number; y: number }>): number {
+    let sum = 0;
+    for (let index = 0; index < points.length; index++) {
+        const a = points[index];
+        const b = points[(index + 1) % points.length];
+        sum += a.x * b.y - b.x * a.y;
+    }
+    return Math.abs(sum / 2);
 }
 
 function asRecord(value: unknown): AnyRecord | undefined {
