@@ -530,6 +530,13 @@
             color: #fff;
         }
 
+        #optimize-preset {
+            width: 98px;
+            height: 34px;
+            padding: 0 8px;
+            font-size: 12px;
+        }
+
         .canvas-meta {
             min-width: 0;
             overflow: hidden;
@@ -1040,7 +1047,12 @@
                     </div>
                     <div class="tool-group">
                         <button id="btn-duplicate-scenario" title="复制当前方案">复制方案</button>
-                        <button id="btn-optimize" title="应用一组保守优化">保守优化</button>
+                        <select id="optimize-preset" title="选择优化策略" aria-label="优化策略">
+                            <option value="compliance">合规回调</option>
+                            <option value="public">公服优先</option>
+                            <option value="ecology">生态优先</option>
+                        </select>
+                        <button id="btn-optimize" title="应用当前优化策略">应用优化</button>
                     </div>
                     <div class="canvas-meta" id="canvas-meta">EPSG:4490 · 语义规划画布</div>
                 </div>

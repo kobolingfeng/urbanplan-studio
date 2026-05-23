@@ -27,6 +27,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click sensitivity and confirm four weight profiles produce a model comparison and scenario rankings.
 - Click report and confirm sensitivity and data-quality summaries are included.
 - Use object search and high-risk filter to locate problem objects.
+- Apply public-service and ecology optimization presets on a duplicated scenario.
 - Save a `.upf`, then load it back.
 - Load `examples/minimal.upf`.
 - Confirm quality report includes import audit when compatibility fixes were applied.

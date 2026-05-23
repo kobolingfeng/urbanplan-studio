@@ -47,6 +47,13 @@ Expected:
 7. Press `Esc`; expected: select mode remains active.
 8. Press `Delete`; expected: selected deletable object is removed, unless it is referenced.
 
+## Scenario Optimization
+
+1. Duplicate the current scenario.
+2. Choose `公服优先`, click `应用优化`, and confirm public-service GFA or notes change.
+3. Choose `生态优先`, click `应用优化`, and confirm green ratio or FAR changes.
+4. Run `检查`; expected: rule counts and evaluation score update.
+
 ## Import/Export
 
 1. Click `保存` and save a `.upf`.

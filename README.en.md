@@ -15,6 +15,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Decision matrix that reruns checks and scoring across all scenarios and explains the recommended scenario.
 - Parcel score heatmap for quickly spotting priority intervention areas.
 - Object search and risk filters for quickly locating problematic parcels or facilities.
+- Scenario optimization presets for compliance, public-service-first, and ecology-first adjustments.
 - UPF export/import.
 - Markdown planning diagnosis report.
 - Data-quality report for evidence, scenario completeness, prototype rules, and dangling references.

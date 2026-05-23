@@ -220,6 +220,7 @@ const ui = {
     btnReset: $('btn-reset') as HTMLButtonElement,
     btnDelete: $('btn-delete') as HTMLButtonElement,
     btnDuplicateScenario: $('btn-duplicate-scenario') as HTMLButtonElement,
+    optimizePreset: $('optimize-preset') as HTMLSelectElement,
     btnOptimize: $('btn-optimize') as HTMLButtonElement,
     modalClose: $('modal-close') as HTMLButtonElement,
     modalCopy: $('modal-copy') as HTMLButtonElement,
@@ -1473,21 +1474,41 @@ function duplicateScenario() {
     renderAll();
 }
 
-function applyConservativeOptimization() {
+function applyScenarioOptimization() {
+    const preset = ui.optimizePreset.value as 'compliance' | 'public' | 'ecology';
     for (const object of project.objects) {
         if (object.type !== 'parcel') continue;
         const value = getParcelScenario(object);
         value.far = Math.min(value.far, object.controls.farMax);
         value.buildingCoverage = Math.min(value.buildingCoverage, object.controls.buildingCoverageMax);
         value.greenRatio = Math.max(value.greenRatio, object.controls.greenRatioMin);
+        if (preset === 'public') {
+            value.publicServiceGfaSqm = Math.max(
+                value.publicServiceGfaSqm,
+                value.residentialGfaSqm * 0.026,
+                areaSqm(object.points) * 0.022,
+            );
+            value.notes = appendScenarioNote(value.notes, '公共服务优先：提高公服建筑面积，优先补齐完整社区设施。');
+        }
+        if (preset === 'ecology') {
+            value.far = Math.min(value.far, Math.max(0.8, object.controls.farMax * 0.92));
+            value.buildingCoverage = Math.min(value.buildingCoverage, Math.max(0.18, object.controls.buildingCoverageMax * 0.88));
+            value.greenRatio = Math.max(value.greenRatio, object.controls.greenRatioMin + 0.05);
+            value.notes = appendScenarioNote(value.notes, '生态保护优先：压低局部强度，提高绿地率和开放空间连续性。');
+        }
         if (parcelResidents(object) > 1000) {
             value.publicServiceGfaSqm = Math.max(value.publicServiceGfaSqm, areaSqm(object.points) * 0.018);
         }
         if (value.updateMode === '拆除重建') value.updateMode = '综合整治';
     }
-    setStatus('已应用保守优化', '指标已回调');
-    markDirty('已应用保守优化');
+    const label = preset === 'public' ? '公共服务优先' : preset === 'ecology' ? '生态保护优先' : '合规回调';
+    setStatus(`已应用${label}`, '方案指标已更新');
+    markDirty(`已应用${label}`);
     renderAll();
+}
+
+function appendScenarioNote(note: string, addition: string): string {
+    return note.includes(addition) ? note : `${note.trim()} ${addition}`.trim();
 }
 
 function deleteSelected() {
@@ -1889,7 +1910,7 @@ function bindControls() {
     });
     ui.btnDelete.addEventListener('click', deleteSelected);
     ui.btnDuplicateScenario.addEventListener('click', duplicateScenario);
-    ui.btnOptimize.addEventListener('click', applyConservativeOptimization);
+    ui.btnOptimize.addEventListener('click', applyScenarioOptimization);
     ui.modalClose.addEventListener('click', () => ui.modal.classList.remove('open'));
     ui.modal.addEventListener('click', event => {
         if (event.target === ui.modal) ui.modal.classList.remove('open');

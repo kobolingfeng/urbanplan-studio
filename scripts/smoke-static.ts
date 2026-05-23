@@ -25,7 +25,7 @@ const config = JSON.parse(fileText(join(DIST, 'app.config.json')));
 const sourceHtml = fileText(join(ROOT, 'src', 'index.html'));
 
 assert(html.includes('UrbanPlan Studio'), 'index.html misses app title');
-for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare', 'btn-quality', 'btn-report', 'btn-upf', 'object-search', 'object-filter', 'evaluation-list', 'plan-canvas']) {
+for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare', 'btn-quality', 'btn-report', 'btn-upf', 'object-search', 'object-filter', 'optimize-preset', 'evaluation-list', 'plan-canvas']) {
     assert(html.includes(`id="${id}"`), `index.html misses ${id}`);
 }
 for (const token of ['方案综合评估', '权重敏感性分析', '导入审计', '方案对比', '数据质量诊断', '不是可识别的 UPF 文件', '引用完整性保护']) {
