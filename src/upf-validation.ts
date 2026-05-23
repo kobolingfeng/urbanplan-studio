@@ -25,8 +25,18 @@ const PARCEL_CONTROL_RANGES: Record<string, { min: number; max: number }> = {
     greenRatioMin: { min: 0, max: 1 },
     heightMaxM: { min: 0, max: 1000 },
 };
+const ROAD_NUMERIC_RANGES: Record<string, { min: number; max: number }> = {
+    redLineWidthM: { min: 0, max: 200 },
+    lanes: { min: 1, max: 12 },
+};
+const FACILITY_NUMERIC_RANGES: Record<string, { min: number; max: number }> = {
+    capacity: { min: 0, max: 200_000 },
+    serviceRadiusM: { min: 0, max: 10_000 },
+};
 const PARCEL_NUMERIC_VALUES = Object.keys(PARCEL_NUMERIC_RANGES);
 const PARCEL_CONTROL_VALUES = Object.keys(PARCEL_CONTROL_RANGES);
+const ROAD_NUMERIC_VALUES = Object.keys(ROAD_NUMERIC_RANGES);
+const FACILITY_NUMERIC_VALUES = Object.keys(FACILITY_NUMERIC_RANGES);
 
 export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
     const issues: UpfValidationIssue[] = [];
@@ -113,14 +123,16 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         if (item.type === 'road') {
             if (!hasPoints(item.points, 2)) add('error', `${path}.points`, '道路至少需要 2 个点。');
             if (!isNonEmptyString(item.level)) add('warning', `${path}.level`, '道路缺少等级。');
-            if (!isFiniteNumber(item.redLineWidthM)) add('warning', `${path}.redLineWidthM`, '道路缺少红线宽度。');
-            if (!isFiniteNumber(item.lanes)) add('warning', `${path}.lanes`, '道路缺少车道数。');
+            for (const field of ROAD_NUMERIC_VALUES) {
+                validateNumberInRange(item, field, path, `道路 ${field}`, ROAD_NUMERIC_RANGES[field], add);
+            }
         }
         if (item.type === 'facility') {
             if (!isPoint(item.point)) add('error', `${path}.point`, '公共服务设施缺少有效点位。');
             if (!isNonEmptyString(item.kind)) add('warning', `${path}.kind`, '公共服务设施缺少类型。');
-            if (!isFiniteNumber(item.capacity)) add('warning', `${path}.capacity`, '公共服务设施缺少服务能力。');
-            if (!isFiniteNumber(item.serviceRadiusM)) add('warning', `${path}.serviceRadiusM`, '公共服务设施缺少服务半径。');
+            for (const field of FACILITY_NUMERIC_VALUES) {
+                validateNumberInRange(item, field, path, `公共服务设施 ${field}`, FACILITY_NUMERIC_RANGES[field], add);
+            }
         }
         if (item.type === 'entrance') {
             if (!isPoint(item.point)) add('error', `${path}.point`, '出入口缺少有效点位。');

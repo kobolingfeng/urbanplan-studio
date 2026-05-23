@@ -208,10 +208,32 @@ const outOfRangeIssues = validateUpfDocument({
         scenarioValues: {
             base: { far: 99, buildingCoverage: 1.2, greenRatio: -0.1, residentialGfaSqm: -1, publicServiceGfaSqm: 9_000_000, updateMode: '综合整治' },
         },
+    }, {
+        id: 'road_range',
+        type: 'road',
+        name: 'Range Road',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 90 }, { x: 80, y: 90 }],
+        level: '支路',
+        redLineWidthM: -1,
+        lanes: 20,
+    }, {
+        id: 'facility_range',
+        type: 'facility',
+        name: 'Range Facility',
+        evidence: ['fixture'],
+        point: { x: 40, y: 40 },
+        kind: '社区卫生',
+        capacity: -1,
+        serviceRadiusM: 50_000,
+        planned: true,
     }],
 });
 const rangeErrors = outOfRangeIssues.filter(issue => issue.severity === 'error' && issue.message.includes('超出允许范围'));
-assert(rangeErrors.length >= 9, 'UPF validation should reject out-of-range parcel indicators and controls');
+assert(rangeErrors.length >= 13, 'UPF validation should reject out-of-range parcel indicators, controls, roads, and facilities');
+for (const path of ['objects[1].redLineWidthM', 'objects[1].lanes', 'objects[2].capacity', 'objects[2].serviceRadiusM']) {
+    assert(rangeErrors.some(issue => issue.path === path), `UPF validation should reject ${path}`);
+}
 
 try {
     const invalidText = readFileSync(join(examples, 'invalid.upf'), 'utf8');

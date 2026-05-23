@@ -196,8 +196,8 @@
             "type": { "const": "road" },
             "points": { "$ref": "#/$defs/points" },
             "level": { "type": "string" },
-            "redLineWidthM": { "type": "number" },
-            "lanes": { "type": "number" }
+            "redLineWidthM": { "type": "number", "minimum": 0, "maximum": 200 },
+            "lanes": { "type": "integer", "minimum": 1, "maximum": 12 }
           },
           "additionalProperties": true
         }
@@ -213,8 +213,8 @@
             "type": { "const": "facility" },
             "point": { "$ref": "#/$defs/point" },
             "kind": { "type": "string" },
-            "capacity": { "type": "number" },
-            "serviceRadiusM": { "type": "number" },
+            "capacity": { "type": "number", "minimum": 0, "maximum": 200000 },
+            "serviceRadiusM": { "type": "number", "minimum": 0, "maximum": 10000 },
             "planned": { "type": "boolean" }
           },
           "additionalProperties": true
