@@ -39,6 +39,8 @@ Expected:
 21. Confirm the report includes core metrics, dimension scores, risk register, sensitivity summary, data quality summary, method metadata, and limitations.
 22. Click `UPF`.
 23. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, `manifest.activeScenarioId`, and `evaluation.modelId`.
+24. Click `GeoJSON`.
+25. Confirm the modal contains a `FeatureCollection` with parcel, road, facility, entrance, open-space, and constraint features.
 
 ## Object Editing
 

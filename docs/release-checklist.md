@@ -29,6 +29,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click validation and confirm the case validation pack includes research questions, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
 - Click quality and confirm it includes UPF structure validation, structured RuleSource metadata, evidence distribution, structured evidence coverage, and import audit.
 - Click report and confirm sensitivity and data-quality summaries are included.
+- Click GeoJSON and confirm a FeatureCollection is exported with UPF object properties.
 - Use object search and high-risk filter to locate problem objects.
 - Apply public-service and ecology optimization presets on a duplicated scenario.
 - Test `Ctrl+F`, arrow-key object navigation, `Ctrl+Enter`, and `Ctrl+S` keyboard flow.
