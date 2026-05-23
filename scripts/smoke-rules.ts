@@ -139,6 +139,7 @@ const catalogReport = buildRuleCatalogReport(result.checks);
 assert(catalogReport.includes('规则目录与验证口径'), 'rule catalog report title mismatch');
 assert(catalogReport.includes('结构化 RuleSource') && catalogReport.includes('来源层级'), 'rule catalog report should expose structured sources');
 assert(catalogReport.includes('规则分布') && catalogReport.includes('交通组织'), 'rule catalog report should summarize rule distribution');
+assert(catalogReport.includes('residents * 0.036') && catalogReport.includes('parcelArea * 0.015'), 'rule catalog formulas should expose shared service assumptions');
 assert(result.recommendations.length > 0, 'recommendations should be generated');
 assert(result.checks.some(check => check.source.includes('技术导则') || check.source.includes('原型启发')), 'rule check source should include source level');
 

@@ -143,7 +143,7 @@ const RULE_CATALOG_DRAFT: RuleCatalogDraft[] = [
         jurisdiction: 'UrbanPlan prototype',
         basis: '完整社区补短板导向',
         clause: '服务人口超过 800 人时提示地块内公共服务空间',
-        formula: 'publicServiceGfaSqm < parcelArea * 0.015 && residents > 800',
+        formula: `publicServiceGfaSqm < parcelArea * ${SERVICE_DEMAND_ASSUMPTIONS.parcelPublicServiceGfaRatio} && residents > 800`,
         prototype: true,
     },
     {
@@ -264,7 +264,7 @@ const RULE_CATALOG_DRAFT: RuleCatalogDraft[] = [
         jurisdiction: 'CN / demo',
         basis: 'GB 50180-2018 居住人口推演',
         clause: '幼儿园需求按估算人口比例推演',
-        formula: 'kindergartenCapacity < ceil(residents * 0.036)',
+        formula: `kindergartenCapacity < ceil(residents * ${SERVICE_DEMAND_ASSUMPTIONS.kindergartenSeatsPerResident})`,
         prototype: true,
     },
     {
@@ -275,7 +275,7 @@ const RULE_CATALOG_DRAFT: RuleCatalogDraft[] = [
         jurisdiction: 'CN / demo',
         basis: '完整居住社区建设指南',
         clause: '养老服务能力按估算人口比例推演',
-        formula: 'elderlyCapacity < ceil(residents * 0.03)',
+        formula: `elderlyCapacity < ceil(residents * ${SERVICE_DEMAND_ASSUMPTIONS.elderlyServiceCapacityPerResident})`,
         prototype: true,
     },
     {
