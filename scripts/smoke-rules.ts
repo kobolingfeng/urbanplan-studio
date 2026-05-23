@@ -17,6 +17,8 @@ const project = {
             id: 'parcel_bad',
             type: 'parcel',
             name: 'Bad Parcel',
+            landUseCode: '1001',
+            landUseName: '工业用地',
             points: [
                 { x: 0, y: 0 },
                 { x: 100, y: 0 },
@@ -120,6 +122,7 @@ for (const id of [
     'parcel_green_min',
     'parcel_coverage_max',
     'historic_area_rebuild_risk',
+    'landuse_industrial_residential_mix',
     'entrance_dangling_parcel',
     'entrance_dangling_road',
     'entrance_arterial_risk',

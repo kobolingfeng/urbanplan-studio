@@ -90,6 +90,26 @@ assertTriggers('heritage overlap', [
     },
 ], ['historic_area_rebuild_risk']);
 
+assertTriggers('land-use compatibility', [
+    {
+        ...badParcel,
+        id: 'parcel_industrial_housing',
+        name: 'Industrial Housing Mix',
+        landUseCode: '1001',
+        landUseName: '工业用地',
+        scenarioValues: {
+            s1: {
+                far: 2.4,
+                buildingCoverage: 0.32,
+                greenRatio: 0.3,
+                residentialGfaSqm: 18000,
+                publicServiceGfaSqm: 800,
+                updateMode: '功能置换',
+            },
+        },
+    },
+], ['landuse_industrial_residential_mix']);
+
 assertTriggers('entrance integrity and geometry', [
     badParcel,
     {

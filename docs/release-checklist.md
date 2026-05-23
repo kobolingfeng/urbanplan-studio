@@ -41,6 +41,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 
 - FAR above control value creates an error.
 - Green ratio below control value creates an error.
+- Industrial land with residential GFA creates a land-use compatibility warning.
 - A vehicle entrance on a trunk road creates a warning.
 - A parcel overlapping heritage control and marked as demolition/rebuild creates a warning.
 - Deleting a parcel referenced by an entrance is blocked.

@@ -20,6 +20,8 @@ type RuleObject = {
     evidence?: EvidenceItem[];
     points?: Point[];
     point?: Point;
+    landUseCode?: string;
+    landUseName?: string;
     kind?: string;
     level?: string;
     controls?: {
@@ -52,7 +54,7 @@ type RuleProject = {
 export type PlanningRuleDefinition = {
     id: string;
     name: string;
-    domain: '控规强度' | '公共服务' | '交通组织' | '风貌保护' | '数据完整性';
+    domain: '控规强度' | '用地兼容' | '公共服务' | '交通组织' | '风貌保护' | '数据完整性';
     defaultSeverity: Severity;
     jurisdiction: string;
     basis: string;
@@ -138,6 +140,17 @@ const RULE_CATALOG_DRAFT: RuleCatalogDraft[] = [
         basis: '完整社区补短板导向',
         clause: '服务人口超过 800 人时提示地块内公共服务空间',
         formula: 'publicServiceGfaSqm < parcelArea * 0.015 && residents > 800',
+        prototype: true,
+    },
+    {
+        id: 'landuse_industrial_residential_mix',
+        name: '工业用地居住功能兼容性预警',
+        domain: '用地兼容',
+        defaultSeverity: 'warning',
+        jurisdiction: 'UrbanPlan prototype',
+        basis: '用地性质兼容性预警',
+        clause: '工业用地承载居住建筑面积需先完成用地调整或混合兼容论证',
+        formula: 'landUseCode startsWith 1001 && residentialGfaSqm > 0',
         prototype: true,
     },
     {
@@ -356,6 +369,17 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 source: ruleSource('parcel_public_service_ratio', project.ruleset.version),
             });
         }
+        if (isIndustrialLand(parcel) && number(value.residentialGfaSqm) > 0) {
+            add({
+                ruleId: 'landuse_industrial_residential_mix',
+                objectId: parcel.id,
+                objectName: parcel.name,
+                severity: 'warning',
+                title: '工业用地承载居住功能',
+                message: `${parcel.landUseName ?? parcel.landUseCode ?? '当前用地'} 中包含 ${format(number(value.residentialGfaSqm))} 平方米住宅建面，需补充用地调整、混合兼容或更新单元论证。`,
+                source: ruleSource('landuse_industrial_residential_mix', project.ruleset.version),
+            });
+        }
         const overlapsHistoric = project.objects.some(item => item.type === 'constraint'
             && item.kind === '历史风貌控制'
             && item.points?.length
@@ -539,6 +563,14 @@ function buildRecommendations(results: PlanningRuleResult[]): PlanningRecommenda
                 basis: result.source,
             });
         }
+        if (result.ruleId === 'landuse_industrial_residential_mix') {
+            add({
+                objectId: result.objectId,
+                title: '先闭合用地性质论证',
+                message: '建议在方案比选表中单列用地调整、混合用地准入、产业保留比例和公共利益贡献说明。',
+                basis: result.source,
+            });
+        }
         if (result.ruleId === 'facility_kindergarten_coverage_gap' || result.ruleId === 'facility_elderly_coverage_gap') {
             add({
                 objectId: result.objectId,
@@ -578,6 +610,12 @@ function coveredByFacility(facilities: RuleObject[], point: Point, kind: Facilit
     return facilities
         .filter(facility => facility.kind === kind && facility.point)
         .some(facility => distance(point, facility.point!) <= number(facility.serviceRadiusM));
+}
+
+function isIndustrialLand(parcel: RuleObject): boolean {
+    const code = String(parcel.landUseCode ?? '');
+    const name = String(parcel.landUseName ?? '');
+    return code.startsWith('1001') || /工业|厂房|产业/.test(name);
 }
 
 function nearestRoadIntersection(roads: RuleObject[], point: Point): Point | null {

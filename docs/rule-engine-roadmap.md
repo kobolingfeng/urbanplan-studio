@@ -11,6 +11,8 @@ The active rule engine now lives in `src/planning-rules.ts`. More UI glue remain
   - Green ratio minimum
   - Building coverage maximum
   - Public service floor area heuristic
+- Land-use compatibility rules
+  - Industrial land carrying residential GFA triggers a use-adjustment warning
 - Heritage overlay risk
   - Parcel polygon overlaps heritage control overlay
   - Demolition/rebuild mode triggers warning

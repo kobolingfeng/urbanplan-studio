@@ -10,7 +10,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Editable evidence traces per object, including legacy strings or structured EvidenceSource entries with type, date, precision, license, and confidence.
 - Import audit for missing fields, compatibility fixes, and objects that need review.
 - UPF structure validation for required fields, object types, scenario completeness, and entrance references.
-- Rule checks for parcel intensity, green ratio, coverage, public-service gaps, entrance risks, and heritage overlay risks.
+- Rule checks for parcel intensity, land-use compatibility, public-service gaps, entrance risks, and heritage overlay risks.
 - Rule catalog metadata for domain, default severity, basis, formula, and prototype status.
 - Structured RuleSource metadata for jurisdiction, source title, clause, version, and source level.
 - Multi-criteria scenario evaluation for compliance, public service, mobility, ecology, renewal value, and evidence confidence.
