@@ -34,7 +34,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click GeoJSON and confirm a FeatureCollection is exported with UPF object properties.
 - Use object search and high-risk filter to locate problem objects.
 - Apply public-service and ecology optimization presets on a duplicated scenario.
-- Test `Ctrl+F`, arrow-key object navigation, `Ctrl+Enter`, and `Ctrl+S` keyboard flow.
+- Test `Ctrl+F`, arrow-key object navigation, Shift+Arrow canvas panning, `+`/`-`/`0` canvas zoom, `Ctrl+Enter`, and `Ctrl+S` keyboard flow.
 - Save a `.upf`, then load it back.
 - Confirm the 导入报告 modal appears after loading, with object counts and compatibility findings. For `.geojson`, confirm it reports the GeoJSON adapter instead of UPF schema format errors.
 - Load `examples/minimal.upf`.

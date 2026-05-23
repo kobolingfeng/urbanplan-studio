@@ -59,9 +59,10 @@ Expected:
 
 1. Press `Ctrl+F`; expected: object search receives focus.
 2. Press `ArrowDown`, `ArrowUp`, `Home`, and `End` outside inputs; expected: selected object moves within the current filtered list.
-3. Press `Ctrl+Enter`; expected: checks and evaluation rerun.
-4. Press `Ctrl+S`; expected: save dialog or browser download for UPF.
-5. Open a report modal, press `Ctrl+S`; expected: the modal content saves with its report filename.
+3. Press `Shift+Arrow` keys, `+`, `-`, and `0`; expected: the canvas pans, zooms, and resets without moving object coordinates.
+4. Press `Ctrl+Enter`; expected: checks and evaluation rerun.
+5. Press `Ctrl+S`; expected: save dialog or browser download for UPF.
+6. Open a report modal, press `Ctrl+S`; expected: the modal content saves with its report filename.
 
 ## Scenario Optimization
 

@@ -25,7 +25,7 @@ This backlog is ordered by product risk, not by excitement.
 
 1. Add recent files and current project path.
 2. Extend the import report with field-level before/after diffs and richer rejected-object previews.
-3. Extend keyboard navigation with map panning, zoom, and command palette workflows.
+3. Extend keyboard navigation with a command palette and saved view bookmarks.
 4. Add saved object-filter presets and map-linked filter chips.
 5. Extend scenario table exports with XLSX formatting and chart templates.
 6. Add a proper rule catalog panel.

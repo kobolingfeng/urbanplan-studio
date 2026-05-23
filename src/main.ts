@@ -170,6 +170,13 @@ type ImportProjectSnapshot = {
     objects: ImportObjectSnapshot[];
 };
 
+type CanvasViewBox = {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+};
+
 type UrbanPlanProject = {
     format: 'UPF';
     formatVersion: '0.1.0';
@@ -275,6 +282,8 @@ let dirty = false;
 let autosaveTimer: number | undefined;
 let objectSearchText = '';
 let objectFilter = 'all';
+const DEFAULT_CANVAS_VIEWBOX: CanvasViewBox = { x: 0, y: 0, width: 1000, height: 640 };
+let canvasViewBox: CanvasViewBox = { ...DEFAULT_CANVAS_VIEWBOX };
 
 const visibleLayers: Record<LayerKey, boolean> = {
     parcels: true,
@@ -1053,6 +1062,7 @@ function objectMatchesListFilter(object: PlanObject): boolean {
 
 function renderCanvas() {
     syncToolButtons();
+    applyCanvasViewBox();
     ui.canvas.classList.toggle('selecting', activeTool === 'select');
     ui.canvas.replaceChildren();
 
@@ -1078,7 +1088,7 @@ function renderCanvas() {
     ui.canvasHint.textContent = activeTool === 'select'
         ? selectedObjectHint()
         : `在画布上点击即可新增${activeTool === 'parcel' ? '地块' : activeTool === 'facility' ? '设施' : '出入口'}对象。`;
-    ui.canvasMeta.textContent = `${project.project.crs} · 1 unit≈${UNIT_SYSTEM.metersPerCanvasUnit}m · ${activeScenario().name} · ${activeTool}`;
+    ui.canvasMeta.textContent = `${project.project.crs} · 1 unit≈${UNIT_SYSTEM.metersPerCanvasUnit}m · ${activeScenario().name} · ${activeTool} · ${canvasZoomPercent()}%`;
 }
 
 function selectedObjectHint(): string {
@@ -1629,6 +1639,45 @@ function canvasPoint(event: MouseEvent): Point {
     if (!matrix) return { x: 0, y: 0 };
     const transformed = point.matrixTransform(matrix.inverse());
     return { x: transformed.x, y: transformed.y };
+}
+
+function applyCanvasViewBox() {
+    ui.canvas.setAttribute('viewBox', `${canvasViewBox.x} ${canvasViewBox.y} ${canvasViewBox.width} ${canvasViewBox.height}`);
+}
+
+function canvasZoomPercent(): number {
+    return Math.round((DEFAULT_CANVAS_VIEWBOX.width / canvasViewBox.width) * 100);
+}
+
+function panCanvas(dx: number, dy: number) {
+    canvasViewBox = {
+        ...canvasViewBox,
+        x: canvasViewBox.x + dx,
+        y: canvasViewBox.y + dy,
+    };
+    applyCanvasViewBox();
+    ui.canvasMeta.textContent = `${project.project.crs} · 1 unit≈${UNIT_SYSTEM.metersPerCanvasUnit}m · ${activeScenario().name} · ${activeTool} · ${canvasZoomPercent()}%`;
+}
+
+function zoomCanvas(factor: number) {
+    const nextWidth = Math.max(250, Math.min(1800, canvasViewBox.width * factor));
+    const nextHeight = Math.max(160, Math.min(1152, canvasViewBox.height * factor));
+    const center = {
+        x: canvasViewBox.x + canvasViewBox.width / 2,
+        y: canvasViewBox.y + canvasViewBox.height / 2,
+    };
+    canvasViewBox = {
+        x: center.x - nextWidth / 2,
+        y: center.y - nextHeight / 2,
+        width: nextWidth,
+        height: nextHeight,
+    };
+    renderCanvas();
+}
+
+function resetCanvasView() {
+    canvasViewBox = { ...DEFAULT_CANVAS_VIEWBOX };
+    renderCanvas();
 }
 
 function addObjectAt(point: Point) {
@@ -2413,6 +2462,7 @@ function loadUpfText(text: string, options: { sourceName?: string; showImportRep
     selectedId = project.objects[0]?.id ?? '';
     objectSearchText = '';
     objectFilter = 'all';
+    canvasViewBox = { ...DEFAULT_CANVAS_VIEWBOX };
     renderAll();
     if (options.showImportReport) {
         showModal('导入报告', buildImportReport(options.sourceName ?? 'UPF 文本'), project.project.name, 'import-report.md');
@@ -2519,6 +2569,7 @@ function bindControls() {
         importFindings = [];
         objectSearchText = '';
         objectFilter = 'all';
+        canvasViewBox = { ...DEFAULT_CANVAS_VIEWBOX };
         dirty = false;
         renderAll();
     });
@@ -2590,6 +2641,23 @@ function bindControls() {
         }
         const active = document.activeElement;
         const editingText = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement;
+        if (!editingText && event.shiftKey && ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+            event.preventDefault();
+            const stepX = canvasViewBox.width * 0.08;
+            const stepY = canvasViewBox.height * 0.08;
+            if (event.key === 'ArrowDown') panCanvas(0, stepY);
+            if (event.key === 'ArrowUp') panCanvas(0, -stepY);
+            if (event.key === 'ArrowLeft') panCanvas(-stepX, 0);
+            if (event.key === 'ArrowRight') panCanvas(stepX, 0);
+            return;
+        }
+        if (!editingText && (event.key === '+' || event.key === '=' || event.key === '-' || event.key === '_' || event.key === '0')) {
+            event.preventDefault();
+            if (event.key === '+' || event.key === '=') zoomCanvas(0.85);
+            if (event.key === '-' || event.key === '_') zoomCanvas(1.15);
+            if (event.key === '0') resetCanvasView();
+            return;
+        }
         if (!editingText && (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End')) {
             event.preventDefault();
             if (event.key === 'ArrowDown') selectAdjacentObject(1);
