@@ -20,17 +20,19 @@ Use this before handing UrbanPlan Studio to another person for review.
 
 - Launch `dist/app.exe`.
 - Confirm the title is UrbanPlan Studio.
-- Confirm the top actions are visible: run check, evaluation, compare, quality, report, UPF, save, load.
+- Confirm the top actions are visible: run check, evaluation, sensitivity, compare, quality, validation, report, UPF, save, load.
 - Click a parcel and edit FAR; status bar should show unsaved state.
 - Click UPF and confirm top-level `format` and `formatVersion` exist.
 - Click evaluation and confirm the modal includes score, confidence, dimensions, parcel priorities, and risk register.
 - Click sensitivity and confirm four weight profiles produce a model comparison and scenario rankings.
+- Click validation and confirm the case validation pack includes research questions, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
 - Click report and confirm sensitivity and data-quality summaries are included.
 - Use object search and high-risk filter to locate problem objects.
 - Apply public-service and ecology optimization presets on a duplicated scenario.
 - Test `Ctrl+F`, `Ctrl+Enter`, and `Ctrl+S` keyboard flow.
 - Save a `.upf`, then load it back.
 - Load `examples/minimal.upf`.
+- Load `examples/luohu-case-v1.upf` and confirm three scenarios and multiple planning object types appear.
 - Confirm quality report includes import audit when compatibility fixes were applied.
 - Try `examples/invalid.upf`; it should show an import error.
 
@@ -43,6 +45,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Deleting a parcel referenced by an entrance is blocked.
 - Scenario decision matrix lists all scenarios, scores, confidence, key metrics, and risk counts.
 - Data quality report exposes rule catalog, prototype rules, evidence coverage, evidence type distribution, and evidence gaps.
+- Data quality report exposes dangling entrance references when an entrance points to a missing parcel or road.
 - Evaluation smoke confirms six dimensions and parcel-level scoring.
 
 ## Known Limits

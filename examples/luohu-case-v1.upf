@@ -1,0 +1,318 @@
+{
+  "format": "UPF",
+  "formatVersion": "0.1.0",
+  "project": {
+    "id": "luohu_case_v1",
+    "name": "罗湖城市更新片区案例 V1",
+    "city": "深圳市",
+    "district": "罗湖区",
+    "planningType": "城市更新片区 / 控规与完整社区辅助推演",
+    "planningHorizon": "2026-2035",
+    "crs": "DemoCanvasMetric"
+  },
+  "ruleset": {
+    "jurisdiction": "CN-GD-SZ",
+    "version": "教学案例规则集 2026-05",
+    "basis": [
+      "GB 50180-2018 城市居住区规划设计标准",
+      "完整居住社区建设指南",
+      "深圳城市更新相关公开政策资料",
+      "UrbanPlan Studio UPF 0.1 原型规则"
+    ]
+  },
+  "scenarios": [
+    { "id": "baseline", "name": "现状基准", "description": "保留现状建筑强度，记录公服、绿地和交通组织短板。" },
+    { "id": "renewal_balanced", "name": "更新均衡方案", "description": "在控规约束内提升住房供给并补齐基本公共服务。" },
+    { "id": "service_upgrade", "name": "公服提升方案", "description": "降低局部强度，优先增加幼儿园、养老、卫生和开放空间。" }
+  ],
+  "activeScenarioId": "service_upgrade",
+  "objects": [
+    {
+      "id": "parcel_lh_a",
+      "type": "parcel",
+      "name": "LH-A 老旧住区更新单元",
+      "evidence": [
+        "案例底图：课程自绘地块边界 2026",
+        "控制指标：教学案例控规参数表 2026",
+        "现场观察：老旧住区公共空间不足 2026"
+      ],
+      "points": [
+        { "x": 145, "y": 135 },
+        { "x": 335, "y": 125 },
+        { "x": 350, "y": 285 },
+        { "x": 135, "y": 295 }
+      ],
+      "landUseCode": "0701",
+      "landUseName": "城镇住宅用地",
+      "controls": {
+        "farMax": 4.2,
+        "buildingCoverageMax": 0.35,
+        "greenRatioMin": 0.3,
+        "heightMaxM": 100
+      },
+      "scenarioValues": {
+        "baseline": {
+          "far": 2.4,
+          "buildingCoverage": 0.39,
+          "greenRatio": 0.2,
+          "residentialGfaSqm": 36000,
+          "publicServiceGfaSqm": 260,
+          "updateMode": "保留整治",
+          "notes": "现状住区公共服务和绿地不足。"
+        },
+        "renewal_balanced": {
+          "far": 4.1,
+          "buildingCoverage": 0.34,
+          "greenRatio": 0.31,
+          "residentialGfaSqm": 61000,
+          "publicServiceGfaSqm": 1450,
+          "updateMode": "综合整治",
+          "notes": "控制强度并在底层嵌入社区服务。"
+        },
+        "service_upgrade": {
+          "far": 3.8,
+          "buildingCoverage": 0.32,
+          "greenRatio": 0.34,
+          "residentialGfaSqm": 56000,
+          "publicServiceGfaSqm": 2200,
+          "updateMode": "综合整治",
+          "notes": "优先补齐公服并增加连续开放空间。"
+        }
+      }
+    },
+    {
+      "id": "parcel_lh_b",
+      "type": "parcel",
+      "name": "LH-B 存量厂房功能置换单元",
+      "evidence": [
+        "案例底图：课程自绘地块边界 2026",
+        "调研记录：存量厂房低效利用 2026",
+        "控制指标：教学案例控规参数表 2026"
+      ],
+      "points": [
+        { "x": 370, "y": 145 },
+        { "x": 570, "y": 130 },
+        { "x": 595, "y": 300 },
+        { "x": 380, "y": 320 }
+      ],
+      "landUseCode": "0801",
+      "landUseName": "商业服务业用地",
+      "controls": {
+        "farMax": 5,
+        "buildingCoverageMax": 0.4,
+        "greenRatioMin": 0.25,
+        "heightMaxM": 120
+      },
+      "scenarioValues": {
+        "baseline": {
+          "far": 1.8,
+          "buildingCoverage": 0.45,
+          "greenRatio": 0.16,
+          "residentialGfaSqm": 8000,
+          "publicServiceGfaSqm": 300,
+          "updateMode": "功能置换",
+          "notes": "低效厂房与停车空间占比较高。"
+        },
+        "renewal_balanced": {
+          "far": 4.8,
+          "buildingCoverage": 0.38,
+          "greenRatio": 0.26,
+          "residentialGfaSqm": 30000,
+          "publicServiceGfaSqm": 1800,
+          "updateMode": "功能置换",
+          "notes": "混合社区服务、就业和补充住房。"
+        },
+        "service_upgrade": {
+          "far": 4.3,
+          "buildingCoverage": 0.36,
+          "greenRatio": 0.31,
+          "residentialGfaSqm": 26000,
+          "publicServiceGfaSqm": 2600,
+          "updateMode": "功能置换",
+          "notes": "把更多底层空间转为公共服务和邻里商业。"
+        }
+      }
+    },
+    {
+      "id": "parcel_lh_c",
+      "type": "parcel",
+      "name": "LH-C 风貌界面整治单元",
+      "evidence": [
+        "案例底图：课程自绘地块边界 2026",
+        "风貌控制：教学案例历史街巷协调范围 2026",
+        "现场观察：沿街界面连续性较强 2026"
+      ],
+      "points": [
+        { "x": 180, "y": 325 },
+        { "x": 465, "y": 320 },
+        { "x": 455, "y": 475 },
+        { "x": 170, "y": 465 }
+      ],
+      "landUseCode": "0701",
+      "landUseName": "城镇住宅用地",
+      "controls": {
+        "farMax": 2.8,
+        "buildingCoverageMax": 0.35,
+        "greenRatioMin": 0.35,
+        "heightMaxM": 60
+      },
+      "scenarioValues": {
+        "baseline": {
+          "far": 2.1,
+          "buildingCoverage": 0.36,
+          "greenRatio": 0.22,
+          "residentialGfaSqm": 25000,
+          "publicServiceGfaSqm": 180,
+          "updateMode": "保留整治",
+          "notes": "风貌街巷旁存量住区配套不足。"
+        },
+        "renewal_balanced": {
+          "far": 3.1,
+          "buildingCoverage": 0.36,
+          "greenRatio": 0.28,
+          "residentialGfaSqm": 43000,
+          "publicServiceGfaSqm": 900,
+          "updateMode": "拆除重建",
+          "notes": "示意一个高风险方案，用于触发风貌与控规复核。"
+        },
+        "service_upgrade": {
+          "far": 2.6,
+          "buildingCoverage": 0.31,
+          "greenRatio": 0.38,
+          "residentialGfaSqm": 34000,
+          "publicServiceGfaSqm": 1500,
+          "updateMode": "综合整治",
+          "notes": "保留街巷界面，增加口袋公园和嵌入式服务。"
+        }
+      }
+    },
+    {
+      "id": "road_lh_main",
+      "type": "road",
+      "name": "片区主干路",
+      "evidence": ["案例路网：课程自绘路网 2026"],
+      "points": [
+        { "x": 635, "y": 80 },
+        { "x": 635, "y": 520 }
+      ],
+      "level": "主干路",
+      "redLineWidthM": 36,
+      "lanes": 6
+    },
+    {
+      "id": "road_lh_branch",
+      "type": "road",
+      "name": "社区支路",
+      "evidence": ["案例路网：课程自绘路网 2026"],
+      "points": [
+        { "x": 105, "y": 505 },
+        { "x": 700, "y": 505 }
+      ],
+      "level": "支路",
+      "redLineWidthM": 18,
+      "lanes": 2
+    },
+    {
+      "id": "road_lh_lane",
+      "type": "road",
+      "name": "慢行街巷",
+      "evidence": ["案例路网：课程自绘慢行系统 2026"],
+      "points": [
+        { "x": 115, "y": 315 },
+        { "x": 610, "y": 315 }
+      ],
+      "level": "慢行街巷",
+      "redLineWidthM": 12,
+      "lanes": 1
+    },
+    {
+      "id": "facility_lh_kindergarten",
+      "type": "facility",
+      "name": "规划幼儿园",
+      "evidence": ["完整社区补短板推演 2026"],
+      "point": { "x": 495, "y": 235 },
+      "kind": "幼儿园",
+      "capacity": 210,
+      "serviceRadiusM": 500,
+      "planned": true
+    },
+    {
+      "id": "facility_lh_elderly",
+      "type": "facility",
+      "name": "社区养老与助餐点",
+      "evidence": ["完整社区补短板推演 2026"],
+      "point": { "x": 300, "y": 365 },
+      "kind": "社区养老",
+      "capacity": 150,
+      "serviceRadiusM": 500,
+      "planned": true
+    },
+    {
+      "id": "facility_lh_health",
+      "type": "facility",
+      "name": "社区健康服务站",
+      "evidence": ["完整社区补短板推演 2026"],
+      "point": { "x": 555, "y": 375 },
+      "kind": "社区卫生",
+      "capacity": 4200,
+      "serviceRadiusM": 700,
+      "planned": true
+    },
+    {
+      "id": "openspace_lh_greenway",
+      "type": "openSpace",
+      "name": "社区慢行绿廊",
+      "evidence": ["开放空间方案草图 2026"],
+      "points": [
+        { "x": 470, "y": 330 },
+        { "x": 610, "y": 325 },
+        { "x": 615, "y": 465 },
+        { "x": 470, "y": 470 }
+      ],
+      "kind": "慢行绿廊"
+    },
+    {
+      "id": "constraint_lh_heritage",
+      "type": "constraint",
+      "name": "历史街巷风貌协调区",
+      "evidence": ["教学案例历史街巷协调范围 2026"],
+      "points": [
+        { "x": 145, "y": 305 },
+        { "x": 480, "y": 300 },
+        { "x": 485, "y": 490 },
+        { "x": 140, "y": 485 }
+      ],
+      "kind": "历史风貌控制"
+    },
+    {
+      "id": "entrance_lh_a_ped",
+      "type": "entrance",
+      "name": "LH-A 人行入口",
+      "evidence": ["出入口组织方案 2026"],
+      "point": { "x": 250, "y": 315 },
+      "entranceType": "人行",
+      "parcelId": "parcel_lh_a",
+      "roadId": "road_lh_lane"
+    },
+    {
+      "id": "entrance_lh_b_vehicle",
+      "type": "entrance",
+      "name": "LH-B 机动车入口",
+      "evidence": ["出入口组织方案 2026"],
+      "point": { "x": 635, "y": 260 },
+      "entranceType": "机动车",
+      "parcelId": "parcel_lh_b",
+      "roadId": "road_lh_main"
+    },
+    {
+      "id": "entrance_lh_c_fire",
+      "type": "entrance",
+      "name": "LH-C 消防入口",
+      "evidence": ["出入口组织方案 2026"],
+      "point": { "x": 330, "y": 505 },
+      "entranceType": "消防",
+      "parcelId": "parcel_lh_c",
+      "roadId": "road_lh_branch"
+    }
+  ]
+}

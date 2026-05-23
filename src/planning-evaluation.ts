@@ -105,7 +105,10 @@ export type ParcelEvaluation = {
 export type ScenarioEvaluation = {
     scenarioId: string;
     scenarioName: string;
+    modelId: string;
     modelName: string;
+    weightSource: string;
+    weights: EvaluationWeightSet;
     score: number;
     band: EvaluationBand;
     confidence: number;
@@ -224,7 +227,10 @@ export function evaluateScenario(
     return {
         scenarioId,
         scenarioName: scenario?.name ?? scenarioId,
+        modelId: weightProfile.id,
         modelName: weightProfile.name,
+        weightSource: 'UrbanPlan Studio prototype built-in profile',
+        weights: { ...weightProfile.weights },
         score,
         band: scoreBand(score),
         confidence,
@@ -247,7 +253,8 @@ export function buildScenarioEvaluationReport(
         `# ${projectName} 方案综合评估`,
         '',
         `当前方案：${evaluation.scenarioName}`,
-        `评价模型：${evaluation.modelName}`,
+        `评价模型：${evaluation.modelName}（${evaluation.modelId}）`,
+        `权重来源：${evaluation.weightSource}`,
         `综合评分：${evaluation.score}/100（${evaluation.band}）`,
         `证据可信度：${evaluation.confidence}/100`,
         `规则版本：${project.ruleset?.version ?? '未声明'}`,

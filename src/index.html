@@ -914,8 +914,70 @@
             color: #172026;
             background: #fbfcfd;
             user-select: text;
-            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .modal-text h1,
+        .modal-text h2,
+        .modal-text h3,
+        .modal-text h4 {
+            margin: 18px 0 8px;
+            line-height: 1.25;
+            letter-spacing: 0;
+        }
+
+        .modal-text h1 { font-size: 20px; }
+        .modal-text h2 { font-size: 17px; }
+        .modal-text h3 { font-size: 15px; color: var(--ink); }
+        .modal-text h4 { font-size: 13px; color: var(--muted); }
+
+        .modal-text p,
+        .modal-text ul {
+            margin: 8px 0;
+        }
+
+        .modal-text ul {
+            padding-left: 20px;
+        }
+
+        .modal-text table {
+            width: 100%;
+            min-width: 620px;
+            margin: 10px 0 14px;
+            border-collapse: collapse;
+            background: #fff;
+            font-size: 12px;
+        }
+
+        .modal-text th,
+        .modal-text td {
+            padding: 7px 8px;
+            border: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .modal-text th {
+            background: var(--surface-2);
+            color: var(--ink);
+            font-weight: 800;
+        }
+
+        .modal-text code,
+        .modal-raw {
             font: 12px/1.6 "Cascadia Code", Consolas, monospace;
+        }
+
+        .modal-text pre,
+        .modal-raw {
+            overflow: auto;
+            margin: 10px 0;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #f1f5f7;
+            white-space: pre;
         }
 
         @media (max-width: 1180px) {
@@ -993,6 +1055,7 @@
                 <button id="btn-sensitivity" title="查看权重敏感性分析">敏感</button>
                 <button id="btn-compare" title="比较不同规划方案">对比</button>
                 <button id="btn-quality" title="检查 UPF 数据质量">质检</button>
+                <button id="btn-validation" title="生成案例验证包">验证</button>
                 <button id="btn-report" title="生成诊断报告">报告</button>
                 <button id="btn-upf" title="查看 UPF 数据">UPF</button>
                 <button id="btn-save" title="保存 UPF 文件">保存</button>
@@ -1111,7 +1174,7 @@
                 <h2 id="modal-title">Output</h2>
                 <button class="icon-btn" id="modal-close" title="关闭">×</button>
             </div>
-            <pre class="modal-text" id="modal-text"></pre>
+            <div class="modal-text" id="modal-text"></div>
             <div class="modal-footer">
                 <span class="compact-label" id="modal-meta">UrbanPlan Studio</span>
                 <div class="top-actions">

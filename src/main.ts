@@ -212,6 +212,7 @@ const ui = {
     btnSensitivity: $('btn-sensitivity') as HTMLButtonElement,
     btnCompare: $('btn-compare') as HTMLButtonElement,
     btnQuality: $('btn-quality') as HTMLButtonElement,
+    btnValidation: $('btn-validation') as HTMLButtonElement,
     btnReport: $('btn-report') as HTMLButtonElement,
     btnUpf: $('btn-upf') as HTMLButtonElement,
     btnSave: $('btn-save') as HTMLButtonElement,
@@ -574,6 +575,8 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
     if (!Array.isArray(input.objects) || !input.objects.length) {
         findings.push({ severity: 'warning', objectId: 'project', message: '未找到有效规划对象，导入后可能退回演示对象或空项目。' });
     }
+    const parcelIds = new Set((input.objects ?? []).filter(object => object?.type === 'parcel').map(object => object.id).filter(Boolean));
+    const roadIds = new Set((input.objects ?? []).filter(object => object?.type === 'road').map(object => object.id).filter(Boolean));
     for (const raw of input.objects ?? []) {
         const object = raw as Partial<PlanObject>;
         const objectId = object.id || 'unknown_object';
@@ -596,6 +599,8 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
         } else if (object.type === 'entrance') {
             const entrance = object as Partial<Entrance>;
             if (!entrance.parcelId || !entrance.roadId) findings.push({ severity: 'warning', objectId, message: '出入口缺少地块或道路引用，需要导入后复核。' });
+            if (entrance.parcelId && !parcelIds.has(entrance.parcelId)) findings.push({ severity: 'warning', objectId, message: `出入口引用不存在的地块 ${entrance.parcelId}，需要重新绑定。` });
+            if (entrance.roadId && !roadIds.has(entrance.roadId)) findings.push({ severity: 'warning', objectId, message: `出入口引用不存在的道路 ${entrance.roadId}，需要重新绑定。` });
         } else if (!['openSpace', 'constraint'].includes(String(object.type))) {
             findings.push({ severity: 'warning', objectId, message: `未知对象类型 ${String(object.type)}，兼容层会过滤。` });
         }
@@ -1609,17 +1614,25 @@ function buildReport(): string {
         '',
         '## 四、主要问题',
         '',
-        ...checks.map(check => `- [${severityLabel(check.severity)}] ${check.objectName}：${check.title}。${check.message} 来源：${check.source}`),
+        ...(checks.length
+            ? checks.map(check => `- [${severityLabel(check.severity)}] ${check.objectName}：${check.title}。${check.message} 来源：${check.source}`)
+            : ['- 暂无规则问题。']),
         '',
         '## 五、智能建议',
         '',
-        ...recommendations.map(recommendation => `- ${recommendation.title}：${recommendation.message} 依据：${recommendation.basis}`),
+        ...(recommendations.length
+            ? recommendations.map(recommendation => `- ${recommendation.title}：${recommendation.message} 依据：${recommendation.basis}`)
+            : ['- 暂无自动建议。']),
         '',
-        '## 六、答辩说明',
+        '## 六、风险登记',
+        '',
+        ...(evaluation.riskRegister.length ? evaluation.riskRegister.map(item => `- ${item}`) : ['- 暂无高优先级风险登记。']),
+        '',
+        '## 七、答辩说明',
         '',
         ...evaluation.highlights.map(item => `- ${item}`),
         '',
-        '## 七、权重敏感性摘要',
+        '## 八、权重敏感性摘要',
         '',
         `- 稳健推荐：${robustWinner ? `${robustWinner[0]}（${robustWinner[1]}/${sensitivityRows.length} 个模型排名第一）` : '暂无'}`,
         '',
@@ -1627,14 +1640,21 @@ function buildReport(): string {
         '|---|---|---:|---:|',
         ...sensitivityRows.map(row => `| ${row.profile.name} | ${row.winner?.scenario.name ?? '暂无'} | ${row.active?.evaluation.score ?? '-'} | ${row.spread} |`),
         '',
-        '## 八、数据质量摘要',
+        '## 九、数据质量摘要',
         '',
         `- 数据质量分：${quality.score}/100`,
         `- 证据覆盖率：${quality.evidenceCoverage.toFixed(1)}%`,
         `- 导入审计：${importFindings.length} 项`,
         `- 规则依据：${quality.basisCount} 条`,
         '',
-        '## 九、说明',
+        '## 十、方法与限制',
+        '',
+        '| 项目 | 说明 |',
+        '|---|---|',
+        `| UPF 版本 | ${project.formatVersion} |`,
+        `| 单位系统 | ${UNIT_SYSTEM.name}，${UNIT_SYSTEM.metersPerCanvasUnit} 米/画布单位 |`,
+        `| 评价模型 | ${evaluation.modelName} |`,
+        `| 规则集 | ${project.ruleset.version} |`,
         '',
         '本报告来自 UPF 0.1 原型规则引擎，是规划辅助判断，不替代法定审查、专项交通影响评价、消防审查或正式控规成果。',
     ];
@@ -1658,8 +1678,8 @@ function buildQualityReport(): string {
     return lines.join('\n');
 }
 
-function buildDecisionMatrixReport(): string {
-    const rows = project.scenarios.map((scenario) => {
+function collectScenarioDecisionRows() {
+    return project.scenarios.map((scenario) => {
         const ruleResult = runPlanningRules(project, scenario.id);
         const scenarioEvaluation = evaluateScenario(project, scenario.id, ruleResult.checks, ruleResult.recommendations);
         const errors = ruleResult.checks.filter(check => check.severity === 'error').length;
@@ -1674,6 +1694,184 @@ function buildDecisionMatrixReport(): string {
             warnings,
         };
     });
+}
+
+function buildCaseValidationReport(): string {
+    const quality = calculateDataQuality(project, checks, recommendations);
+    const decisionRows = collectScenarioDecisionRows();
+    const sensitivityRows = buildSensitivityRows();
+    const robustWinner = robustSensitivityWinner(sensitivityRows);
+    const activeRow = decisionRows.find(row => row.scenario.id === activeScenarioId);
+    const errors = checks.filter(check => check.severity === 'error');
+    const warnings = checks.filter(check => check.severity === 'warning');
+    const agreement = robustWinner ? robustWinner[1] / EVALUATION_WEIGHT_PROFILES.length : 0;
+    const riskControlScore = Math.max(0, 100 - Math.min(45, errors.length * 12 + warnings.length * 4));
+    const readiness = Math.round(
+        quality.score * 0.30
+        + evaluation.confidence * 0.25
+        + agreement * 100 * 0.20
+        + riskControlScore * 0.25,
+    );
+    const typeCounts = project.objects.reduce<Record<string, number>>((counts, object) => {
+        counts[object.type] = (counts[object.type] ?? 0) + 1;
+        return counts;
+    }, {});
+    const lines = [
+        `# ${project.project.name} 城市更新案例验证包`,
+        '',
+        `生成时间：${new Date().toLocaleString('zh-CN')}`,
+        `研究对象：${project.project.city}${project.project.district} · ${project.project.planningType}`,
+        `当前方案：${activeScenario().name}`,
+        `验证就绪度：${readiness}/100（${validationReadinessBand(readiness)}）`,
+        '',
+        '## 一、研究问题与证据链',
+        '',
+        '| 研究问题 | 系统证据 | 当前状态 |',
+        '|---|---|---|',
+        `| RQ1：UPF 语义模型能否表达城市更新方案对象 | ${project.objects.length} 个对象，${project.scenarios.length} 个情景方案 | ${quality.objectCount > 0 ? '可验证' : '需补数据'} |`,
+        `| RQ2：规则校核能否形成可解释问题清单 | ${checks.length} 条规则结果，${quality.ruleCatalog.length} 类规则触发 | ${errors.length ? '存在硬性风险' : '未发现硬性错误'} |`,
+        `| RQ3：多方案比较能否支撑方案选择 | ${decisionRows.length} 个方案进入决策矩阵 | ${decisionRows.length >= 2 ? '可比较' : '需增加对照方案'} |`,
+        `| RQ4：评价结果对权重变化是否稳健 | ${robustWinner ? `${robustWinner[0]} 获得 ${robustWinner[1]}/${EVALUATION_WEIGHT_PROFILES.length} 个模型第一` : '暂无稳健推荐'} | ${agreement >= 0.5 ? '可讨论稳健性' : '需说明价值偏好影响'} |`,
+        `| RQ5：数据来源是否足以支撑论文答辩 | 证据覆盖率 ${quality.evidenceCoverage.toFixed(1)}%，质量分 ${quality.score}/100 | ${quality.score >= 80 ? '较充分' : '需补充来源'} |`,
+        '',
+        '## 二、数据与对象概况',
+        '',
+        '| 数据项 | 当前值 | 论文写法 |',
+        '|---|---:|---|',
+        `| 地块 | ${typeCounts.parcel ?? 0} | 作为控规和更新评价的基本空间单元 |`,
+        `| 道路 | ${typeCounts.road ?? 0} | 用于入口、通达性和道路等级复核 |`,
+        `| 公共服务设施 | ${typeCounts.facility ?? 0} | 用于服务半径和配套能力分析 |`,
+        `| 出入口 | ${typeCounts.entrance ?? 0} | 用于交通组织和界面关系检查 |`,
+        `| 开放空间 | ${typeCounts.openSpace ?? 0} | 用于绿地率、公共开放空间和慢行连续性判断 |`,
+        `| 约束控制线 | ${typeCounts.constraint ?? 0} | 用于历史风貌、蓝绿线、轨道保护等约束识别 |`,
+        '',
+        '### 证据类型分布',
+        '',
+        ...(Object.entries(quality.evidenceTypeCounts).length
+            ? Object.entries(quality.evidenceTypeCounts).map(([kind, count]) => `- ${kind}：${count}`)
+            : ['- 暂无证据来源，请补齐对象 evidence 字段。']),
+        '',
+        '## 三、当前方案综合评估',
+        '',
+        `当前方案综合评分为 ${evaluation.score}/100（${evaluation.band}），证据可信度 ${evaluation.confidence}/100。`,
+        activeRow ? `当前方案在多方案矩阵中的人口估算为 ${formatNumber(activeRow.residents)} 人，住宅建面 ${formatNumber(activeRow.residentialGfa)} 平方米，公服建面 ${formatNumber(activeRow.publicServiceGfa)} 平方米。` : '当前方案暂未进入决策矩阵。',
+        '',
+        '| 维度 | 权重 | 得分 | 解释 |',
+        '|---|---:|---:|---|',
+        ...evaluation.dimensions.map(dimension => `| ${dimension.name} | ${(dimension.weight * 100).toFixed(0)}% | ${dimension.score} | ${dimension.reason} |`),
+        '',
+        '## 四、多方案决策矩阵',
+        '',
+        '| 方案 | 综合评分 | 可信度 | 估算人口 | 住宅建面 | 公服建面 | 错误 | 警告 | 判断 |',
+        '|---|---:|---:|---:|---:|---:|---:|---:|---|',
+        ...decisionRows.map(row => `| ${row.scenario.name} | ${row.evaluation.score} | ${row.evaluation.confidence} | ${formatNumber(row.residents)} | ${formatNumber(row.residentialGfa)} | ${formatNumber(row.publicServiceGfa)} | ${row.errors} | ${row.warnings} | ${row.evaluation.band} |`),
+        '',
+        '## 五、权重敏感性与稳健性',
+        '',
+        `稳健推荐：${robustWinner ? `${robustWinner[0]}（${robustWinner[1]}/${EVALUATION_WEIGHT_PROFILES.length} 个模型排名第一）` : '暂无'}`,
+        '',
+        '| 权重模型 | 侧重点 | 第一名 | 当前方案得分 | 分差范围 |',
+        '|---|---|---|---:|---:|',
+        ...sensitivityRows.map(row => `| ${row.profile.name} | ${row.profile.description} | ${row.winner?.scenario.name ?? '暂无'} | ${row.active?.evaluation.score ?? '-'} | ${row.spread} |`),
+        '',
+        '## 六、规则校核与风险闭环',
+        '',
+        `当前方案共 ${checks.length} 条规则结果，其中错误 ${errors.length} 条、警告 ${warnings.length} 条。`,
+        '',
+        '| 等级 | 对象 | 规则 | 问题 | 来源 |',
+        '|---|---|---|---|---|',
+        ...(checks.length
+            ? checks.map(check => `| ${severityLabel(check.severity)} | ${check.objectName} | ${check.ruleId} | ${check.title}：${check.message} | ${check.source} |`)
+            : ['| 通过 | 全局 | - | 当前没有规则问题 | - |']),
+        '',
+        '## 七、论文实验记录表',
+        '',
+        '| 验证任务 | 操作对象 | 记录指标 | 结果填写 |',
+        '|---|---|---|---|',
+        '| T1 方案建模 | UPF 地块、道路、设施、出入口 | 是否能完整表达案例对象 | 待实测 |',
+        '| T2 规则检查 | 当前方案 | 问题识别准确性、遗漏项 | 待专家复核 |',
+        '| T3 方案比较 | 基准、更新、保护等方案 | 评分排序是否符合专业判断 | 待专家复核 |',
+        '| T4 权重敏感性 | 四类权重模型 | 推荐结果是否稳定 | 待记录 |',
+        '| T5 报告导出 | 诊断、质检、验证包 | 是否能直接支撑论文材料整理 | 待记录 |',
+        '',
+        '## 八、专家复核表',
+        '',
+        '| 复核项 | 1-5 分 | 主要意见 |',
+        '|---|---:|---|',
+        '| 指标体系合理性 |  |  |',
+        '| 规则问题识别准确性 |  |  |',
+        '| 情景比较解释性 |  |  |',
+        '| 数据质量诊断价值 |  |  |',
+        '| 作为毕业设计原型的完整性 |  |  |',
+        '',
+        '## 九、可复现材料清单',
+        '',
+        '- UPF 项目文件：保存按钮导出的 `.upf` 文件。',
+        '- 规划诊断报告：报告按钮导出的 `planning-report.md`。',
+        '- 方案综合评估：评估按钮导出的 `scenario-evaluation.md`。',
+        '- 方案决策矩阵：对比按钮导出的 `scenario-decision-matrix.md`。',
+        '- 权重敏感性分析：敏感按钮导出的 `weight-sensitivity-report.md`。',
+        '- 数据质量诊断：质检按钮导出的 `data-quality-report.md`。',
+        '- 本案例验证包：验证按钮导出的 `case-validation-pack.md`。',
+        '',
+        '## 十、CSV 附录',
+        '',
+        '```csv',
+        buildScenarioDecisionCsv(decisionRows),
+        '```',
+        '',
+        '## 十一、保守结论表达',
+        '',
+        `- 本案例中，系统将方案综合评分、规则问题、数据质量和权重敏感性放入同一证据链，验证就绪度为 ${readiness}/100。`,
+        '- 该结果适合表述为“早期方案推演和毕业设计研究支持工具”，不宜表述为替代法定审查或替代专家判断。',
+        '- 若后续补充真实 GIS、控规图则、人口、POI、交通和现场调研数据，可进一步把原型验证升级为案例实证研究。',
+    ];
+    return lines.join('\n');
+}
+
+function buildScenarioDecisionCsv(rows: ReturnType<typeof collectScenarioDecisionRows>): string {
+    const header = [
+        'scenario_id',
+        'scenario_name',
+        'score',
+        'band',
+        'confidence',
+        'residents',
+        'residential_gfa_sqm',
+        'public_service_gfa_sqm',
+        'rule_errors',
+        'rule_warnings',
+    ];
+    const body = rows.map(row => [
+        row.scenario.id,
+        row.scenario.name,
+        row.evaluation.score,
+        row.evaluation.band,
+        row.evaluation.confidence,
+        row.residents,
+        Math.round(row.residentialGfa),
+        Math.round(row.publicServiceGfa),
+        row.errors,
+        row.warnings,
+    ].map(csvCell).join(','));
+    return [header.join(','), ...body].join('\n');
+}
+
+function csvCell(value: string | number): string {
+    const text = String(value);
+    if (!/[",\n]/.test(text)) return text;
+    return `"${text.replace(/"/g, '""')}"`;
+}
+
+function validationReadinessBand(score: number): string {
+    if (score >= 85) return '可作为主案例材料';
+    if (score >= 70) return '可答辩展示，建议补证据';
+    if (score >= 55) return '可演示，需补数据与专家复核';
+    return '仅适合原型演示';
+}
+
+function buildDecisionMatrixReport(): string {
+    const rows = collectScenarioDecisionRows();
     const best = [...rows].sort((a, b) => b.evaluation.score - a.evaluation.score)[0];
     const lines = [
         `# ${project.project.name} 方案决策矩阵`,
@@ -1700,7 +1898,7 @@ function buildDecisionMatrixReport(): string {
         ]),
         '## 四、原始指标表',
         '',
-        buildScenarioComparisonReport(project, activeScenarioId),
+        buildScenarioComparisonReport(project, activeScenarioId, { headingLevel: 3 }),
     ];
     return lines.join('\n');
 }
@@ -1804,9 +2002,118 @@ function showModal(title: string, text: string, meta = 'UrbanPlan Studio', defau
     modalContent = text;
     modalDefaultName = defaultName;
     ui.modalTitle.textContent = title;
-    ui.modalText.textContent = text;
+    ui.modalText.innerHTML = renderModalContent(text, defaultName);
     ui.modalMeta.textContent = meta;
     ui.modal.classList.add('open');
+}
+
+function renderModalContent(text: string, defaultName: string): string {
+    if (!defaultName.endsWith('.md')) return `<pre class="modal-raw">${escapeHtml(text)}</pre>`;
+    return markdownToHtml(text);
+}
+
+function markdownToHtml(markdown: string): string {
+    const lines = markdown.split('\n');
+    const html: string[] = [];
+    let inList = false;
+    let inCode = false;
+    let codeLines: string[] = [];
+    for (let index = 0; index < lines.length; index++) {
+        const line = lines[index];
+        if (line.startsWith('```')) {
+            if (inCode) {
+                html.push(`<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
+                codeLines = [];
+                inCode = false;
+            } else {
+                closeList();
+                inCode = true;
+            }
+            continue;
+        }
+        if (inCode) {
+            codeLines.push(line);
+            continue;
+        }
+        if (isMarkdownTableStart(lines, index)) {
+            closeList();
+            const tableLines: string[] = [];
+            while (index < lines.length && lines[index].trim().startsWith('|')) {
+                tableLines.push(lines[index]);
+                index++;
+            }
+            index--;
+            html.push(markdownTableToHtml(tableLines));
+            continue;
+        }
+        const heading = /^(#{1,4})\s+(.+)$/.exec(line);
+        if (heading) {
+            closeList();
+            const level = heading[1].length;
+            html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+            continue;
+        }
+        if (line.startsWith('- ')) {
+            if (!inList) {
+                html.push('<ul>');
+                inList = true;
+            }
+            html.push(`<li>${inlineMarkdown(line.slice(2))}</li>`);
+            continue;
+        }
+        if (!line.trim()) {
+            closeList();
+            continue;
+        }
+        closeList();
+        html.push(`<p>${inlineMarkdown(line)}</p>`);
+    }
+    if (inCode) html.push(`<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
+    closeList();
+    return html.join('');
+
+    function closeList() {
+        if (!inList) return;
+        html.push('</ul>');
+        inList = false;
+    }
+}
+
+function isMarkdownTableStart(lines: string[], index: number): boolean {
+    const header = lines[index]?.trim() ?? '';
+    const separator = lines[index + 1]?.trim() ?? '';
+    return header.startsWith('|') && separator.startsWith('|') && /---/.test(separator);
+}
+
+function markdownTableToHtml(lines: string[]): string {
+    const rows = lines
+        .filter((line, index) => index !== 1)
+        .map(line => line.split('|').slice(1, -1).map(cell => inlineMarkdown(cell.trim())));
+    const [header = [], ...body] = rows;
+    return [
+        '<table>',
+        '<thead><tr>',
+        ...header.map(cell => `<th>${cell}</th>`),
+        '</tr></thead>',
+        '<tbody>',
+        ...body.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`),
+        '</tbody></table>',
+    ].join('');
+}
+
+function inlineMarkdown(text: string): string {
+    return escapeHtml(text)
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 async function saveText(defaultName: string, content: string) {
@@ -1924,6 +2231,7 @@ function bindControls() {
     ui.btnSensitivity.addEventListener('click', () => showModal('权重敏感性分析', buildWeightSensitivityReport(), project.project.name, 'weight-sensitivity-report.md'));
     ui.btnCompare.addEventListener('click', () => showModal('方案决策矩阵', buildDecisionMatrixReport(), project.project.name, 'scenario-decision-matrix.md'));
     ui.btnQuality.addEventListener('click', () => showModal('数据质量诊断', buildQualityReport(), project.ruleset.version, 'data-quality-report.md'));
+    ui.btnValidation.addEventListener('click', () => showModal('案例验证包', buildCaseValidationReport(), project.project.name, 'case-validation-pack.md'));
     ui.btnReport.addEventListener('click', () => showModal('规划诊断报告', buildReport(), activeScenario().name, 'planning-report.md'));
     ui.btnUpf.addEventListener('click', () => showModal('UPF 数据', buildUpf(), `${project.format} ${project.formatVersion}`, `${project.project.id}.upf`));
     ui.btnSave.addEventListener('click', () => void saveText(`${project.project.id}.upf`, buildUpf()));

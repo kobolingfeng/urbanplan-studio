@@ -13,6 +13,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Multi-criteria scenario evaluation for compliance, public service, mobility, ecology, renewal value, and evidence confidence.
 - Weight-sensitivity analysis across balanced, public-service-first, conservation-first, and implementation-risk models.
 - Decision matrix that reruns checks and scoring across all scenarios and explains the recommended scenario.
+- Case validation pack for research questions, data overview, scenario matrix, sensitivity results, experiment records, and CSV appendix.
 - Parcel score heatmap for quickly spotting priority intervention areas.
 - Object search and risk filters for quickly locating problematic parcels or facilities.
 - Scenario optimization presets for compliance, public-service-first, and ecology-first adjustments.
@@ -55,6 +56,7 @@ Open `http://127.0.0.1:4173`.
 
 - `examples/minimal.upf`
 - `examples/luohu-demo.upf`
+- `examples/luohu-case-v1.upf`
 - `examples/invalid.upf`
 
 ## Review Docs
@@ -67,6 +69,8 @@ Open `http://127.0.0.1:4173`.
 - `docs/evaluation-methodology.md`
 - `docs/defense-demo-script.md`
 - `docs/expert-review-form.md`
+- `docs/case-validation-protocol.md`
+- `docs/cases/luohu/`
 
 ## Limits
 

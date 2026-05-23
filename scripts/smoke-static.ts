@@ -25,10 +25,10 @@ const config = JSON.parse(fileText(join(DIST, 'app.config.json')));
 const sourceHtml = fileText(join(ROOT, 'src', 'index.html'));
 
 assert(html.includes('UrbanPlan Studio'), 'index.html misses app title');
-for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare', 'btn-quality', 'btn-report', 'btn-upf', 'object-search', 'object-filter', 'optimize-preset', 'evaluation-list', 'plan-canvas']) {
+for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare', 'btn-quality', 'btn-validation', 'btn-report', 'btn-upf', 'object-search', 'object-filter', 'optimize-preset', 'evaluation-list', 'plan-canvas']) {
     assert(html.includes(`id="${id}"`), `index.html misses ${id}`);
 }
-for (const token of ['方案综合评估', '权重敏感性分析', '导入审计', 'service-radius-shape', '方案对比', '数据质量诊断', '不是可识别的 UPF 文件', '引用完整性保护']) {
+for (const token of ['方案综合评估', '权重敏感性分析', '案例验证包', '验证就绪度', '导入审计', 'service-radius-shape', '方案对比', '数据质量诊断', '不是可识别的 UPF 文件', '引用完整性保护']) {
     assert(js.includes(token), `main bundle misses ${token}`);
 }
 
@@ -43,12 +43,18 @@ for (const entry of readdirSync(DIST)) {
     if (stat.isFile()) assert(allowed.has(entry), `unexpected file in dist: ${entry}`);
 }
 
-for (const file of ['minimal.upf', 'luohu-demo.upf']) {
+for (const file of ['minimal.upf', 'luohu-demo.upf', 'luohu-case-v1.upf']) {
     const data = JSON.parse(fileText(join(EXAMPLES, file)));
     assert(data.format === 'UPF', `${file} misses top-level UPF format`);
     assert(Array.isArray(data.scenarios), `${file} misses scenarios`);
     assert(Array.isArray(data.objects), `${file} misses objects`);
 }
+
+const luohuCase = JSON.parse(fileText(join(EXAMPLES, 'luohu-case-v1.upf')));
+assert(luohuCase.scenarios.length >= 3, 'luohu-case-v1 should contain at least three scenarios');
+assert(luohuCase.objects.filter((item: { type?: string }) => item.type === 'parcel').length >= 3, 'luohu-case-v1 should contain at least three parcels');
+assert(luohuCase.objects.some((item: { type?: string }) => item.type === 'openSpace'), 'luohu-case-v1 should contain open space');
+assert(luohuCase.objects.some((item: { type?: string }) => item.type === 'constraint'), 'luohu-case-v1 should contain constraints');
 
 assert(config.app?.version === '0.1.0', 'app version missing from config');
 assert(config.permissions?.shell === false, 'shell namespace should be denied');

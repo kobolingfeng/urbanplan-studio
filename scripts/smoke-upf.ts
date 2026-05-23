@@ -1,6 +1,12 @@
 import { readFileSync } from 'fs';
 import { join, resolve } from 'path';
-import { createUpfDocument, parseUpfText } from '../src/planning-analytics';
+import {
+    buildDataQualityReport,
+    buildScenarioComparisonReport,
+    calculateDataQuality,
+    createUpfDocument,
+    parseUpfText,
+} from '../src/planning-analytics';
 
 const ROOT = resolve(import.meta.dir, '..');
 const examples = join(ROOT, 'examples');
@@ -30,15 +36,76 @@ assert(minimal.activeScenarioId === 'scenario_base', 'minimal active scenario mi
 
 const roundTrip = createUpfDocument(minimal.project, minimal.activeScenarioId, [], [], {
     scenarioId: minimal.activeScenarioId,
+    modelId: 'balanced',
+    modelName: '均衡模型',
+    weights: { compliance: 0.24, publicService: 0.22, mobility: 0.16, ecology: 0.16, renewalValue: 0.12, evidence: 0.10 },
     score: 88,
     dimensions: [],
+    riskRegister: [],
 });
 assert(roundTrip.manifest.software.version === '0.1.0', 'manifest software version mismatch');
+assert(roundTrip.manifest.activeScenarioId === minimal.activeScenarioId, 'manifest active scenario mismatch');
 assert(roundTrip.manifest.unitSystem.metersPerCanvasUnit === 0.68, 'manifest unit system mismatch');
 assert((roundTrip.evaluation as { score?: number }).score === 88, 'evaluation export mismatch');
+assert((roundTrip.evaluation as { modelId?: string }).modelId === 'balanced', 'evaluation model id export mismatch');
+assert((roundTrip.evaluation as { modelName?: string }).modelName === '均衡模型', 'evaluation model name export mismatch');
+assert(Array.isArray((roundTrip.evaluation as { riskRegister?: unknown[] }).riskRegister), 'evaluation risk register export mismatch');
 const parsedRoundTrip = parseUpfText(JSON.stringify(roundTrip), fallback);
 assert(parsedRoundTrip.project.format === 'UPF', 'round-trip format mismatch');
 assert(parsedRoundTrip.project.objects?.length === 1, 'round-trip objects mismatch');
+
+const analyticsFixture: Parameters<typeof calculateDataQuality>[0] = {
+    project: { name: 'Analytics Fixture' },
+    ruleset: { basis: ['fixture basis'] },
+    scenarios: [{ id: 'base', name: 'Base' }, { id: 'update', name: 'Update' }],
+    objects: [
+        {
+            id: 'parcel_a',
+            type: 'parcel',
+            name: 'Parcel A',
+            evidence: ['fixture survey'],
+            points: [
+                { x: 0, y: 0 },
+                { x: 100, y: 0 },
+                { x: 100, y: 100 },
+                { x: 0, y: 100 },
+            ],
+            scenarioValues: {
+                base: { far: 1.2, greenRatio: 0.3, residentialGfaSqm: 12000, publicServiceGfaSqm: 400 },
+            },
+        },
+        {
+            id: 'parcel_b',
+            type: 'parcel',
+            name: 'Parcel B',
+            evidence: ['fixture survey'],
+            points: [
+                { x: 120, y: 0 },
+                { x: 220, y: 0 },
+                { x: 220, y: 100 },
+                { x: 120, y: 100 },
+            ],
+            scenarioValues: {
+                base: { far: 1, greenRatio: 0.25, residentialGfaSqm: 9000, publicServiceGfaSqm: 100 },
+                update: { far: 1.5, greenRatio: 0.32, residentialGfaSqm: 14000, publicServiceGfaSqm: 500 },
+            },
+        },
+        {
+            id: 'entrance_bad',
+            type: 'entrance',
+            name: 'Bad Entrance',
+            evidence: ['fixture survey'],
+            parcelId: 'missing_parcel',
+            roadId: 'missing_road',
+        },
+    ],
+};
+const quality = calculateDataQuality(analyticsFixture, [], []);
+assert(quality.score < 100, 'data quality should penalize missing scenario values and dangling references');
+assert(quality.entranceReferenceIssues.length === 2, 'dangling entrance references should be reported');
+assert(buildDataQualityReport(analyticsFixture, [], []).includes('引用完整性问题'), 'quality report should expose reference issues');
+const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
+assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
 
 try {
     parseUpfText(readFileSync(join(examples, 'invalid.upf'), 'utf8'), fallback);

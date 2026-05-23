@@ -153,9 +153,14 @@ export function parseUpfText<TProject extends ProjectLike>(
     throw new Error('不是可识别的 UPF 文件');
 }
 
-export function buildScenarioComparisonReport(project: ProjectLike, activeScenarioId: string): string {
+export function buildScenarioComparisonReport(
+    project: ProjectLike,
+    activeScenarioId: string,
+    options: { headingLevel?: number } = {},
+): string {
     const scenarios = project.scenarios ?? [];
     const parcels = (project.objects ?? []).filter(object => object.type === 'parcel');
+    const titleLevel = Math.max(1, Math.min(6, options.headingLevel ?? 1));
     const rows = scenarios.map((scenario) => {
         let residentialGfa = 0;
         let publicServiceGfa = 0;
@@ -163,9 +168,13 @@ export function buildScenarioComparisonReport(project: ProjectLike, activeScenar
         let weightedGreenSum = 0;
         let areaSum = 0;
         let valuesCount = 0;
+        const missingParcels: string[] = [];
         for (const parcel of parcels) {
             const value = parcel.scenarioValues?.[scenario.id];
-            if (!value) continue;
+            if (!value) {
+                missingParcels.push(String(parcel.name ?? parcel.id ?? '未命名地块'));
+                continue;
+            }
             const parcelArea = polygonArea(parcel.points ?? []);
             residentialGfa += Number(value.residentialGfaSqm ?? 0);
             publicServiceGfa += Number(value.publicServiceGfaSqm ?? 0);
@@ -184,17 +193,20 @@ export function buildScenarioComparisonReport(project: ProjectLike, activeScenar
             residents,
             avgFar,
             avgGreen,
+            valuesCount,
+            missingParcels,
         };
     });
 
     const active = rows.find(row => row.scenario.id === activeScenarioId);
+    const dataGapRows = rows.filter(row => row.missingParcels.length);
     const lines = [
-        `# ${project.project?.name ?? 'UrbanPlan'} 方案对比`,
+        `${heading(titleLevel)} ${project.project?.name ?? 'UrbanPlan'} 方案对比`,
         '',
         `当前方案：${active?.scenario.name ?? activeScenarioId}`,
         '',
-        '| 方案 | 住宅建面 | 估算人口 | 公服建面 | 平均 FAR | 平均绿地率 | 判断 |',
-        '|---|---:|---:|---:|---:|---:|---|',
+        '| 方案 | 参与地块 | 缺失地块 | 住宅建面 | 估算人口 | 公服建面 | 平均 FAR | 平均绿地率 | 判断 |',
+        '|---|---:|---:|---:|---:|---:|---:|---:|---|',
         ...rows.map(row => {
             const publicRatio = row.residentialGfa ? row.publicServiceGfa / row.residentialGfa : 0;
             const judgement = publicRatio >= 0.02 && row.avgGreen >= 0.30
@@ -202,10 +214,16 @@ export function buildScenarioComparisonReport(project: ProjectLike, activeScenar
                 : row.avgFar > 4.5
                     ? '强度偏高'
                     : '需专项复核';
-            return `| ${row.scenario.name} | ${number(row.residentialGfa)} | ${number(row.residents)} | ${number(row.publicServiceGfa)} | ${row.avgFar.toFixed(2)} | ${(row.avgGreen * 100).toFixed(1)}% | ${judgement} |`;
+            return `| ${row.scenario.name} | ${row.valuesCount}/${parcels.length} | ${row.missingParcels.length} | ${number(row.residentialGfa)} | ${number(row.residents)} | ${number(row.publicServiceGfa)} | ${row.avgFar.toFixed(2)} | ${(row.avgGreen * 100).toFixed(1)}% | ${judgement} |`;
         }),
         '',
-        '## 产品化启发',
+        `${heading(titleLevel + 1)} 方案数据缺口`,
+        '',
+        ...(dataGapRows.length
+            ? dataGapRows.map(row => `- ${row.scenario.name} 缺失 ${row.missingParcels.length} 个地块方案值：${row.missingParcels.join('、')}`)
+            : ['- 所有方案均覆盖全部地块。']),
+        '',
+        `${heading(titleLevel + 1)} 产品化启发`,
         '',
         '- 专业规划软件不应只展示单方案指标，而应把多方案容量、公共服务、绿地、风险同步比较。',
         '- 后续应加入政策目标线，例如人口、就业、住房供应、公共服务覆盖率、碳排和财政估算。',
@@ -232,7 +250,7 @@ export function buildDataQualityReport(
         `- 缺少证据来源的对象：${quality.missingEvidence.length}`,
         `- 规则依据条数：${quality.basisCount}`,
         `- 仍依赖原型规则的检查：${quality.prototypeRuleCount}`,
-        `- 未绑定地块或道路的出入口：${quality.unboundEntrances.length}`,
+        `- 未绑定或悬挂引用的出入口：${quality.unboundEntrances.length}`,
         `- 地块方案值缺口：${quality.parcelScenarioGaps.length}`,
         `- 智能建议数量：${recommendations.length}`,
         '',
@@ -260,6 +278,9 @@ export function buildDataQualityReport(
     if (quality.parcelScenarioGaps.length) {
         lines.push('', '## 方案数据缺口', '', ...quality.parcelScenarioGaps.map(item => `- ${item}`));
     }
+    if (quality.entranceReferenceIssues.length) {
+        lines.push('', '## 引用完整性问题', '', ...quality.entranceReferenceIssues.map(item => `- ${item}`));
+    }
     return lines.join('\n');
 }
 
@@ -280,7 +301,9 @@ export function calculateDataQuality(
         }, {});
     const prototypeRuleCount = checks.filter(check => String(check.source ?? '').includes('原型')).length;
     const ruleCatalog = buildRuleCatalog(checks);
-    const unboundEntrances = objects.filter(object => object.type === 'entrance' && (!object.parcelId || !object.roadId));
+    const entranceReferenceIssues = buildEntranceReferenceIssues(objects);
+    const unboundEntrances = objects.filter(object => object.type === 'entrance'
+        && entranceReferenceIssues.some(issue => issue.startsWith(String(object.name ?? object.id ?? '未命名出入口'))));
     const scenarioIds = new Set((project.scenarios ?? []).map(scenario => scenario.id));
     const parcelScenarioGaps = objects
         .filter(object => object.type === 'parcel')
@@ -289,7 +312,7 @@ export function calculateDataQuality(
     const score = Math.max(0, Math.min(100, 100
         - missingEvidence.length * 8
         - prototypeRuleCount * 4
-        - unboundEntrances.length * 12
+        - entranceReferenceIssues.length * 12
         - parcelScenarioGaps.length * 10
         - Math.max(0, recommendations.length - 8)));
 
@@ -303,8 +326,25 @@ export function calculateDataQuality(
         missingEvidence,
         prototypeRuleCount,
         unboundEntrances,
+        entranceReferenceIssues,
         parcelScenarioGaps,
     };
+}
+
+function buildEntranceReferenceIssues(objects: PlanningObjectLike[]): string[] {
+    const parcelIds = new Set(objects.filter(object => object.type === 'parcel').map(object => object.id).filter(Boolean));
+    const roadIds = new Set(objects.filter(object => object.type === 'road').map(object => object.id).filter(Boolean));
+    return objects
+        .filter(object => object.type === 'entrance')
+        .flatMap((object) => {
+            const name = String(object.name ?? object.id ?? '未命名出入口');
+            const issues: string[] = [];
+            if (!object.parcelId) issues.push(`${name} 缺少地块引用`);
+            else if (!parcelIds.has(object.parcelId)) issues.push(`${name} 引用不存在的地块 ${object.parcelId}`);
+            if (!object.roadId) issues.push(`${name} 缺少道路引用`);
+            else if (!roadIds.has(object.roadId)) issues.push(`${name} 引用不存在的道路 ${object.roadId}`);
+            return issues;
+        });
 }
 
 function buildRuleCatalog(checks: CheckLike[]) {
@@ -335,6 +375,10 @@ function evidenceKind(text: string): string {
     if (/调研|实测|现场|访谈|问卷|遥感|手机信令|POI|路网/.test(text)) return '调研/空间数据';
     if (/演示|样例|原型|兼容层|用户/.test(text)) return '原型/用户输入';
     return '其他证据';
+}
+
+function heading(level: number): string {
+    return '#'.repeat(Math.max(1, Math.min(6, level)));
 }
 
 function number(value: number): string {

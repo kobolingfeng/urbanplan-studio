@@ -11,7 +11,7 @@ D:\projects\urbanplan-studio\dist\app.exe
 Expected:
 
 - Window title is UrbanPlan Studio.
-- Top actions include: run check, evaluation, compare, quality, report, UPF, save, load.
+- Top actions include: run check, evaluation, sensitivity, compare, quality, validation, report, UPF, save, load.
 - Central canvas shows parcels, roads, facilities, entrances, open space, and a heritage overlay.
 
 ## Core Planning Flow
@@ -27,16 +27,18 @@ Expected:
 9. Select a public facility and confirm its service-radius overlay appears on the map.
 10. Click `评估`.
 11. Confirm the modal includes dimension scores, parcel priorities, highlights, and risk register.
-12. Click `敏感性`.
+12. Click `敏感`.
 13. Confirm the modal compares at least four weight models and reports whether the recommended scheme is stable.
 14. Click `对比`.
 15. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
 16. Click `质检`.
 17. Confirm a data quality score, rule catalog, evidence coverage, evidence type distribution, and prototype-rule notes appear.
-18. Click `报告`.
-19. Confirm the report includes core metrics, dimension scores, sensitivity summary, data quality summary, and limitations.
-20. Click `UPF`.
-21. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, and `evaluation`.
+18. Click `验证`.
+19. Confirm the report includes research questions, data overview, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
+20. Click `报告`.
+21. Confirm the report includes core metrics, dimension scores, risk register, sensitivity summary, data quality summary, method metadata, and limitations.
+22. Click `UPF`.
+23. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, `manifest.activeScenarioId`, and `evaluation.modelId`.
 
 ## Object Editing
 
@@ -68,8 +70,11 @@ Expected:
 1. Click `保存` and save a `.upf`.
 2. Click `载入` and load the same file.
 3. Load `examples/minimal.upf`.
-4. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section.
-5. Load `examples/invalid.upf`; expected: import error modal.
+4. Load `examples/luohu-case-v1.upf`.
+5. Confirm the project contains multiple parcels, roads, facilities, open space, heritage constraint, and three scenarios.
+6. Open `验证`; expected: validation pack reflects the loaded Luohu case.
+7. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, and dangling references are reported if present.
+8. Load `examples/invalid.upf`; expected: import error modal.
 
 ## Data Integrity
 

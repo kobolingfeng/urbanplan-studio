@@ -167,7 +167,19 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
     }
 
+    const parcelIds = new Set(parcels.map(parcel => parcel.id));
     for (const entrance of project.objects.filter(object => object.type === 'entrance' && object.point)) {
+        if (!entrance.parcelId || !parcelIds.has(entrance.parcelId)) {
+            add({
+                ruleId: 'entrance_dangling_parcel',
+                objectId: entrance.id,
+                objectName: entrance.name,
+                severity: 'error',
+                title: '出入口地块引用缺失',
+                message: '出入口绑定的地块不存在，请重新选择关联地块。',
+                source: 'UPF 引用完整性规则',
+            });
+        }
         const road = roads.find(item => item.id === entrance.roadId);
         if (!road) {
             add({

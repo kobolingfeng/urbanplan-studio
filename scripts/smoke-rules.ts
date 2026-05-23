@@ -99,6 +99,15 @@ const project = {
             parcelId: 'parcel_bad',
             point: { x: 155, y: 200 },
         },
+        {
+            id: 'entrance_dangling',
+            type: 'entrance',
+            name: 'Dangling Entrance',
+            entranceType: '机动车',
+            roadId: 'missing_road',
+            parcelId: 'missing_parcel',
+            point: { x: 170, y: 180 },
+        },
     ],
 };
 
@@ -110,6 +119,8 @@ for (const id of [
     'parcel_green_min',
     'parcel_coverage_max',
     'historic_area_rebuild_risk',
+    'entrance_dangling_parcel',
+    'entrance_dangling_road',
     'entrance_arterial_risk',
     'entrance_intersection_distance',
 ]) {
