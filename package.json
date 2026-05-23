@@ -1,0 +1,27 @@
+{
+  "name": "urbanplan-studio",
+  "version": "0.1.0",
+  "devDependencies": {
+    "@types/bun": "1.2.15",
+    "typescript": "5.8.3"
+  },
+  "scripts": {
+    "setup": "bun scripts/setup.ts",
+    "dev": "bun scripts/dev.ts",
+    "clean": "bun scripts/clean.ts",
+    "typecheck": "bun x tsc --noEmit",
+    "smoke:geometry": "bun scripts/smoke-geometry.ts",
+    "smoke:upf": "bun scripts/smoke-upf.ts",
+    "smoke:rules": "bun scripts/smoke-rules.ts",
+    "smoke:static": "bun scripts/smoke-static.ts",
+    "smoke:release": "bun scripts/smoke-release.ts",
+    "verify": "bun run typecheck && bun run smoke:geometry && bun run smoke:upf && bun run smoke:rules && bun run build && bun run smoke:static",
+    "verify:release": "bun run package && bun run smoke:release",
+    "build": "bun scripts/build.ts",
+    "build:native": "bun scripts/build.ts --native-only",
+    "build:frontend": "bun scripts/build.ts --frontend-only",
+    "build:single": "bun scripts/build.ts --single-exe",
+    "package": "bun scripts/package.ts",
+    "package:single": "bun scripts/package.ts --single-exe"
+  }
+}

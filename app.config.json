@@ -1,0 +1,46 @@
+{
+    "app": {
+        "name": "UrbanPlan Studio",
+        "version": "0.1.0"
+    },
+    "window": {
+        "title": "UrbanPlan Studio",
+        "width": 1440,
+        "height": 920,
+        "minWidth": 1100,
+        "minHeight": 720,
+        "frameless": false,
+        "backgroundColor": "#f6f7f9",
+        "followSystemTheme": false,
+        "lightBackgroundColor": "#f6f6f9",
+        "darkBackgroundColor": "#f6f7f9",
+        "resizable": true,
+        "alwaysOnTop": false
+    },
+    "dev": {
+        "port": 3000
+    },
+    "build": {
+    },
+    "permissions": {
+        "window": true,
+        "dialog": true,
+        "fs.readTextFile": true,
+        "fs.writeTextFile": true,
+        "clipboard": true,
+        "log": true,
+        "shell": false,
+        "registry": false,
+        "protocol": false,
+        "hotkey": false,
+        "tray": false,
+        "notification": false,
+        "http": false,
+        "watcher": false,
+        "devtools": false,
+        "env": false,
+        "app.checkUpdate": false,
+        "app.downloadUpdate": false,
+        "app.installUpdate": false
+    }
+}

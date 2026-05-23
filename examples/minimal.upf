@@ -1,0 +1,59 @@
+{
+  "format": "UPF",
+  "formatVersion": "0.1.0",
+  "project": {
+    "id": "minimal_demo",
+    "name": "UPF 最小样例",
+    "city": "示例城市",
+    "district": "示例片区",
+    "planningType": "城市更新辅助审查",
+    "planningHorizon": "2026-2035",
+    "crs": "DemoCanvasMetric"
+  },
+  "ruleset": {
+    "jurisdiction": "CN-DEMO",
+    "version": "UPF 0.1 原型规则",
+    "basis": ["演示规则"]
+  },
+  "scenarios": [
+    {
+      "id": "scenario_base",
+      "name": "基准方案",
+      "description": "最小可运行方案。"
+    }
+  ],
+  "activeScenarioId": "scenario_base",
+  "objects": [
+    {
+      "id": "parcel_min_01",
+      "type": "parcel",
+      "name": "最小住宅地块",
+      "evidence": ["examples/minimal.upf"],
+      "points": [
+        { "x": 160, "y": 140 },
+        { "x": 360, "y": 140 },
+        { "x": 360, "y": 280 },
+        { "x": 160, "y": 280 }
+      ],
+      "landUseCode": "0701",
+      "landUseName": "城镇住宅用地",
+      "controls": {
+        "farMax": 3.5,
+        "buildingCoverageMax": 0.35,
+        "greenRatioMin": 0.3,
+        "heightMaxM": 80
+      },
+      "scenarioValues": {
+        "scenario_base": {
+          "far": 3.2,
+          "buildingCoverage": 0.32,
+          "greenRatio": 0.31,
+          "residentialGfaSqm": 24000,
+          "publicServiceGfaSqm": 600,
+          "updateMode": "综合整治",
+          "notes": "最小样例用于验证导入。"
+        }
+      }
+    }
+  ]
+}

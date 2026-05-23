@@ -1,0 +1,50 @@
+# Next Professional Steps
+
+This backlog is ordered by product risk, not by excitement.
+
+## P0: Trust And Data Correctness
+
+1. Add a real UPF JSON Schema and schema-version migration.
+2. Replace demo canvas units with real projected coordinates.
+3. Add CRS transform support and reject mixed-coordinate imports.
+4. Add structured `EvidenceSource` with source type, timestamp, precision, license, and confidence.
+5. Add structured `RuleSource` with jurisdiction, version, effective date, clause, and URL.
+6. Split prototype rules from statutory rules visually and structurally.
+
+## P1: Planning Logic
+
+1. Add explicit `Intersection` objects instead of deriving intersections every rule run.
+2. Add network walking distance for facility coverage.
+3. Add service population allocation by parcel, not just project totals.
+4. Add land-use compatibility rules.
+5. Add road access hierarchy and entrance spacing rules by road class.
+6. Add scenario-scoped facilities and open spaces.
+7. Add facility demand by age structure assumptions.
+
+## P1: Product Experience
+
+1. Add recent files and current project path.
+2. Add an import report with warnings, normalized fields, and rejected objects.
+3. Add keyboard navigation over canvas objects.
+4. Add object search and filtering.
+5. Add export of scenario comparison tables.
+6. Add a proper rule catalog panel.
+
+## P2: Engineering
+
+1. Move type definitions to `src/model/upf-types.ts`.
+2. Move UI rendering into view modules.
+3. Add fixture-based tests for each rule group.
+4. Add release smoke that verifies zip contents and SHA256.
+5. Add CI workflow once this becomes a git repository.
+6. Add native Windows `VERSIONINFO`.
+7. Add installer/signing path for real distribution.
+
+## P2: Data Adapters
+
+1. GeoJSON import/export.
+2. DXF import for parcel and road layers.
+3. CSV import for parcel indicators.
+4. POI import adapter.
+5. OSM/Overpass adapter for roads and facilities.
+6. Raster/remote-sensing metadata adapter.

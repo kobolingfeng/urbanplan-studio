@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanPlan Studio</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f6f7f9;
+            --chrome: #20252d;
+            --surface: #ffffff;
+            --surface-2: #eef2f4;
+            --surface-3: #e5eaee;
+            --ink: #172026;
+            --muted: #64717b;
+            --subtle: #8b98a2;
+            --line: #d6dee4;
+            --strong-line: #b8c4cc;
+            --teal: #0f766e;
+            --teal-2: #d9f1ed;
+            --green: #2f8f5b;
+            --blue: #2563a8;
+            --amber: #b7791f;
+            --red: #c2413b;
+            --purple: #6d5aa8;
+            --shadow: 0 16px 40px rgba(30, 39, 46, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+            user-select: none;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        button,
+        select,
+        input,
+        textarea {
+            border: 1px solid var(--line);
+            color: var(--ink);
+            background: var(--surface);
+            border-radius: 6px;
+            outline: none;
+        }
+
+        button {
+            height: 34px;
+            padding: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, transform 0.14s ease;
+        }
+
+        button:hover:not(:disabled) {
+            border-color: var(--teal);
+            background: var(--teal-2);
+        }
+
+        button:active:not(:disabled) { transform: translateY(1px); }
+
+        button:disabled {
+            cursor: default;
+            opacity: 0.42;
+        }
+
+        .icon-btn {
+            width: 34px;
+            padding: 0;
+            font-weight: 700;
+        }
+
+        .primary {
+            border-color: var(--teal);
+            background: var(--teal);
+            color: #fff;
+        }
+
+        .primary:hover:not(:disabled) {
+            background: #0b625c;
+            color: #fff;
+        }
+
+        .ghost {
+            background: transparent;
+        }
+
+        .titlebar {
+            display: none;
+            height: 38px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--chrome);
+            color: #dce4ea;
+        }
+
+        .titlebar.active { display: flex; }
+
+        .titlebar-title {
+            flex: 1;
+            padding-left: 14px;
+            color: #aeb9c2;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .titlebar-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .titlebar-btn {
+            width: 46px;
+            height: 100%;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #cbd4dc;
+        }
+
+        .titlebar-btn:hover { background: rgba(255, 255, 255, 0.1); }
+        .titlebar-btn.close:hover { background: var(--red); color: #fff; }
+
+        .resize-layer {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 2147483000;
+            pointer-events: none;
+        }
+
+        .resize-layer.active { display: block; }
+
+        .resize-zone {
+            position: absolute;
+            pointer-events: auto;
+            background: transparent;
+        }
+
+        .resize-top,
+        .resize-bottom {
+            left: 10px;
+            right: 10px;
+            height: 6px;
+            cursor: ns-resize;
+        }
+
+        .resize-top { top: 0; }
+        .resize-bottom { bottom: 0; }
+
+        .resize-left,
+        .resize-right {
+            top: 10px;
+            bottom: 10px;
+            width: 6px;
+            cursor: ew-resize;
+        }
+
+        .resize-left { left: 0; }
+        .resize-right { right: 0; }
+
+        .resize-top-left,
+        .resize-top-right,
+        .resize-bottom-left,
+        .resize-bottom-right {
+            width: 12px;
+            height: 12px;
+        }
+
+        .resize-top-left { top: 0; left: 0; cursor: nwse-resize; }
+        .resize-top-right { top: 0; right: 0; cursor: nesw-resize; }
+        .resize-bottom-left { bottom: 0; left: 0; cursor: nesw-resize; }
+        .resize-bottom-right { right: 0; bottom: 0; cursor: nwse-resize; }
+
+        .app-shell {
+            height: 100vh;
+            min-height: 0;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        .topbar {
+            height: 66px;
+            display: grid;
+            grid-template-columns: minmax(260px, auto) minmax(280px, 1fr) auto;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--line);
+            background: var(--surface);
+        }
+
+        .brand {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: var(--chrome);
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .brand-text {
+            min-width: 0;
+            display: grid;
+            gap: 3px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 18px;
+            line-height: 1.1;
+            letter-spacing: 0;
+        }
+
+        .brand span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .scenario-strip {
+            min-width: 0;
+            display: grid;
+            grid-template-columns: auto minmax(180px, 280px) minmax(120px, 1fr);
+            gap: 8px;
+            align-items: center;
+        }
+
+        .scenario-strip label,
+        .compact-label {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .scenario-strip select,
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            min-width: 0;
+            min-height: 34px;
+            padding: 0 9px;
+        }
+
+        .scenario-strip .scenario-note {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .workspace {
+            min-height: 0;
+            display: grid;
+            grid-template-columns: 292px minmax(520px, 1fr) 340px;
+        }
+
+        .panel {
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+            background: var(--surface);
+        }
+
+        .panel:last-child {
+            border-right: 0;
+            border-left: 1px solid var(--line);
+        }
+
+        .panel-header {
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .panel-title {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .panel-body {
+            min-height: 0;
+            overflow: auto;
+            padding: 12px;
+        }
+
+        .left-stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        .section {
+            display: grid;
+            gap: 8px;
+        }
+
+        .section h2 {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .project-summary {
+            display: grid;
+            gap: 8px;
+            padding-bottom: 2px;
+        }
+
+        .summary-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 24px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .summary-line strong {
+            color: var(--ink);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .layer-list,
+        .object-list,
+        .scenario-list {
+            display: grid;
+            gap: 6px;
+        }
+
+        .layer-row,
+        .object-row,
+        .scenario-row {
+            width: 100%;
+            min-height: 40px;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+            padding: 7px 8px;
+            text-align: left;
+            border-color: transparent;
+            background: var(--surface-2);
+        }
+
+        .layer-row input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--teal);
+        }
+
+        .object-row.selected,
+        .scenario-row.selected {
+            border-color: var(--teal);
+            background: var(--teal-2);
+        }
+
+        .row-title {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .row-meta {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .pill {
+            min-width: 28px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 0 8px;
+            background: var(--surface);
+            color: var(--muted);
+            border: 1px solid var(--line);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .pill.error { color: var(--red); border-color: rgba(194, 65, 59, 0.35); background: #fff1ef; }
+        .pill.warn { color: var(--amber); border-color: rgba(183, 121, 31, 0.34); background: #fff6df; }
+        .pill.ok { color: var(--green); border-color: rgba(47, 143, 91, 0.34); background: #e8f6ef; }
+        .pill.info { color: var(--blue); border-color: rgba(37, 99, 168, 0.28); background: #edf4ff; }
+
+        .canvas-panel {
+            min-height: 0;
+            display: grid;
+            grid-template-rows: auto minmax(280px, 1fr) 220px;
+            background: var(--bg);
+        }
+
+        .canvas-toolbar {
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--line);
+            background: var(--surface);
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .tool-btn.active {
+            border-color: var(--teal);
+            background: var(--teal);
+            color: #fff;
+        }
+
+        .canvas-meta {
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .canvas-wrap {
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+            background:
+                linear-gradient(var(--line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--line) 1px, transparent 1px),
+                #eef3f4;
+            background-size: 40px 40px;
+        }
+
+        .plan-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: crosshair;
+        }
+
+        .plan-canvas:focus {
+            outline: 2px solid var(--teal);
+            outline-offset: -2px;
+        }
+
+        .plan-canvas.selecting { cursor: default; }
+
+        .parcel-shape,
+        .road-shape,
+        .facility-shape,
+        .entrance-shape,
+        .open-space-shape,
+        .control-shape {
+            vector-effect: non-scaling-stroke;
+            transition: opacity 0.12s ease, stroke-width 0.12s ease, filter 0.12s ease;
+        }
+
+        .parcel-shape { stroke: #6d7881; stroke-width: 1.4; }
+        .parcel-shape:hover { filter: drop-shadow(0 3px 5px rgba(20, 30, 36, 0.22)); }
+        .parcel-shape.selected { stroke: var(--teal); stroke-width: 3; }
+        .road-shape { stroke: #6d7680; stroke-linecap: round; opacity: 0.92; }
+        .road-shape.selected { stroke: var(--teal); opacity: 1; }
+        .facility-shape { stroke: #ffffff; stroke-width: 2; }
+        .facility-shape.selected { stroke: var(--teal); stroke-width: 3; }
+        .entrance-shape { stroke: #ffffff; stroke-width: 2; }
+        .entrance-shape.selected { stroke: var(--teal); stroke-width: 3; }
+        .open-space-shape { stroke: #2f8f5b; stroke-width: 1.4; fill: rgba(80, 166, 108, 0.22); }
+        .open-space-shape.selected { stroke: var(--teal); stroke-width: 3; }
+        .control-shape { stroke: var(--purple); stroke-width: 1.5; fill: rgba(109, 90, 168, 0.12); stroke-dasharray: 8 5; }
+        .control-shape.selected { stroke-width: 3; }
+
+        .map-label {
+            pointer-events: none;
+            fill: #26323a;
+            font-size: 12px;
+            font-weight: 700;
+            text-anchor: middle;
+            paint-order: stroke;
+            stroke: rgba(255, 255, 255, 0.86);
+            stroke-width: 4px;
+            stroke-linejoin: round;
+        }
+
+        .road-label {
+            pointer-events: none;
+            fill: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            text-anchor: middle;
+        }
+
+        .canvas-hint {
+            position: absolute;
+            left: 12px;
+            bottom: 12px;
+            max-width: min(520px, calc(100% - 24px));
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--muted);
+            font-size: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .metrics-strip {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--line);
+            background: var(--surface);
+        }
+
+        .metric {
+            min-width: 0;
+            display: grid;
+            gap: 3px;
+            padding: 8px 9px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface-2);
+        }
+
+        .metric span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .metric strong {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 17px;
+            line-height: 1.1;
+        }
+
+        .bottom-grid {
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) minmax(260px, 0.9fr);
+            background: var(--surface);
+        }
+
+        .bottom-section {
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+        }
+
+        .bottom-section:last-child { border-right: 0; }
+
+        .bottom-header {
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .bottom-title {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .check-list,
+        .recommendation-list {
+            min-height: 0;
+            overflow: auto;
+            display: grid;
+            align-content: start;
+            gap: 7px;
+            padding: 8px 10px 10px;
+        }
+
+        .check-row,
+        .recommendation-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 8px;
+            align-items: start;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        .check-main,
+        .recommendation-main {
+            min-width: 0;
+            display: grid;
+            gap: 3px;
+        }
+
+        .check-main strong,
+        .recommendation-main strong {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .check-main span,
+        .recommendation-main span {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .inspector-body {
+            min-height: 0;
+            overflow: auto;
+            padding: 12px;
+            display: grid;
+            align-content: start;
+            gap: 14px;
+        }
+
+        .identity {
+            display: grid;
+            gap: 4px;
+        }
+
+        .identity strong {
+            font-size: 18px;
+            line-height: 1.15;
+        }
+
+        .identity span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+        }
+
+        .field-grid.one { grid-template-columns: 1fr; }
+
+        .field {
+            min-width: 0;
+            display: grid;
+            gap: 5px;
+        }
+
+        .field label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .field input,
+        .field select {
+            height: 34px;
+        }
+
+        .field textarea {
+            min-height: 84px;
+            padding: 8px 9px;
+            resize: vertical;
+            user-select: text;
+        }
+
+        .kv-list {
+            display: grid;
+            gap: 7px;
+        }
+
+        .kv-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 26px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .kv-row strong {
+            color: var(--ink);
+            font-size: 13px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .statusbar {
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 12px;
+            border-top: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(23, 32, 38, 0.42);
+        }
+
+        .modal.open { display: flex; }
+
+        .modal-panel {
+            width: min(920px, 100%);
+            height: min(680px, 100%);
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .modal-header,
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--line);
+            border-bottom: 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .modal-text {
+            min-height: 0;
+            overflow: auto;
+            margin: 0;
+            padding: 14px 16px;
+            color: #172026;
+            background: #fbfcfd;
+            user-select: text;
+            white-space: pre-wrap;
+            font: 12px/1.6 "Cascadia Code", Consolas, monospace;
+        }
+
+        @media (max-width: 1180px) {
+            .workspace { grid-template-columns: 260px minmax(460px, 1fr) 310px; }
+            .metrics-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 920px) {
+            body { overflow: auto; }
+            .app-shell { min-height: 100vh; height: auto; }
+            .topbar { height: auto; grid-template-columns: 1fr; align-items: stretch; }
+            .scenario-strip { grid-template-columns: auto minmax(0, 1fr); }
+            .scenario-strip .scenario-note { grid-column: 1 / -1; }
+            .top-actions { overflow-x: auto; }
+            .workspace { grid-template-columns: 1fr; }
+            .panel { min-height: 320px; border-right: 0; border-bottom: 1px solid var(--line); }
+            .panel:last-child { border-left: 0; }
+            .canvas-panel { min-height: 760px; grid-template-rows: auto 1fr 300px; }
+            .bottom-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="resize-layer" id="resize-layer" aria-hidden="true">
+        <div class="resize-zone resize-top" data-resize-edge="top"></div>
+        <div class="resize-zone resize-right" data-resize-edge="right"></div>
+        <div class="resize-zone resize-bottom" data-resize-edge="bottom"></div>
+        <div class="resize-zone resize-left" data-resize-edge="left"></div>
+        <div class="resize-zone resize-top-left" data-resize-edge="top-left"></div>
+        <div class="resize-zone resize-top-right" data-resize-edge="top-right"></div>
+        <div class="resize-zone resize-bottom-left" data-resize-edge="bottom-left"></div>
+        <div class="resize-zone resize-bottom-right" data-resize-edge="bottom-right"></div>
+    </div>
+
+    <div class="titlebar" id="titlebar">
+        <span class="titlebar-title">UrbanPlan Studio</span>
+        <div class="titlebar-controls">
+            <button class="titlebar-btn" id="tb-min" title="最小化">_</button>
+            <button class="titlebar-btn" id="tb-max" title="最大化">□</button>
+            <button class="titlebar-btn close" id="tb-close" title="关闭">×</button>
+        </div>
+    </div>
+
+    <main class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">UP</div>
+                <div class="brand-text">
+                    <h1>UrbanPlan Studio</h1>
+                    <span id="project-subtitle">城市更新片区 · UPF 0.1</span>
+                </div>
+            </div>
+            <div class="scenario-strip">
+                <label for="scenario-select">方案</label>
+                <select id="scenario-select"></select>
+                <span class="scenario-note" id="scenario-note"></span>
+            </div>
+            <div class="top-actions">
+                <button id="btn-run" class="primary" title="运行规则检查">运行检查</button>
+                <button id="btn-compare" title="比较不同规划方案">对比</button>
+                <button id="btn-quality" title="检查 UPF 数据质量">质检</button>
+                <button id="btn-report" title="生成诊断报告">报告</button>
+                <button id="btn-upf" title="查看 UPF 数据">UPF</button>
+                <button id="btn-save" title="保存 UPF 文件">保存</button>
+                <button id="btn-load" title="载入 UPF 文件">载入</button>
+            </div>
+        </header>
+
+        <section class="workspace">
+            <aside class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Project</h2>
+                    <div class="top-actions">
+                        <button class="icon-btn ghost" id="btn-restore" title="恢复自动备份">⟲</button>
+                        <button class="icon-btn ghost" id="btn-reset" title="恢复演示项目">↺</button>
+                    </div>
+                </div>
+                <div class="panel-body left-stack">
+                    <section class="section">
+                        <h2>项目概况</h2>
+                        <div class="project-summary" id="project-summary"></div>
+                    </section>
+                    <section class="section">
+                        <h2>图层</h2>
+                        <div class="layer-list" id="layer-list"></div>
+                    </section>
+                    <section class="section">
+                        <h2>对象</h2>
+                        <div class="object-list" id="object-list"></div>
+                    </section>
+                    <section class="section">
+                        <h2>方案版本</h2>
+                        <div class="scenario-list" id="scenario-list"></div>
+                    </section>
+                </div>
+            </aside>
+
+            <section class="canvas-panel">
+                <div class="canvas-toolbar">
+                    <div class="tool-group" id="tool-group">
+                        <button class="tool-btn active" data-tool="select" title="选择对象">选择</button>
+                        <button class="tool-btn" data-tool="parcel" title="新增地块">地块</button>
+                        <button class="tool-btn" data-tool="facility" title="新增公共服务设施">设施</button>
+                        <button class="tool-btn" data-tool="entrance" title="新增出入口">出入口</button>
+                    </div>
+                    <div class="tool-group">
+                        <button id="btn-duplicate-scenario" title="复制当前方案">复制方案</button>
+                        <button id="btn-optimize" title="应用一组保守优化">保守优化</button>
+                    </div>
+                    <div class="canvas-meta" id="canvas-meta">EPSG:4490 · 语义规划画布</div>
+                </div>
+                <div class="canvas-wrap">
+                    <svg id="plan-canvas" class="plan-canvas selecting" viewBox="0 0 1000 640" role="application" tabindex="0" aria-label="语义规划交互画布"></svg>
+                    <div class="canvas-hint" id="canvas-hint">选择对象查看规则、指标和证据链。</div>
+                </div>
+                <div>
+                    <div class="metrics-strip" id="metrics-strip"></div>
+                    <div class="bottom-grid">
+                        <section class="bottom-section">
+                            <div class="bottom-header">
+                                <h2 class="bottom-title">规则问题</h2>
+                                <span class="pill" id="check-count">0</span>
+                            </div>
+                            <div class="check-list" id="check-list"></div>
+                        </section>
+                        <section class="bottom-section">
+                            <div class="bottom-header">
+                                <h2 class="bottom-title">智能建议</h2>
+                                <span class="pill info" id="suggestion-count">0</span>
+                            </div>
+                            <div class="recommendation-list" id="recommendation-list"></div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Inspector</h2>
+                    <button id="btn-delete" title="删除当前对象">删除</button>
+                </div>
+                <div class="inspector-body" id="inspector"></div>
+            </aside>
+        </section>
+
+        <footer class="statusbar">
+            <span id="status-left">Ready</span>
+            <span id="status-right">0 objects</span>
+        </footer>
+    </main>
+
+    <div class="modal" id="modal">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h2 id="modal-title">Output</h2>
+                <button class="icon-btn" id="modal-close" title="关闭">×</button>
+            </div>
+            <pre class="modal-text" id="modal-text"></pre>
+            <div class="modal-footer">
+                <span class="compact-label" id="modal-meta">UrbanPlan Studio</span>
+                <div class="top-actions">
+                    <button id="modal-copy">复制</button>
+                    <button id="modal-save">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-input" accept=".upf,.json,application/json" hidden>
+    <script type="module" src="./main.ts"></script>
+</body>
+</html>

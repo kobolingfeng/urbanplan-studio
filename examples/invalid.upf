@@ -1,0 +1,5 @@
+{
+  "name": "故意无效的 UPF",
+  "reason": "用于验证导入和 smoke test 能识别坏样例。",
+  "objects": "this should be an array"
+}

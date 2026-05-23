@@ -1,0 +1,93 @@
+{
+  "format": "UPF",
+  "formatVersion": "0.1.0",
+  "project": {
+    "id": "luohu_demo_external",
+    "name": "罗湖片区外部样例",
+    "city": "深圳市",
+    "district": "罗湖区",
+    "planningType": "城市更新片区 / 控规辅助审查",
+    "planningHorizon": "2026-2035",
+    "crs": "DemoCanvasMetric"
+  },
+  "ruleset": {
+    "jurisdiction": "CN-GD-SZ",
+    "version": "深圳 2025 修订汇总版 + UPF 原型规则",
+    "basis": [
+      "国土空间调查、规划、用途管制用地用海分类指南",
+      "GB 50180-2018 城市居住区规划设计标准",
+      "完整居住社区建设指南"
+    ]
+  },
+  "scenarios": [
+    { "id": "baseline", "name": "现状基准", "description": "保留现状强度。" },
+    { "id": "renewal", "name": "更新方案", "description": "提升强度并补齐配套。" }
+  ],
+  "activeScenarioId": "renewal",
+  "objects": [
+    {
+      "id": "parcel_lh_01",
+      "type": "parcel",
+      "name": "LH-01 居住更新地块",
+      "evidence": ["示例地块边界", "示例控制指标"],
+      "points": [
+        { "x": 180, "y": 150 },
+        { "x": 390, "y": 150 },
+        { "x": 390, "y": 310 },
+        { "x": 180, "y": 310 }
+      ],
+      "landUseCode": "0701",
+      "landUseName": "城镇住宅用地",
+      "controls": {
+        "farMax": 4.2,
+        "buildingCoverageMax": 0.35,
+        "greenRatioMin": 0.3,
+        "heightMaxM": 100
+      },
+      "scenarioValues": {
+        "baseline": {
+          "far": 2.6,
+          "buildingCoverage": 0.36,
+          "greenRatio": 0.24,
+          "residentialGfaSqm": 36000,
+          "publicServiceGfaSqm": 300,
+          "updateMode": "综合整治",
+          "notes": "现状配套不足。"
+        },
+        "renewal": {
+          "far": 4.1,
+          "buildingCoverage": 0.34,
+          "greenRatio": 0.31,
+          "residentialGfaSqm": 62000,
+          "publicServiceGfaSqm": 1400,
+          "updateMode": "综合整治",
+          "notes": "控制强度并补齐公服。"
+        }
+      }
+    },
+    {
+      "id": "road_lh_01",
+      "type": "road",
+      "name": "生活性支路",
+      "evidence": ["示例路网"],
+      "points": [
+        { "x": 110, "y": 340 },
+        { "x": 680, "y": 340 }
+      ],
+      "level": "支路",
+      "redLineWidthM": 18,
+      "lanes": 2
+    },
+    {
+      "id": "facility_lh_01",
+      "type": "facility",
+      "name": "规划社区养老服务点",
+      "evidence": ["完整社区补短板推演"],
+      "point": { "x": 420, "y": 260 },
+      "kind": "社区养老",
+      "capacity": 100,
+      "serviceRadiusM": 500,
+      "planned": true
+    }
+  ]
+}
