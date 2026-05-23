@@ -179,6 +179,12 @@ type CanvasViewBox = {
     height: number;
 };
 
+type NumberFieldOptions = {
+    min?: number;
+    max?: number;
+    integer?: boolean;
+};
+
 type UrbanPlanProject = {
     format: 'UPF';
     formatVersion: '0.1.0';
@@ -1389,16 +1395,18 @@ function renderParcelInspector(parcel: Parcel) {
         textField('用地名称', parcel.landUseName, next => { parcel.landUseName = next; renderAll(); }),
     ]));
     ui.inspector.append(fieldGrid([
-        numberField('容积率', value.far, 0.1, next => { value.far = next; renderAll(); }),
-        numberField('控制 FAR', parcel.controls.farMax, 0.1, next => { parcel.controls.farMax = next; renderAll(); }),
+        numberField('容积率', value.far, 0.1, next => { value.far = next; renderAll(); }, { min: 0, max: 15 }),
+        numberField('控制 FAR', parcel.controls.farMax, 0.1, next => { parcel.controls.farMax = next; renderAll(); }, { min: 0, max: 15 }),
         percentField('建筑密度', value.buildingCoverage, next => { value.buildingCoverage = next; renderAll(); }),
         percentField('绿地率', value.greenRatio, next => { value.greenRatio = next; renderAll(); }),
-        numberField('住宅建面', value.residentialGfaSqm, 1000, next => { value.residentialGfaSqm = next; renderAll(); }),
-        numberField('公服建面', value.publicServiceGfaSqm, 100, next => { value.publicServiceGfaSqm = next; renderAll(); }),
+        numberField('住宅建面', value.residentialGfaSqm, 1000, next => { value.residentialGfaSqm = next; renderAll(); }, { min: 0, max: 5_000_000 }),
+        numberField('公服建面', value.publicServiceGfaSqm, 100, next => { value.publicServiceGfaSqm = next; renderAll(); }, { min: 0, max: 5_000_000 }),
     ]));
     ui.inspector.append(fieldGrid([
         selectField('更新方式', value.updateMode, ['保留整治', '综合整治', '功能置换', '拆除重建'], next => { value.updateMode = next as ParcelScenarioValue['updateMode']; renderAll(); }),
-        numberField('限高 m', parcel.controls.heightMaxM, 5, next => { parcel.controls.heightMaxM = next; renderAll(); }),
+        numberField('限高 m', parcel.controls.heightMaxM, 5, next => { parcel.controls.heightMaxM = next; renderAll(); }, { min: 0, max: 1000 }),
+        percentField('控制建筑密度', parcel.controls.buildingCoverageMax, next => { parcel.controls.buildingCoverageMax = next; renderAll(); }),
+        percentField('控制绿地率', parcel.controls.greenRatioMin, next => { parcel.controls.greenRatioMin = next; renderAll(); }),
     ]));
     ui.inspector.append(fieldGrid([
         textAreaField('方案备注', value.notes, next => { value.notes = next; renderAll(); }),
@@ -1406,16 +1414,15 @@ function renderParcelInspector(parcel: Parcel) {
     ui.inspector.append(kvList([
         ['地块面积', formatArea(areaSqm(parcel.points))],
         ['估算人口', `${formatNumber(parcelResidents(parcel))} 人`],
-        ['建筑密度控制', `${(parcel.controls.buildingCoverageMax * 100).toFixed(1)}%`],
-        ['绿地率控制', `${(parcel.controls.greenRatioMin * 100).toFixed(1)}%`],
+        ['控制指标', `FAR ${parcel.controls.farMax.toFixed(1)} · 密度 ${(parcel.controls.buildingCoverageMax * 100).toFixed(1)}% · 绿地 ${(parcel.controls.greenRatioMin * 100).toFixed(1)}%`],
     ]));
 }
 
 function renderRoadInspector(road: Road) {
     ui.inspector.append(fieldGrid([
         selectField('道路等级', road.level, ['主干路', '次干路', '支路', '慢行街巷'], next => { road.level = next as Road['level']; renderAll(); }),
-        numberField('红线宽度 m', road.redLineWidthM, 1, next => { road.redLineWidthM = next; renderAll(); }),
-        numberField('车道数', road.lanes, 1, next => { road.lanes = Math.max(0, Math.round(next)); renderAll(); }),
+        numberField('红线宽度 m', road.redLineWidthM, 1, next => { road.redLineWidthM = next; renderAll(); }, { min: 0, max: 200 }),
+        numberField('车道数', road.lanes, 1, next => { road.lanes = next; renderAll(); }, { min: 1, max: 12, integer: true }),
     ]));
     renderReadonlyInspector(road, [['线位点数', `${road.points.length}`], ['说明', '道路对象可参与出入口、断面和慢行连续性检查。']]);
 }
@@ -1423,8 +1430,8 @@ function renderRoadInspector(road: Road) {
 function renderFacilityInspector(facility: Facility) {
     ui.inspector.append(fieldGrid([
         selectField('设施类型', facility.kind, ['幼儿园', '社区养老', '社区卫生', '文化活动', '便民商业'], next => { facility.kind = next as FacilityKind; renderAll(); }),
-        numberField('服务能力', facility.capacity, 10, next => { facility.capacity = Math.max(0, Math.round(next)); renderAll(); }),
-        numberField('服务半径 m', facility.serviceRadiusM, 50, next => { facility.serviceRadiusM = Math.max(0, Math.round(next)); renderAll(); }),
+        numberField('服务能力', facility.capacity, 10, next => { facility.capacity = next; renderAll(); }, { min: 0, max: 200_000, integer: true }),
+        numberField('服务半径 m', facility.serviceRadiusM, 50, next => { facility.serviceRadiusM = next; renderAll(); }, { min: 0, max: 10_000, integer: true }),
         selectField('状态', facility.planned ? '规划' : '现状', ['现状', '规划'], next => { facility.planned = next === '规划'; renderAll(); }),
     ]));
     renderReadonlyInspector(facility, [['坐标', `${facility.point.x.toFixed(0)}, ${facility.point.y.toFixed(0)}`]]);
@@ -1603,28 +1610,49 @@ function textAreaField(label: string, value: string, onChange: (value: string) =
     return field(label, input);
 }
 
-function numberField(label: string, value: number, step: number, onChange: (value: number) => void): HTMLElement {
+function numberField(label: string, value: number, step: number, onChange: (value: number) => void, options: NumberFieldOptions = {}): HTMLElement {
     const input = document.createElement('input');
     input.type = 'number';
     input.step = String(step);
+    if (options.min !== undefined) input.min = String(options.min);
+    if (options.max !== undefined) input.max = String(options.max);
     input.value = String(value);
     input.addEventListener('change', () => {
         markDirty();
-        onChange(Number(input.value) || 0);
+        const next = normalizeNumberInput(input.value, value, options);
+        input.value = String(next);
+        onChange(next);
     });
     return field(label, input);
 }
 
-function percentField(label: string, value: number, onChange: (value: number) => void): HTMLElement {
+function percentField(label: string, value: number, onChange: (value: number) => void, options: NumberFieldOptions = { min: 0, max: 1 }): HTMLElement {
     const input = document.createElement('input');
     input.type = 'number';
     input.step = '1';
     input.value = String(Math.round(value * 100));
+    if (options.min !== undefined) input.min = String(Math.round(options.min * 100));
+    if (options.max !== undefined) input.max = String(Math.round(options.max * 100));
     input.addEventListener('change', () => {
         markDirty();
-        onChange((Number(input.value) || 0) / 100);
+        const next = normalizeNumberInput(input.value, value * 100, {
+            min: options.min === undefined ? undefined : options.min * 100,
+            max: options.max === undefined ? undefined : options.max * 100,
+            integer: true,
+        }) / 100;
+        input.value = String(Math.round(next * 100));
+        onChange(next);
     });
     return field(`${label} %`, input);
+}
+
+function normalizeNumberInput(value: string, fallback: number, options: NumberFieldOptions): number {
+    let next = Number(value);
+    if (!Number.isFinite(next)) next = fallback;
+    if (options.integer) next = Math.round(next);
+    if (options.min !== undefined) next = Math.max(options.min, next);
+    if (options.max !== undefined) next = Math.min(options.max, next);
+    return next;
 }
 
 function selectField(label: string, value: string, options: string[], onChange: (value: string) => void): HTMLElement {
