@@ -99,8 +99,8 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         }
     });
 
-    const parcelIds = new Set(objects.map(asRecord).filter(item => item?.type === 'parcel').map(item => String(item!.id)).filter(Boolean));
-    const roadIds = new Set(objects.map(asRecord).filter(item => item?.type === 'road').map(item => String(item!.id)).filter(Boolean));
+    const parcelIds = new Set(objects.map(asRecord).filter(item => item?.type === 'parcel').map(item => item?.id).filter(isNonEmptyString));
+    const roadIds = new Set(objects.map(asRecord).filter(item => item?.type === 'road').map(item => item?.id).filter(isNonEmptyString));
 
     objects.forEach((object, index) => {
         const item = asRecord(object);

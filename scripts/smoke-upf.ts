@@ -240,6 +240,45 @@ for (const path of ['objects[1].redLineWidthM', 'objects[1].lanes', 'objects[2].
     assert(rangeErrors.some(issue => issue.path === path), `UPF validation should reject ${path}`);
 }
 
+const undefinedReferenceIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'undefined_ref', name: 'Undefined Ref', city: '深圳市', district: '罗湖区', planningType: 'Reference smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Reference fixture' }],
+    objects: [{
+        type: 'parcel',
+        name: 'Missing Id Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: 3, buildingCoverageMax: 0.35, greenRatioMin: 0.3, heightMaxM: 80 },
+        scenarioValues: {
+            base: { far: 2, buildingCoverage: 0.3, greenRatio: 0.31, residentialGfaSqm: 10000, publicServiceGfaSqm: 300, updateMode: '综合整治' },
+        },
+    }, {
+        id: 'road_ok',
+        type: 'road',
+        name: 'Road OK',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 90 }, { x: 80, y: 90 }],
+        level: '支路',
+        redLineWidthM: 18,
+        lanes: 2,
+    }, {
+        id: 'entrance_undefined',
+        type: 'entrance',
+        name: 'Undefined Parcel Entrance',
+        evidence: ['fixture'],
+        point: { x: 10, y: 10 },
+        entranceType: '机动车',
+        parcelId: 'undefined',
+        roadId: 'road_ok',
+    }],
+});
+assert(undefinedReferenceIssues.some(issue => issue.path === 'objects[2].parcelId' && issue.message.includes('不存在')), 'UPF validation should not treat missing object ids as undefined references');
+
 try {
     const invalidText = readFileSync(join(examples, 'invalid.upf'), 'utf8');
     const invalidIssues = validateUpfDocument(JSON.parse(invalidText));
