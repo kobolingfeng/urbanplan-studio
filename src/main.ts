@@ -730,15 +730,25 @@ function renderScenarios() {
 
     ui.scenarioList.replaceChildren();
     for (const scenario of project.scenarios) {
+        const scenarioScore = evaluateScenarioForSummary(scenario.id);
         const button = document.createElement('button');
         button.className = `scenario-row${scenario.id === activeScenarioId ? ' selected' : ''}`;
         button.addEventListener('click', () => {
             activeScenarioId = scenario.id;
             renderAll();
         });
-        button.append(rowText(scenario.name, scenario.description), pill(scenario.id === activeScenarioId ? '当前' : '方案', scenario.id === activeScenarioId ? 'ok' : ''));
+        button.append(
+            rowText(scenario.name, `${scenario.description} · ${scenarioScore.score}/100 · ${scenarioScore.band}`),
+            pill(scenario.id === activeScenarioId ? '当前' : `${scenarioScore.score}`, scenario.id === activeScenarioId ? scoreClass(scenarioScore.score) : scoreClass(scenarioScore.score)),
+        );
         ui.scenarioList.append(button);
     }
+}
+
+function evaluateScenarioForSummary(scenarioId: string): ScenarioEvaluation {
+    if (scenarioId === activeScenarioId) return evaluation;
+    const result = runPlanningRules(project, scenarioId);
+    return evaluateScenario(project, scenarioId, result.checks, result.recommendations);
 }
 
 function renderProjectSummary() {
@@ -858,9 +868,17 @@ function renderCanvas() {
     }
     renderLabels();
     ui.canvasHint.textContent = activeTool === 'select'
-        ? '选择对象查看规则、指标和证据链；地块颜色按综合评分热力显示。'
+        ? selectedObjectHint()
         : `在画布上点击即可新增${activeTool === 'parcel' ? '地块' : activeTool === 'facility' ? '设施' : '出入口'}对象。`;
     ui.canvasMeta.textContent = `${project.project.crs} · 1 unit≈${UNIT_SYSTEM.metersPerCanvasUnit}m · ${activeScenario().name} · ${activeTool}`;
+}
+
+function selectedObjectHint(): string {
+    const object = getObject(selectedId);
+    if (object?.type === 'facility') {
+        return `${object.kind} 服务半径 ${formatNumber(object.serviceRadiusM)}m 已显示；可用于解释公共服务覆盖。`;
+    }
+    return '选择对象查看规则、指标和证据链；地块颜色按综合评分热力显示。';
 }
 
 function syncToolButtons() {
@@ -908,6 +926,7 @@ function renderRoad(road: Road) {
 }
 
 function renderFacility(facility: Facility) {
+    if (facility.id === selectedId) renderFacilityCoverage(facility);
     const circle = svg$<SVGCircleElement>('circle');
     circle.setAttribute('cx', String(facility.point.x));
     circle.setAttribute('cy', String(facility.point.y));
@@ -919,6 +938,20 @@ function renderFacility(facility: Facility) {
         selectObject(facility.id);
     });
     ui.canvas.append(circle);
+}
+
+function renderFacilityCoverage(facility: Facility) {
+    const radius = Math.max(24, facility.serviceRadiusM / UNIT_SYSTEM.metersPerCanvasUnit);
+    const coverage = svg$<SVGCircleElement>('circle');
+    coverage.setAttribute('cx', String(facility.point.x));
+    coverage.setAttribute('cy', String(facility.point.y));
+    coverage.setAttribute('r', String(radius));
+    coverage.setAttribute('class', 'service-radius-shape');
+    coverage.addEventListener('click', event => {
+        event.stopPropagation();
+        selectObject(facility.id);
+    });
+    ui.canvas.append(coverage);
 }
 
 function renderEntrance(entrance: Entrance) {

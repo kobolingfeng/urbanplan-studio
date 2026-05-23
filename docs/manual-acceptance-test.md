@@ -22,19 +22,21 @@ Expected:
 4. Click `检查`.
 5. Confirm rule count updates.
 6. Confirm the bottom `综合评估` section shows six dimension rows and a scenario score.
-7. Confirm parcel fill colors reflect score bands: lower scoring parcels are warmer, stable parcels are cooler/green.
-8. Click `评估`.
-9. Confirm the modal includes dimension scores, parcel priorities, highlights, and risk register.
-10. Click `敏感性`.
-11. Confirm the modal compares at least four weight models and reports whether the recommended scheme is stable.
-12. Click `对比`.
-13. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
-14. Click `质检`.
-15. Confirm a data quality score, rule catalog, evidence coverage, evidence type distribution, and prototype-rule notes appear.
-16. Click `报告`.
-17. Confirm the report includes core metrics, dimension scores, sensitivity summary, data quality summary, and limitations.
-18. Click `UPF`.
-19. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, and `evaluation`.
+7. Confirm scenario rows show score and band, not only scenario names.
+8. Confirm parcel fill colors reflect score bands: lower scoring parcels are warmer, stable parcels are cooler/green.
+9. Select a public facility and confirm its service-radius overlay appears on the map.
+10. Click `评估`.
+11. Confirm the modal includes dimension scores, parcel priorities, highlights, and risk register.
+12. Click `敏感性`.
+13. Confirm the modal compares at least four weight models and reports whether the recommended scheme is stable.
+14. Click `对比`.
+15. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
+16. Click `质检`.
+17. Confirm a data quality score, rule catalog, evidence coverage, evidence type distribution, and prototype-rule notes appear.
+18. Click `报告`.
+19. Confirm the report includes core metrics, dimension scores, sensitivity summary, data quality summary, and limitations.
+20. Click `UPF`.
+21. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, and `evaluation`.
 
 ## Object Editing
 

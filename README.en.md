@@ -16,6 +16,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Parcel score heatmap for quickly spotting priority intervention areas.
 - Object search and risk filters for quickly locating problematic parcels or facilities.
 - Scenario optimization presets for compliance, public-service-first, and ecology-first adjustments.
+- Map explanation aids: scenario scores in the scenario list and selected-facility service-radius overlays.
 - UPF export/import.
 - Markdown planning diagnosis report.
 - Data-quality report for evidence, scenario completeness, prototype rules, and dangling references.
@@ -63,6 +64,8 @@ Open `http://127.0.0.1:4173`.
 - `docs/next-professional-steps.md`
 - `docs/graduation-design-plan.md`
 - `docs/evaluation-methodology.md`
+- `docs/defense-demo-script.md`
+- `docs/expert-review-form.md`
 
 ## Limits
 
