@@ -188,6 +188,29 @@ const degeneratePolygonIssues = validateUpfDocument({
 });
 assert(degeneratePolygonIssues.some(issue => issue.severity === 'error' && issue.message.includes('面积接近 0')), 'degenerate parcel polygons should be rejected');
 
+const outOfRangeIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'range', name: 'Range', city: '深圳市', district: '罗湖区', planningType: 'Range smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Range fixture' }],
+    objects: [{
+        id: 'parcel_range',
+        type: 'parcel',
+        name: 'Range Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: 20, buildingCoverageMax: 1.4, greenRatioMin: -0.1, heightMaxM: 1200 },
+        scenarioValues: {
+            base: { far: 99, buildingCoverage: 1.2, greenRatio: -0.1, residentialGfaSqm: -1, publicServiceGfaSqm: 9_000_000, updateMode: '综合整治' },
+        },
+    }],
+});
+const rangeErrors = outOfRangeIssues.filter(issue => issue.severity === 'error' && issue.message.includes('超出允许范围'));
+assert(rangeErrors.length >= 9, 'UPF validation should reject out-of-range parcel indicators and controls');
+
 try {
     const invalidText = readFileSync(join(examples, 'invalid.upf'), 'utf8');
     const invalidIssues = validateUpfDocument(JSON.parse(invalidText));

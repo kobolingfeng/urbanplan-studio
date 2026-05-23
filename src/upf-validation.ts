@@ -11,8 +11,21 @@ export type UpfValidationIssue = {
 };
 
 const OBJECT_TYPES = new Set(['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint']);
-const PARCEL_NUMERIC_VALUES = ['far', 'buildingCoverage', 'greenRatio', 'residentialGfaSqm', 'publicServiceGfaSqm'];
-const PARCEL_CONTROL_VALUES = ['farMax', 'buildingCoverageMax', 'greenRatioMin', 'heightMaxM'];
+const PARCEL_NUMERIC_RANGES: Record<string, { min: number; max: number }> = {
+    far: { min: 0, max: 15 },
+    buildingCoverage: { min: 0, max: 1 },
+    greenRatio: { min: 0, max: 1 },
+    residentialGfaSqm: { min: 0, max: 5_000_000 },
+    publicServiceGfaSqm: { min: 0, max: 5_000_000 },
+};
+const PARCEL_CONTROL_RANGES: Record<string, { min: number; max: number }> = {
+    farMax: { min: 0, max: 15 },
+    buildingCoverageMax: { min: 0, max: 1 },
+    greenRatioMin: { min: 0, max: 1 },
+    heightMaxM: { min: 0, max: 1000 },
+};
+const PARCEL_NUMERIC_VALUES = Object.keys(PARCEL_NUMERIC_RANGES);
+const PARCEL_CONTROL_VALUES = Object.keys(PARCEL_CONTROL_RANGES);
 
 export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
     const issues: UpfValidationIssue[] = [];
@@ -241,7 +254,7 @@ function validateParcel(
     if (!controls) add('error', `${path}.controls`, '地块缺少控制指标。');
     else {
         for (const field of PARCEL_CONTROL_VALUES) {
-            if (!isFiniteNumber(controls[field])) add('error', `${path}.controls.${field}`, `控制指标 ${field} 必须是数字。`);
+            validateNumberInRange(controls, field, `${path}.controls`, `控制指标 ${field}`, PARCEL_CONTROL_RANGES[field], add);
         }
     }
     const values = asRecord(item.scenarioValues);
@@ -256,10 +269,32 @@ function validateParcel(
             continue;
         }
         for (const field of PARCEL_NUMERIC_VALUES) {
-            if (!isFiniteNumber(value[field])) add('error', `${path}.scenarioValues.${scenarioId}.${field}`, `${field} 必须是数字。`);
+            validateNumberInRange(value, field, `${path}.scenarioValues.${scenarioId}`, field, PARCEL_NUMERIC_RANGES[field], add);
         }
         if (!isNonEmptyString(value.updateMode)) add('warning', `${path}.scenarioValues.${scenarioId}.updateMode`, '缺少更新方式。');
     }
+}
+
+function validateNumberInRange(
+    record: AnyRecord,
+    field: string,
+    path: string,
+    label: string,
+    range: { min: number; max: number } | undefined,
+    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+) {
+    const value = record[field];
+    if (!isFiniteNumber(value)) {
+        add('error', `${path}.${field}`, `${label} 必须是数字。`);
+        return;
+    }
+    if (range && (value < range.min || value > range.max)) {
+        add('error', `${path}.${field}`, `${label} 超出允许范围 ${formatRange(range)}。`);
+    }
+}
+
+function formatRange(range: { min: number; max: number }): string {
+    return `${range.min}-${range.max}`;
 }
 
 function validatePolygonGeometry(
