@@ -398,6 +398,21 @@
             gap: 6px;
         }
 
+        .object-tools {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 88px;
+            gap: 6px;
+        }
+
+        .object-tools input,
+        .object-tools select {
+            width: 100%;
+            min-width: 0;
+            height: 32px;
+            padding: 0 8px;
+            font-size: 12px;
+        }
+
         .layer-row,
         .object-row,
         .scenario-row {
@@ -423,6 +438,15 @@
         .scenario-row.selected {
             border-color: var(--teal);
             background: var(--teal-2);
+        }
+
+        .empty-state {
+            padding: 10px 8px;
+            border: 1px dashed var(--line);
+            border-radius: 8px;
+            color: var(--muted);
+            background: var(--surface-2);
+            font-size: 12px;
         }
 
         .row-title {
@@ -987,6 +1011,16 @@
                     </section>
                     <section class="section">
                         <h2>对象</h2>
+                        <div class="object-tools">
+                            <input id="object-search" placeholder="搜索对象" aria-label="搜索对象">
+                            <select id="object-filter" aria-label="对象筛选">
+                                <option value="all">全部</option>
+                                <option value="issues">有问题</option>
+                                <option value="high-risk">高风险</option>
+                                <option value="parcel">地块</option>
+                                <option value="facility">设施</option>
+                            </select>
+                        </div>
                         <div class="object-list" id="object-list"></div>
                     </section>
                     <section class="section">

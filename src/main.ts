@@ -185,6 +185,8 @@ const ui = {
     projectSummary: $('project-summary'),
     layerList: $('layer-list'),
     objectList: $('object-list'),
+    objectSearch: $('object-search') as HTMLInputElement,
+    objectFilter: $('object-filter') as HTMLSelectElement,
     scenarioList: $('scenario-list'),
     toolGroup: $('tool-group'),
     canvas: document.getElementById('plan-canvas') as unknown as SVGSVGElement,
@@ -237,6 +239,8 @@ let currentFilePath = '';
 let importFindings: ImportFinding[] = [];
 let dirty = false;
 let autosaveTimer: number | undefined;
+let objectSearchText = '';
+let objectFilter = 'all';
 
 const visibleLayers: Record<LayerKey, boolean> = {
     parcels: true,
@@ -785,14 +789,47 @@ function renderLayers() {
 }
 
 function renderObjectList() {
+    ui.objectSearch.value = objectSearchText;
+    ui.objectFilter.value = objectFilter;
     ui.objectList.replaceChildren();
-    for (const object of project.objects) {
+    const objects = project.objects.filter(objectMatchesListFilter);
+    if (!objects.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = '没有匹配对象。';
+        ui.objectList.append(empty);
+        return;
+    }
+    for (const object of objects) {
         const row = document.createElement('button');
         row.className = `object-row${object.id === selectedId ? ' selected' : ''}`;
         row.addEventListener('click', () => selectObject(object.id));
         row.append(typeDot(object), rowText(object.name, objectMeta(object)), issuePill(object.id));
         ui.objectList.append(row);
     }
+}
+
+function objectMatchesListFilter(object: PlanObject): boolean {
+    const keyword = objectSearchText.trim().toLowerCase();
+    if (keyword) {
+        const haystack = [
+            object.id,
+            object.name,
+            object.type,
+            object.evidence.join(' '),
+            objectMeta(object),
+        ].join(' ').toLowerCase();
+        if (!haystack.includes(keyword)) return false;
+    }
+    if (objectFilter === 'issues') return checks.some(check => check.objectId === object.id);
+    if (objectFilter === 'high-risk') {
+        const hasSeriousCheck = checks.some(check => check.objectId === object.id && (check.severity === 'error' || check.severity === 'warning'));
+        const parcelEvaluation = evaluation.parcels.find(item => item.objectId === object.id);
+        return hasSeriousCheck || Boolean(parcelEvaluation && parcelEvaluation.score < 70);
+    }
+    if (objectFilter === 'parcel') return object.type === 'parcel';
+    if (objectFilter === 'facility') return object.type === 'facility';
+    return true;
 }
 
 function renderCanvas() {
@@ -1764,6 +1801,8 @@ function loadUpfText(text: string) {
         ? parsed.activeScenarioId
         : project.scenarios[0]?.id ?? '';
     selectedId = project.objects[0]?.id ?? '';
+    objectSearchText = '';
+    objectFilter = 'all';
     renderAll();
 }
 
@@ -1788,6 +1827,14 @@ function bindControls() {
             renderCanvas();
         });
     });
+    ui.objectSearch.addEventListener('input', () => {
+        objectSearchText = ui.objectSearch.value;
+        renderObjectList();
+    });
+    ui.objectFilter.addEventListener('change', () => {
+        objectFilter = ui.objectFilter.value;
+        renderObjectList();
+    });
     ui.canvas.addEventListener('click', event => {
         if (activeTool === 'select') return;
         addObjectAt(canvasPoint(event));
@@ -1809,6 +1856,8 @@ function bindControls() {
         activeTool = 'select';
         currentFilePath = '';
         importFindings = [];
+        objectSearchText = '';
+        objectFilter = 'all';
         dirty = false;
         renderAll();
     });
