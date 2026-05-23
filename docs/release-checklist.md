@@ -14,6 +14,7 @@ Use this before handing UrbanPlan Studio to another person for review.
   - `main.js`
 - Confirm `release/UrbanPlan Studio-0.1.0-portable.zip` contains only the same runtime files.
 - Confirm `release/SHA256SUMS.txt` is regenerated.
+- Confirm `dist/app.exe` FileVersion matches `app.config.json`.
 - `verify:release` runs `package` and `smoke:release`.
 
 ## Product Smoke

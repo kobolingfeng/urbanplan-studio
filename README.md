@@ -105,6 +105,7 @@ bun run verify:release
 ## 专业化改进记录
 
 - `dist` 构建前自动清理，避免把浏览器缓存、截图、运行时 profile 混入交付物。
+- 原生 `app.exe` 写入 Windows VERSIONINFO，并由静态 smoke 校验文件版本与 `app.config.json` 一致。
 - UPF 保存现在带顶层 `format/formatVersion`，保存后可以再次载入。
 - 导入经过兼容层处理，缺失字段会补默认值，非法对象会被过滤。
 - 质检报告现在包含 UPF 结构校验和规则目录元数据。

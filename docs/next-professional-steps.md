@@ -37,7 +37,7 @@ This backlog is ordered by product risk, not by excitement.
 3. Add fixture-based tests for each rule group.
 4. Add release smoke that verifies zip contents and SHA256.
 5. Add CI workflow once this becomes a git repository.
-6. Add native Windows `VERSIONINFO`.
+6. Extend native Windows metadata with icon branding, publisher, signing, and installer manifests.
 7. Add installer/signing path for real distribution.
 
 ## P2: Data Adapters

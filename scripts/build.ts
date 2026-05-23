@@ -48,11 +48,60 @@ process.once('exit', releaseBuildLock);
 // ── Load config ───────────────────────────────────────
 let buildCommand: string | undefined;
 let buildOutDir: string | undefined;
+let appName = 'UrbanPlan Studio';
+let appVersion = '0.0.0';
 try {
     const cfg = await Bun.file(join(ROOT, 'app.config.json')).json();
     buildCommand = cfg?.build?.command;
     buildOutDir  = cfg?.build?.outDir;
+    appName = cfg?.app?.name ?? cfg?.window?.title ?? appName;
+    appVersion = cfg?.app?.version ?? appVersion;
 } catch {}
+
+function rcString(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function versionTuple(version: string): string {
+    const parts = version.split(/[^\d]+/).filter(Boolean).map(value => Number.parseInt(value, 10));
+    while (parts.length < 4) parts.push(0);
+    return parts.slice(0, 4).map(value => Number.isFinite(value) ? value : 0).join(',');
+}
+
+function versionInfoResource(name: string, version: string): string {
+    const tuple = versionTuple(version);
+    const safeName = rcString(name);
+    const safeVersion = rcString(version);
+    return [
+        '1 VERSIONINFO',
+        `FILEVERSION ${tuple}`,
+        `PRODUCTVERSION ${tuple}`,
+        'FILEFLAGSMASK 0x3fL',
+        'FILEFLAGS 0x0L',
+        'FILEOS 0x40004L',
+        'FILETYPE 0x1L',
+        'FILESUBTYPE 0x0L',
+        'BEGIN',
+        '  BLOCK "StringFileInfo"',
+        '  BEGIN',
+        '    BLOCK "040904b0"',
+        '    BEGIN',
+        `      VALUE "CompanyName", "${safeName}"`,
+        `      VALUE "FileDescription", "${safeName}"`,
+        `      VALUE "FileVersion", "${safeVersion}"`,
+        `      VALUE "InternalName", "${safeName}"`,
+        `      VALUE "OriginalFilename", "app.exe"`,
+        `      VALUE "ProductName", "${safeName}"`,
+        `      VALUE "ProductVersion", "${safeVersion}"`,
+        '    END',
+        '  END',
+        '  BLOCK "VarFileInfo"',
+        '  BEGIN',
+        '    VALUE "Translation", 0x409, 1200',
+        '  END',
+        'END',
+    ].join('\n');
+}
 
 // ── Check deps ────────────────────────────────────────
 const wv2Inc  = join(DEPS, 'webview2', 'build', 'native', 'include');
@@ -219,12 +268,16 @@ if (singleExe) {
         ...(existsSync(icoFile) ? ['IDI_APP ICON "app.ico"'] : []),
         `IDR_HTML   RCDATA "_embedded-${buildMode}.pak"`,
         `IDR_CONFIG RCDATA "_embedded-${buildMode}.json"`,
+        versionInfoResource(appName, appVersion),
     ].join('\n');
     writeFileSync(rcFile, rcContent, 'utf-8');
 } else {
-    if (existsSync(icoFile)) {
-        writeFileSync(rcFile, '#include "resource.h"\nIDI_APP ICON "app.ico"\n', 'utf-8');
-    }
+    const rcContent = [
+        '#include "resource.h"',
+        ...(existsSync(icoFile) ? ['IDI_APP ICON "app.ico"'] : []),
+        versionInfoResource(appName, appVersion),
+    ].join('\n');
+    writeFileSync(rcFile, rcContent, 'utf-8');
 }
 
 let linkRes = '';

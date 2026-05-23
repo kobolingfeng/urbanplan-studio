@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { join, resolve } from 'path';
+import { execFileSync } from 'child_process';
 
 const ROOT = resolve(import.meta.dir, '..');
 const DIST = join(ROOT, 'dist');
@@ -61,6 +62,14 @@ assert(config.app?.version === '0.1.0', 'app version missing from config');
 assert(config.permissions?.shell === false, 'shell namespace should be denied');
 assert(config.permissions?.registry === false, 'registry namespace should be denied');
 assert(config.permissions?.dialog === true, 'dialog namespace should be allowed');
+if (existsSync(join(DIST, 'app.exe'))) {
+    const fileVersion = execFileSync('powershell', [
+        '-NoProfile',
+        '-Command',
+        `(Get-Item ${JSON.stringify(join(DIST, 'app.exe'))}).VersionInfo.FileVersion`,
+    ], { encoding: 'utf8' }).trim();
+    assert(fileVersion === config.app.version, `app.exe FileVersion should be ${config.app.version}, got ${fileVersion || 'empty'}`);
+}
 assert(sourceHtml.includes('grid-template-columns: repeat(3, minmax(0, 1fr));'), 'bottom grid should fit the minimum desktop width');
 assert(sourceHtml.includes('.evaluation-row') && sourceHtml.includes('height: auto;'), 'evaluation rows should not inherit fixed button height');
 assert(sourceHtml.includes('grid-template-columns: minmax(180px, 220px) minmax(230px, 1fr) minmax(500px, 560px);'), 'topbar should not be stretched by button groups');
