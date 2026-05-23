@@ -632,8 +632,8 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
         if (base.type === 'entrance') {
             base.point = validPoint(base.point, { x: 420, y: 320 });
             base.entranceType = base.entranceType || '机动车';
-            base.parcelId = base.parcelId || firstParcel?.id || '';
-            base.roadId = base.roadId || firstRoad?.id || '';
+            base.parcelId = normalizeImportedReferenceId(base.parcelId, firstParcel?.id ?? '');
+            base.roadId = normalizeImportedReferenceId(base.roadId, firstRoad?.id ?? '');
             return [base];
         }
         if (base.type === 'openSpace') {
@@ -668,12 +668,12 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
     if (!Array.isArray(input.objects) || !input.objects.length) {
         findings.push({ severity: 'warning', objectId: 'project', message: '未找到有效规划对象，导入后可能退回演示对象或空项目。' });
     }
-    const parcelIds = new Set((input.objects ?? []).filter(object => object?.type === 'parcel').map(object => object.id).filter(Boolean));
-    const roadIds = new Set((input.objects ?? []).filter(object => object?.type === 'road').map(object => object.id).filter(Boolean));
-    for (const raw of input.objects ?? []) {
+    const parcelIds = new Set((input.objects ?? []).filter(object => object?.type === 'parcel').map(object => importIdentifierText(object.id)).filter((id): id is string => Boolean(id)));
+    const roadIds = new Set((input.objects ?? []).filter(object => object?.type === 'road').map(object => importIdentifierText(object.id)).filter((id): id is string => Boolean(id)));
+    for (const [index, raw] of (input.objects ?? []).entries()) {
         const object = raw as Partial<PlanObject>;
-        const objectId = object.id || 'unknown_object';
-        if (!object.id) findings.push({ severity: 'warning', objectId, message: '对象缺少 id，兼容层会生成临时 id。' });
+        const objectId = importObjectIdLabel(object.id, index);
+        if (!hasImportIdentifier(object.id)) findings.push({ severity: 'warning', objectId, message: '对象缺少 id，兼容层会生成临时 id。' });
         if (!object.name) findings.push({ severity: 'info', objectId, message: '对象缺少名称，兼容层会使用 id 代替。' });
         if (!object.evidence?.length) findings.push({ severity: 'warning', objectId, message: '对象缺少证据来源，会降低数据质量和可信度。' });
         else if (!object.evidence.some(isStructuredEvidence)) findings.push({ severity: 'info', objectId, message: '对象证据仍是旧版字符串，建议升级为结构化 EvidenceSource。' });
@@ -692,9 +692,11 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
             if (!facility.point) findings.push({ severity: 'warning', objectId, message: '公共设施缺少点位，兼容层会补默认坐标。' });
         } else if (object.type === 'entrance') {
             const entrance = object as Partial<Entrance>;
-            if (!entrance.parcelId || !entrance.roadId) findings.push({ severity: 'warning', objectId, message: '出入口缺少地块或道路引用，需要导入后复核。' });
-            if (entrance.parcelId && !parcelIds.has(entrance.parcelId)) findings.push({ severity: 'warning', objectId, message: `出入口引用不存在的地块 ${entrance.parcelId}，需要重新绑定。` });
-            if (entrance.roadId && !roadIds.has(entrance.roadId)) findings.push({ severity: 'warning', objectId, message: `出入口引用不存在的道路 ${entrance.roadId}，需要重新绑定。` });
+            const parcelId = importIdentifierText(entrance.parcelId);
+            const roadId = importIdentifierText(entrance.roadId);
+            if (!parcelId || !roadId) findings.push({ severity: 'warning', objectId, message: '出入口缺少地块或道路引用，需要导入后复核。' });
+            if (parcelId && !parcelIds.has(parcelId)) findings.push({ severity: 'warning', objectId, message: `出入口引用不存在的地块 ${parcelId}，需要重新绑定。` });
+            if (roadId && !roadIds.has(roadId)) findings.push({ severity: 'warning', objectId, message: `出入口引用不存在的道路 ${roadId}，需要重新绑定。` });
         } else if (!['openSpace', 'constraint'].includes(String(object.type))) {
             findings.push({ severity: 'warning', objectId, message: `未知对象类型 ${String(object.type)}，兼容层会过滤。` });
         }
@@ -810,6 +812,18 @@ function importObjectIdLabel(value: unknown, index: number): string {
         if (text) return text;
     }
     return `objects[${index}]`;
+}
+
+function hasImportIdentifier(value: unknown): boolean {
+    return (typeof value === 'string' || typeof value === 'number') && String(value).trim().length > 0;
+}
+
+function importIdentifierText(value: unknown): string | undefined {
+    return hasImportIdentifier(value) ? String(value).trim() : undefined;
+}
+
+function normalizeImportedReferenceId(value: unknown, fallback: string): string {
+    return importIdentifierText(value) ?? fallback;
 }
 
 function hasImportGeometry(object: Partial<PlanObject>): boolean {
