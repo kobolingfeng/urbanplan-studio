@@ -38,8 +38,9 @@ Expected:
 2. Click the canvas to create a new parcel.
 3. Confirm the tool returns to select mode.
 4. Edit the new parcel values in the inspector.
-5. Press `Esc`; expected: select mode remains active.
-6. Press `Delete`; expected: selected deletable object is removed, unless it is referenced.
+5. Edit `证据来源（每行一条）`, then run quality check and confirm evidence counts update.
+6. Press `Esc`; expected: select mode remains active.
+7. Press `Delete`; expected: selected deletable object is removed, unless it is referenced.
 
 ## Import/Export
 

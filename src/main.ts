@@ -987,13 +987,27 @@ function renderInspector() {
     if (object.type === 'openSpace') renderReadonlyInspector(object, [['类型', object.kind], ['面积', formatArea(areaSqm(object.points))]]);
     if (object.type === 'constraint') renderReadonlyInspector(object, [['控制线类型', object.kind], ['覆盖面积', formatArea(areaSqm(object.points))]]);
 
+    ui.inspector.append(fieldGrid([
+        textAreaField('证据来源（每行一条）', object.evidence.join('\n'), next => {
+            object.evidence = parseEvidenceList(next);
+            renderAll();
+        }),
+    ], true));
+
     const objectChecks = checks.filter(check => check.objectId === object.id);
     const parcelEvaluation = evaluation.parcels.find(item => item.objectId === object.id);
     ui.inspector.append(kvList([
         ['规则问题', objectChecks.length ? `${objectChecks.length} 条` : '暂无'],
         ['综合评分', parcelEvaluation ? `${parcelEvaluation.score}/100 · ${parcelEvaluation.band}` : '未纳入地块评分'],
-        ['证据来源', object.evidence.join('；')],
+        ['证据条数', `${object.evidence.length} 条`],
     ]));
+}
+
+function parseEvidenceList(text: string): string[] {
+    return text
+        .split(/\r?\n|；|;/)
+        .map(item => item.trim())
+        .filter(Boolean);
 }
 
 function renderParcelInspector(parcel: Parcel) {

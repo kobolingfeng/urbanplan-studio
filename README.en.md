@@ -7,6 +7,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Semantic planning canvas with parcels, roads, entrances, facilities, open spaces, and control overlays.
 - Scenario switching and comparison.
 - Parcel inspector for FAR, coverage, green ratio, residential GFA, public-service GFA, and renewal mode.
+- Editable evidence traces per object, feeding data-quality and confidence scoring.
 - Rule checks for parcel intensity, green ratio, coverage, public-service gaps, entrance risks, and heritage overlay risks.
 - Multi-criteria scenario evaluation for compliance, public service, mobility, ecology, renewal value, and evidence confidence.
 - Decision matrix that reruns checks and scoring across all scenarios and explains the recommended scenario.
