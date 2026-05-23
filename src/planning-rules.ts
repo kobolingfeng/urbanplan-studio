@@ -11,6 +11,7 @@ import {
 
 type Severity = 'error' | 'warning' | 'info' | 'ok';
 type FacilityKind = '幼儿园' | '社区养老' | '社区卫生' | '文化活动' | '便民商业';
+type RuleSourceLevel = 'statutory' | 'technical' | 'format' | 'prototype';
 
 type RuleObject = {
     id: string;
@@ -58,6 +59,17 @@ export type PlanningRuleDefinition = {
     clause: string;
     formula: string;
     prototype: boolean;
+    source: RuleSource;
+};
+
+export type RuleSource = {
+    jurisdiction: string;
+    title: string;
+    clause: string;
+    level: RuleSourceLevel;
+    version?: string;
+    effectiveDate?: string;
+    url?: string;
 };
 
 export type PlanningRuleResult = {
@@ -81,7 +93,9 @@ export type PlanningRecommendation = {
 
 const SQM_PER_RESIDENT = 33;
 
-export const RULE_CATALOG: PlanningRuleDefinition[] = [
+type RuleCatalogDraft = Omit<PlanningRuleDefinition, 'source'>;
+
+const RULE_CATALOG_DRAFT: RuleCatalogDraft[] = [
     {
         id: 'parcel_far_max',
         name: '容积率不超过控制值',
@@ -249,6 +263,11 @@ export const RULE_CATALOG: PlanningRuleDefinition[] = [
     },
 ];
 
+export const RULE_CATALOG: PlanningRuleDefinition[] = RULE_CATALOG_DRAFT.map(rule => ({
+    ...rule,
+    source: buildStructuredRuleSource(rule),
+}));
+
 const RULE_CATALOG_BY_ID = new Map(RULE_CATALOG.map(rule => [rule.id, rule]));
 
 export function buildRuleCatalogReport(triggered: PlanningRuleResult[] = []): string {
@@ -263,10 +282,11 @@ export function buildRuleCatalogReport(triggered: PlanningRuleResult[] = []): st
         `规则总数：${RULE_CATALOG.length}`,
         `原型启发式规则：${prototypeCount}`,
         `有触发记录的规则：${Object.keys(counts).length}`,
+        `结构化 RuleSource：${RULE_CATALOG.filter(rule => rule.source).length}/${RULE_CATALOG.length}`,
         '',
-        '| 规则 ID | 领域 | 默认等级 | 原型 | 本次触发 | 依据 | 计算口径 |',
-        '|---|---|---|---:|---:|---|---|',
-        ...RULE_CATALOG.map(rule => `| ${rule.id} | ${rule.domain} | ${severityLabel(rule.defaultSeverity)} | ${rule.prototype ? '是' : '否'} | ${counts[rule.id] ?? 0} | ${rule.basis}；${rule.clause} | ${rule.formula} |`),
+        '| 规则 ID | 领域 | 默认等级 | 来源层级 | 原型 | 本次触发 | 适用范围 | 依据 | 条款/口径 | 计算公式 |',
+        '|---|---|---|---|---:|---:|---|---|---|---|',
+        ...RULE_CATALOG.map(rule => `| ${rule.id} | ${rule.domain} | ${severityLabel(rule.defaultSeverity)} | ${sourceLevelLabel(rule.source.level)} | ${rule.prototype ? '是' : '否'} | ${counts[rule.id] ?? 0} | ${rule.source.jurisdiction} | ${rule.source.title} | ${rule.source.clause} | ${rule.formula} |`),
         '',
         '## 论文验证建议',
         '',
@@ -581,12 +601,43 @@ function number(value: unknown, fallback = 0): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
+function buildStructuredRuleSource(rule: RuleCatalogDraft): RuleSource {
+    const version = sourceVersion(rule);
+    return {
+        jurisdiction: rule.jurisdiction,
+        title: rule.basis,
+        clause: rule.clause,
+        level: sourceLevel(rule),
+        ...(version ? { version } : {}),
+        ...(rule.jurisdiction === 'UPF 0.1' ? { effectiveDate: '2026-05-23' } : {}),
+    };
+}
+
+function sourceLevel(rule: RuleCatalogDraft): RuleSourceLevel {
+    if (rule.prototype) return 'prototype';
+    if (rule.jurisdiction.startsWith('UPF')) return 'format';
+    if (rule.jurisdiction.includes('CN')) return 'technical';
+    return 'statutory';
+}
+
+function sourceVersion(rule: RuleCatalogDraft): string {
+    if (rule.jurisdiction === 'UPF 0.1') return '0.1.0';
+    if (rule.basis.includes('GB 50180-2018')) return 'GB 50180-2018';
+    if (rule.basis.includes('完整居住社区建设指南')) return '完整居住社区建设指南';
+    if (rule.jurisdiction.includes('SZ')) return '深圳 2025 修订汇总版';
+    if (rule.prototype) return 'UrbanPlan Studio prototype';
+    return '';
+}
+
 function ruleSource(ruleId: string, rulesetVersion?: string): string {
     const rule = RULE_CATALOG_BY_ID.get(ruleId);
     if (!rule) return rulesetVersion ?? '未声明规则';
-    const parts = [rule.basis, rule.clause];
-    if (rulesetVersion) parts.push(rulesetVersion);
-    if (rule.prototype) parts.push('原型启发式规则');
+    const parts = [
+        rule.source.title,
+        rule.source.clause,
+        rulesetVersion ?? rule.source.version,
+        sourceLevelLabel(rule.source.level),
+    ].filter(Boolean);
     return parts.join(' / ');
 }
 
@@ -599,4 +650,11 @@ function severityLabel(severity: Severity): string {
     if (severity === 'warning') return '警告';
     if (severity === 'ok') return '通过';
     return '提示';
+}
+
+function sourceLevelLabel(level: RuleSourceLevel): string {
+    if (level === 'statutory') return '法定/强制';
+    if (level === 'technical') return '技术导则';
+    if (level === 'format') return '格式约束';
+    return '原型启发';
 }

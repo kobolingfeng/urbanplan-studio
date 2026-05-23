@@ -32,7 +32,7 @@ Expected:
 14. Click `对比`.
 15. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
 16. Click `质检`.
-17. Confirm a data quality score, UPF structure validation report, rule catalog metadata, evidence coverage, structured evidence coverage, evidence type distribution, and prototype-rule notes appear.
+17. Confirm a data quality score, UPF structure validation report, structured RuleSource metadata, evidence coverage, structured evidence coverage, evidence type distribution, and prototype-rule notes appear.
 18. Click `验证`.
 19. Confirm the report includes research questions, data overview, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
 20. Click `报告`.

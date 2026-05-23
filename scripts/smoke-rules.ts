@@ -130,7 +130,11 @@ for (const id of [
 }
 
 assert(RULE_CATALOG.length >= 15, 'rule catalog should cover current rules');
-assert(buildRuleCatalogReport(result.checks).includes('规则目录与验证口径'), 'rule catalog report title mismatch');
+assert(RULE_CATALOG.every(rule => rule.source?.jurisdiction && rule.source.title && rule.source.clause && rule.source.level), 'rule catalog should expose structured RuleSource');
+const catalogReport = buildRuleCatalogReport(result.checks);
+assert(catalogReport.includes('规则目录与验证口径'), 'rule catalog report title mismatch');
+assert(catalogReport.includes('结构化 RuleSource') && catalogReport.includes('来源层级'), 'rule catalog report should expose structured sources');
 assert(result.recommendations.length > 0, 'recommendations should be generated');
+assert(result.checks.some(check => check.source.includes('技术导则') || check.source.includes('原型启发')), 'rule check source should include source level');
 
 console.log('rules smoke passed');

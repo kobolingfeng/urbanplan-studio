@@ -168,7 +168,7 @@ The score currently uses prototype weights across compliance, public service, mo
 ## Known Schema Gaps
 
 - `Intersection` should become an explicit object instead of being derived every run.
-- `RuleSource` should become an object with jurisdiction, version, effective date, source URL, and clause.
+- `RuleSource` should gain verified source URLs, attachments, reviewer status, and version history.
 - `EvidenceSource` should gain source registry IDs, attachments, reviewer status, and version history.
 - `ServiceArea` should support walking-network distance instead of straight-line distance.
 - `Indicator` should store scenario dashboard metrics.

@@ -8,7 +8,7 @@ This backlog is ordered by product risk, not by excitement.
 2. Replace demo canvas units with real projected coordinates.
 3. Add CRS transform support and reject mixed-coordinate imports.
 4. Extend structured `EvidenceSource` into a reusable source registry with attachments and review status.
-5. Add structured `RuleSource` with jurisdiction, version, effective date, clause, and URL.
+5. Extend structured `RuleSource` with verified URLs, effective dates, attachments, and expert review status.
 6. Split prototype rules from statutory rules visually and structurally.
 
 ## P1: Planning Logic

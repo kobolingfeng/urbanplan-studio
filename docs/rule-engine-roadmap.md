@@ -2,7 +2,7 @@
 
 The active rule engine now lives in `src/planning-rules.ts`. More UI glue remains in `src/main.ts`, but rule execution has started moving toward pure modules.
 
-`src/planning-rules.ts` now also exposes `RULE_CATALOG`, which gives each rule a stable ID, domain, default severity, basis, formula, jurisdiction, and prototype flag. This is the current bridge between prototype logic and thesis-method documentation.
+`src/planning-rules.ts` now also exposes `RULE_CATALOG`, which gives each rule a stable ID, domain, default severity, formula, prototype flag, and structured `RuleSource`. This is the current bridge between prototype logic and thesis-method documentation.
 
 ## Current Rule Groups
 
@@ -82,6 +82,12 @@ Current catalog fields already implemented:
 - `clause`
 - `formula`
 - `prototype`
+- `source.jurisdiction`
+- `source.title`
+- `source.clause`
+- `source.level`
+- `source.version`
+- `source.effectiveDate` for UPF format constraints
 
 ## Test Fixtures
 
