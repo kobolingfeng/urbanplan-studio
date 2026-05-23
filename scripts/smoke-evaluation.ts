@@ -114,6 +114,7 @@ const evaluationReport = buildScenarioEvaluationReport(project, 'scenario_update
 assert(evaluationReport.includes('方案综合评估'), 'report title mismatch');
 assert(evaluationReport.includes('服务人口分摊') && evaluationReport.includes('幼儿园需求'), 'report should expose parcel service allocation');
 assert(evaluationReport.includes('服务人口分摊假设'), 'report should explain service demand assumptions');
+assert(evaluationReport.includes('公服建面目标按住宅建面'), 'report should include shared public-service target assumptions');
 assert(evaluationReport.includes('Parcel \\| A'), 'report table cells should escape pipe characters');
 
 for (const profile of EVALUATION_WEIGHT_PROFILES) {

@@ -340,9 +340,9 @@ function publicServiceDimension(
     weight: number,
 ): DimensionScore {
     const publicServiceGfa = parcels.reduce((sum, parcel) => sum + number(parcelValue(parcel, scenarioId).publicServiceGfaSqm), 0);
-    const publicRatioScore = targetRatioScore(residentialGfa ? publicServiceGfa / residentialGfa : 0, 0.025);
-    const kindergarten = facilityScore(parcels, facilities, scenarioId, '幼儿园', residents * 0.036);
-    const elderly = facilityScore(parcels, facilities, scenarioId, '社区养老', residents * 0.03);
+    const publicRatioScore = targetRatioScore(residentialGfa ? publicServiceGfa / residentialGfa : 0, SERVICE_DEMAND_ASSUMPTIONS.publicServiceGfaToResidentialTarget);
+    const kindergarten = facilityScore(parcels, facilities, scenarioId, '幼儿园', residents * SERVICE_DEMAND_ASSUMPTIONS.kindergartenSeatsPerResident);
+    const elderly = facilityScore(parcels, facilities, scenarioId, '社区养老', residents * SERVICE_DEMAND_ASSUMPTIONS.elderlyServiceCapacityPerResident);
     const health = facilityScore(parcels, facilities, scenarioId, '社区卫生', residents);
     const score = roundScore(average([publicRatioScore, kindergarten, elderly, health]));
     return {
@@ -463,7 +463,7 @@ function evaluateParcel(parcel: PlanningObjectLike, scenarioId: string, checks: 
     const compliance = clamp(100 - parcelChecks.reduce((sum, check) => sum + severityPenalty(check.severity), 0));
     const farScore = farMax ? clamp(100 - Math.max(0, far - farMax) * 35 - Math.max(0, farMax * 0.45 - far) * 8) : 80;
     const greenScore = targetRatioScore(greenRatio, greenMin);
-    const serviceScore = targetRatioScore(serviceRatio, 0.025);
+    const serviceScore = targetRatioScore(serviceRatio, SERVICE_DEMAND_ASSUMPTIONS.publicServiceGfaToResidentialTarget);
     const evidenceScore = parcel.evidence?.length
         ? Math.max(60, average(parcel.evidence.map(evidenceCompletenessScore)))
         : 45;
