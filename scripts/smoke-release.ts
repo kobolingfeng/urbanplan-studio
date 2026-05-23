@@ -6,6 +6,14 @@ import { join, resolve } from 'path';
 const ROOT = resolve(import.meta.dir, '..');
 const RELEASE = join(ROOT, 'release');
 
+function sanitizeFileName(value: string): string {
+    return value
+        .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/[. ]+$/g, '') || 'app';
+}
+
 function fail(message: string): never {
     console.error(`release smoke failed: ${message}`);
     process.exit(1);
@@ -16,9 +24,13 @@ function assert(condition: unknown, message: string) {
 }
 
 assert(existsSync(RELEASE), 'release directory does not exist');
+const config = JSON.parse(readFileSync(join(ROOT, 'app.config.json'), 'utf8'));
+const appName = config.app?.name || config.window?.title || 'app';
+const appVersion = config.app?.version || '0.0.0';
+const expectedZipName = `${sanitizeFileName(appName)}-${sanitizeFileName(appVersion)}-portable.zip`;
 const zips = readdirSync(RELEASE).filter(name => name.endsWith('.zip'));
 assert(zips.length === 1, `expected one zip, found ${zips.length}`);
-assert(zips[0] === 'UrbanPlan Studio-0.1.0-portable.zip', `unexpected zip name ${zips[0]}`);
+assert(zips[0] === expectedZipName, `unexpected zip name ${zips[0]}`);
 
 const sumsPath = join(RELEASE, 'SHA256SUMS.txt');
 assert(existsSync(sumsPath), 'SHA256SUMS.txt does not exist');
