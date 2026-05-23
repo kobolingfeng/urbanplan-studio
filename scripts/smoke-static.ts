@@ -74,6 +74,9 @@ assert(sourceHtml.includes('grid-template-columns: repeat(3, minmax(0, 1fr));'),
 assert(sourceHtml.includes('.evaluation-row') && sourceHtml.includes('height: auto;'), 'evaluation rows should not inherit fixed button height');
 assert(sourceHtml.includes('grid-template-columns: minmax(180px, 220px) minmax(230px, 1fr) minmax(500px, 560px);'), 'topbar should not be stretched by button groups');
 assert(sourceHtml.includes('overflow-x: auto;'), 'button groups should protect narrow desktop layouts');
+for (const filterValue of ['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint']) {
+    assert(sourceHtml.includes(`value="${filterValue}"`), `object filter misses ${filterValue}`);
+}
 
 const invalid = JSON.parse(fileText(join(EXAMPLES, 'invalid.upf')));
 assert(invalid.format !== 'UPF' || !Array.isArray(invalid.objects), 'invalid.upf should remain invalid');

@@ -937,8 +937,7 @@ function objectMatchesListFilter(object: PlanObject): boolean {
         const parcelEvaluation = evaluation.parcels.find(item => item.objectId === object.id);
         return hasSeriousCheck || Boolean(parcelEvaluation && parcelEvaluation.score < 70);
     }
-    if (objectFilter === 'parcel') return object.type === 'parcel';
-    if (objectFilter === 'facility') return object.type === 'facility';
+    if (['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint'].includes(objectFilter)) return object.type === objectFilter;
     return true;
 }
 
