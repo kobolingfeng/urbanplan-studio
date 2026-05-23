@@ -1,0 +1,45 @@
+{
+  "type": "FeatureCollection",
+  "name": "control_lines",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "control_line_heritage_buffer",
+        "type": "ConstraintOverlay",
+        "name": "历史风貌协调控制示意区",
+        "overlayType": "heritage_context",
+        "severity": "warning",
+        "reviewStatus": "needs_review",
+        "source": "source_user_input_001"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.05005,
+              22.54005
+            ],
+            [
+              114.0511,
+              22.54005
+            ],
+            [
+              114.0511,
+              22.54195
+            ],
+            [
+              114.05005,
+              22.54195
+            ],
+            [
+              114.05005,
+              22.54005
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

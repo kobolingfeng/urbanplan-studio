@@ -1,0 +1,24 @@
+{
+  "sources": [
+    {
+      "id": "source_user_input_001",
+      "name": "毕业设计样例手工录入",
+      "type": "user_input",
+      "collectedAt": "2026-05-23",
+      "license": "demo_only",
+      "accuracy": "conceptual",
+      "confidence": "medium",
+      "notes": "用于验证 UPF 0.1 数据结构和规则检查闭环。"
+    },
+    {
+      "id": "source_rule_demo_001",
+      "name": "MVP 规则集示范参数",
+      "type": "model_assumption",
+      "collectedAt": "2026-05-23",
+      "license": "demo_only",
+      "accuracy": "conceptual",
+      "confidence": "low",
+      "notes": "参数不是法定审查依据，正式论文中应标注为原型示范规则。"
+    }
+  ]
+}

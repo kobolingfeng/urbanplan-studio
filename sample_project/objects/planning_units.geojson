@@ -1,0 +1,46 @@
+{
+  "type": "FeatureCollection",
+  "name": "planning_units",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "unit_001",
+        "type": "PlanningUnit",
+        "name": "示范更新单元",
+        "areaSqm": 178000,
+        "dominantFunction": "residential_mixed",
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.05,
+              22.54
+            ],
+            [
+              114.054,
+              22.54
+            ],
+            [
+              114.054,
+              22.544
+            ],
+            [
+              114.05,
+              22.544
+            ],
+            [
+              114.05,
+              22.54
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "type": "FeatureCollection",
+  "name": "entrances",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "entrance_01",
+        "type": "Entrance",
+        "entranceType": "vehicle",
+        "servesObjectId": "parcel_01",
+        "connectedRoadId": "road_north",
+        "distanceToIntersectionM": 42,
+        "conflicts": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0505,
+          22.544
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "entrance_02",
+        "type": "Entrance",
+        "entranceType": "vehicle",
+        "servesObjectId": "parcel_02",
+        "connectedRoadId": "road_center",
+        "distanceToIntersectionM": 28,
+        "conflicts": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.052,
+          22.543
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "entrance_03",
+        "type": "Entrance",
+        "entranceType": "vehicle",
+        "servesObjectId": "parcel_03",
+        "connectedRoadId": "road_west",
+        "distanceToIntersectionM": 70,
+        "conflicts": [
+          "bus_stop"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.05,
+          22.541
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "entrance_04",
+        "type": "Entrance",
+        "entranceType": "pedestrian",
+        "servesObjectId": "parcel_04",
+        "connectedRoadId": "road_middle",
+        "distanceToIntersectionM": 85,
+        "conflicts": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0515,
+          22.542
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "entrance_05",
+        "type": "Entrance",
+        "entranceType": "vehicle",
+        "servesObjectId": "parcel_05",
+        "connectedRoadId": "road_center",
+        "distanceToIntersectionM": 55,
+        "conflicts": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.052,
+          22.5432
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "entrance_06",
+        "type": "Entrance",
+        "entranceType": "vehicle",
+        "servesObjectId": "parcel_06",
+        "connectedRoadId": "road_north",
+        "distanceToIntersectionM": 35,
+        "conflicts": [
+          "school_gate"
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0535,
+          22.544
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "entrance_07",
+        "type": "Entrance",
+        "entranceType": "pedestrian",
+        "servesObjectId": "parcel_07",
+        "connectedRoadId": "road_middle",
+        "distanceToIntersectionM": 90,
+        "conflicts": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0525,
+          22.542
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "entrance_08",
+        "type": "Entrance",
+        "entranceType": "vehicle",
+        "servesObjectId": "parcel_08",
+        "connectedRoadId": "road_south",
+        "distanceToIntersectionM": 65,
+        "conflicts": []
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0535,
+          22.54
+        ]
+      }
+    }
+  ]
+}

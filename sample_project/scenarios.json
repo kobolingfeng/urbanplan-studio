@@ -1,0 +1,21 @@
+{
+  "scenarios": [
+    {
+      "id": "baseline",
+      "name": "现状基准",
+      "description": "表达片区现状或初始方案，用于优化不恶化和方案对比。"
+    },
+    {
+      "id": "scenario_a",
+      "name": "开发强度提升方案",
+      "baseScenarioId": "baseline",
+      "description": "提高部分居住与混合用地开发强度，同时补充一定公共服务设施。"
+    },
+    {
+      "id": "scenario_b",
+      "name": "公共服务与开放空间优化方案",
+      "baseScenarioId": "baseline",
+      "description": "控制增量开发，优先补齐养老、社区活动、绿地和开放空间。"
+    }
+  ]
+}

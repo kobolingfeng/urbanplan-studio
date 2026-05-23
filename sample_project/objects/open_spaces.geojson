@@ -1,0 +1,84 @@
+{
+  "type": "FeatureCollection",
+  "name": "open_spaces",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "open_space_01",
+        "type": "OpenSpace",
+        "name": "中央口袋公园",
+        "scenarioId": "scenario_a",
+        "areaSqm": 9800,
+        "isPublic": true,
+        "serviceRadiusM": 500
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.05215,
+              22.54025
+            ],
+            [
+              114.05285,
+              22.54025
+            ],
+            [
+              114.05285,
+              22.54175
+            ],
+            [
+              114.05215,
+              22.54175
+            ],
+            [
+              114.05215,
+              22.54025
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "open_space_02",
+        "type": "OpenSpace",
+        "name": "社区共享花园",
+        "scenarioId": "scenario_b",
+        "areaSqm": 2400,
+        "isPublic": true,
+        "serviceRadiusM": 300
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.0502,
+              22.5432
+            ],
+            [
+              114.0508,
+              22.5432
+            ],
+            [
+              114.0508,
+              22.54375
+            ],
+            [
+              114.0502,
+              22.54375
+            ],
+            [
+              114.0502,
+              22.5432
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

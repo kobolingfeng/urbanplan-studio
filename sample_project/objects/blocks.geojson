@@ -1,0 +1,82 @@
+{
+  "type": "FeatureCollection",
+  "name": "blocks",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "block_01",
+        "type": "Block",
+        "name": "西侧居住更新街坊",
+        "planningUnitId": "unit_001",
+        "areaSqm": 89000,
+        "dominantFunction": "residential"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.05,
+              22.54
+            ],
+            [
+              114.052,
+              22.54
+            ],
+            [
+              114.052,
+              22.544
+            ],
+            [
+              114.05,
+              22.544
+            ],
+            [
+              114.05,
+              22.54
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "block_02",
+        "type": "Block",
+        "name": "东侧综合提升街坊",
+        "planningUnitId": "unit_001",
+        "areaSqm": 89000,
+        "dominantFunction": "mixed_use"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.052,
+              22.54
+            ],
+            [
+              114.054,
+              22.54
+            ],
+            [
+              114.054,
+              22.544
+            ],
+            [
+              114.052,
+              22.544
+            ],
+            [
+              114.052,
+              22.54
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

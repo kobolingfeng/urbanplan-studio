@@ -1,0 +1,193 @@
+{
+  "scenarioId": "scenario_a",
+  "generatedAt": "2026-05-23T21:50:00+08:00",
+  "method": "manual_expected_results_for_prototype",
+  "results": [
+    {
+      "id": "check_0001",
+      "ruleId": "rule_green_ratio_min",
+      "objectId": "parcel_01",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": 0.28,
+      "requiredValue": ">= 0.30",
+      "message": "parcel_01 的绿地率为 28%，低于控制值 30%。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0002",
+      "ruleId": "rule_far_max",
+      "objectId": "parcel_02",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": 4.1,
+      "requiredValue": "<= 3.6",
+      "message": "parcel_02 的容积率超过控制值。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0003",
+      "ruleId": "rule_coverage_max",
+      "objectId": "parcel_02",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": 0.37,
+      "requiredValue": "<= 0.35",
+      "message": "parcel_02 的建筑密度超过控制值。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0004",
+      "ruleId": "rule_far_max",
+      "objectId": "parcel_03",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": 3.2,
+      "requiredValue": "<= 3.0",
+      "message": "parcel_03 的容积率超过控制值。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0005",
+      "ruleId": "rule_required_land_use",
+      "objectId": "parcel_03",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": "0701",
+      "requiredValue": "1001 or 0901",
+      "message": "parcel_03 的拟更新用地与示范控制要求不一致。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0006",
+      "ruleId": "rule_green_ratio_min",
+      "objectId": "parcel_04",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": 0.24,
+      "requiredValue": ">= 0.25",
+      "message": "parcel_04 的绿地率略低于控制值。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0007",
+      "ruleId": "rule_coverage_max",
+      "objectId": "parcel_06",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": 0.36,
+      "requiredValue": "<= 0.35",
+      "message": "parcel_06 的建筑密度仍略高于控制值，应通过整治降低硬质覆盖或补充开放空间。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0008",
+      "ruleId": "rule_green_ratio_min",
+      "objectId": "parcel_06",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": 0.22,
+      "requiredValue": ">= 0.30",
+      "message": "parcel_06 的绿地率不足。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0009",
+      "ruleId": "rule_far_max",
+      "objectId": "parcel_08",
+      "status": "failed",
+      "severity": "error",
+      "observedValue": 3.1,
+      "requiredValue": "<= 3.0",
+      "message": "parcel_08 的容积率略超控制值。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson"
+      ]
+    },
+    {
+      "id": "check_0010",
+      "ruleId": "rule_vehicle_entrance_distance",
+      "objectId": "entrance_02",
+      "status": "warning",
+      "severity": "warning",
+      "observedValue": 28,
+      "requiredValue": ">= 50m",
+      "message": "entrance_02 距交叉口较近，应复核交通组织。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/entrances.geojson"
+      ]
+    },
+    {
+      "id": "check_0011",
+      "ruleId": "rule_entrance_on_restricted_road",
+      "objectId": "entrance_03",
+      "status": "warning",
+      "severity": "warning",
+      "observedValue": "road_west",
+      "requiredValue": "not restricted",
+      "message": "entrance_03 设置在限制开口的西侧主干路上。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/entrances.geojson",
+        "objects/roads.geojson"
+      ]
+    },
+    {
+      "id": "check_0012",
+      "ruleId": "rule_entrance_sensitive_conflict",
+      "objectId": "entrance_06",
+      "status": "warning",
+      "severity": "warning",
+      "observedValue": [
+        "school_gate"
+      ],
+      "requiredValue": "no obvious conflict",
+      "message": "entrance_06 与学校出入口存在示意冲突，应调整或专项论证。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/entrances.geojson"
+      ]
+    },
+    {
+      "id": "check_0013",
+      "ruleId": "rule_kindergarten_review",
+      "objectId": "unit_001",
+      "status": "needs_review",
+      "severity": "warning",
+      "observedValue": "estimated residents above threshold",
+      "requiredValue": "kindergarten demand review",
+      "message": "片区新增居住人口较多，应复核幼儿园配置需求。",
+      "sourceTrace": [
+        "rulesets/mvp_rules.json",
+        "objects/parcels.geojson",
+        "objects/facilities.geojson"
+      ]
+    }
+  ]
+}

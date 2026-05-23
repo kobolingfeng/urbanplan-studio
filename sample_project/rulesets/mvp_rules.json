@@ -1,0 +1,213 @@
+{
+  "rulesetId": "mvp_rules",
+  "name": "UPF 0.1 MVP 规则集",
+  "version": "0.1.0",
+  "jurisdiction": "CN-DEMO",
+  "effectiveFrom": "2026-05-23",
+  "source": {
+    "title": "毕业设计原型示范规则",
+    "version": "0.1.0",
+    "note": "本规则集用于原型验证，不作为法定审查依据。"
+  },
+  "rules": [
+    {
+      "id": "rule_far_max",
+      "name": "容积率不得超过控制值",
+      "level": "L2",
+      "severity": "error",
+      "targetObjectType": "Parcel",
+      "category": "parcel_control",
+      "implementationHint": "scenario.far <= controls.farMax"
+    },
+    {
+      "id": "rule_coverage_max",
+      "name": "建筑密度不得超过控制值",
+      "level": "L2",
+      "severity": "error",
+      "targetObjectType": "Parcel",
+      "category": "parcel_control",
+      "implementationHint": "scenario.buildingCoverage <= controls.buildingCoverageMax"
+    },
+    {
+      "id": "rule_green_ratio_min",
+      "name": "绿地率不得低于控制值",
+      "level": "L2",
+      "severity": "error",
+      "targetObjectType": "Parcel",
+      "category": "parcel_control",
+      "implementationHint": "scenario.greenRatio >= controls.greenRatioMin"
+    },
+    {
+      "id": "rule_height_max",
+      "name": "建筑高度不得超过控制值",
+      "level": "L2",
+      "severity": "error",
+      "targetObjectType": "Parcel",
+      "category": "parcel_control",
+      "implementationHint": "scenario.heightM == null || scenario.heightM <= controls.heightMaxM"
+    },
+    {
+      "id": "rule_required_land_use",
+      "name": "地块用地性质应符合控制要求",
+      "level": "L2",
+      "severity": "error",
+      "targetObjectType": "Parcel",
+      "category": "land_use",
+      "implementationHint": "allowedLandUseCodes is empty or proposedLandUseCode in allowedLandUseCodes"
+    },
+    {
+      "id": "rule_no_worse_green_ratio",
+      "name": "更新后绿地率不应低于现状",
+      "level": "L4",
+      "severity": "warning",
+      "targetObjectType": "Parcel",
+      "category": "urban_renewal",
+      "implementationHint": "scenario.greenRatio >= baseline.greenRatio"
+    },
+    {
+      "id": "rule_no_worse_open_space",
+      "name": "更新后公共开放空间不应减少",
+      "level": "L4",
+      "severity": "warning",
+      "targetObjectType": "Parcel",
+      "category": "urban_renewal",
+      "implementationHint": "scenario.openSpaceSqm >= baseline.openSpaceSqm"
+    },
+    {
+      "id": "rule_no_worse_service_gfa",
+      "name": "更新后公共服务面积不应减少",
+      "level": "L4",
+      "severity": "warning",
+      "targetObjectType": "Parcel",
+      "category": "urban_renewal",
+      "implementationHint": "scenario.publicServiceGfaSqm >= baseline.publicServiceGfaSqm"
+    },
+    {
+      "id": "rule_high_density_review",
+      "name": "高密度增容需专项论证",
+      "level": "L4",
+      "severity": "warning",
+      "defaultStatus": "needs_review",
+      "targetObjectType": "Parcel",
+      "category": "urban_renewal",
+      "parameters": {
+        "farDeltaReviewThreshold": 1.0
+      },
+      "implementationHint": "scenario.far - baseline.far <= farDeltaReviewThreshold"
+    },
+    {
+      "id": "rule_renewal_mode_evidence",
+      "name": "更新方式应有证据支撑",
+      "level": "L4",
+      "severity": "warning",
+      "defaultStatus": "needs_review",
+      "targetObjectType": "Parcel",
+      "category": "urban_renewal",
+      "implementationHint": "renewal.proposedMode != null && evidenceRefs.length > 0"
+    },
+    {
+      "id": "rule_estimated_residents_required",
+      "name": "住宅地块应有人口估算",
+      "level": "L6",
+      "severity": "warning",
+      "targetObjectType": "Parcel",
+      "category": "population",
+      "implementationHint": "landUseCode startsWith 0701 implies estimatedResidents is not null"
+    },
+    {
+      "id": "rule_elderly_service_capacity",
+      "name": "养老服务能力应匹配估算人口",
+      "level": "L5",
+      "severity": "warning",
+      "targetObjectType": "PlanningUnit",
+      "category": "public_service",
+      "parameters": {
+        "capacityPerThousandResidents": 20
+      },
+      "implementationHint": "elderlyServiceCapacity >= estimatedResidents / 1000 * capacityPerThousandResidents"
+    },
+    {
+      "id": "rule_community_activity_space",
+      "name": "社区活动空间应匹配估算人口",
+      "level": "L5",
+      "severity": "warning",
+      "targetObjectType": "PlanningUnit",
+      "category": "public_service",
+      "parameters": {
+        "gfaSqmPerThousandResidents": 100
+      },
+      "implementationHint": "communityActivityGfa >= estimatedResidents / 1000 * gfaSqmPerThousandResidents"
+    },
+    {
+      "id": "rule_kindergarten_review",
+      "name": "居住人口达到阈值时应检查幼儿园需求",
+      "level": "L5",
+      "severity": "warning",
+      "defaultStatus": "needs_review",
+      "targetObjectType": "PlanningUnit",
+      "category": "public_service",
+      "parameters": {
+        "residentThreshold": 3000
+      },
+      "implementationHint": "estimatedResidents < residentThreshold || hasKindergartenReview"
+    },
+    {
+      "id": "rule_service_radius_review",
+      "name": "公共设施服务半径覆盖不足需复核",
+      "level": "L5",
+      "severity": "warning",
+      "defaultStatus": "needs_review",
+      "targetObjectType": "Facility",
+      "category": "public_service",
+      "implementationHint": "serviceCoverageRatio >= 0.8 or mark needs_review"
+    },
+    {
+      "id": "rule_vehicle_entrance_distance",
+      "name": "机动车出入口距交叉口不宜过近",
+      "level": "L5",
+      "severity": "warning",
+      "targetObjectType": "Entrance",
+      "category": "road_access",
+      "parameters": {
+        "minDistanceToIntersectionM": 50
+      },
+      "implementationHint": "entranceType != vehicle || distanceToIntersectionM >= minDistanceToIntersectionM"
+    },
+    {
+      "id": "rule_entrance_on_restricted_road",
+      "name": "限制开口道路不宜设置机动车出入口",
+      "level": "L5",
+      "severity": "warning",
+      "targetObjectType": "Entrance",
+      "category": "road_access",
+      "implementationHint": "entranceType != vehicle || connectedRoad.isEntranceRestricted == false"
+    },
+    {
+      "id": "rule_entrance_sensitive_conflict",
+      "name": "出入口不应与敏感点明显冲突",
+      "level": "L5",
+      "severity": "warning",
+      "targetObjectType": "Entrance",
+      "category": "road_access",
+      "implementationHint": "conflicts.length == 0"
+    },
+    {
+      "id": "rule_sidewalk_continuity",
+      "name": "主要生活道路应保持人行连续性",
+      "level": "L5",
+      "severity": "warning",
+      "targetObjectType": "RoadSegment",
+      "category": "slow_traffic",
+      "implementationHint": "roadClass in branch/secondary implies hasSidewalk == true"
+    },
+    {
+      "id": "rule_parcel_has_access",
+      "name": "开发地块应具备道路联系",
+      "level": "L5",
+      "severity": "warning",
+      "targetObjectType": "Parcel",
+      "category": "road_access",
+      "implementationHint": "parcel has at least one entrance or adjacent road"
+    }
+  ]
+}

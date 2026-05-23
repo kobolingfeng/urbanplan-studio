@@ -1,0 +1,136 @@
+{
+  "type": "FeatureCollection",
+  "name": "roads",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "road_north",
+        "type": "RoadSegment",
+        "name": "北侧生活路",
+        "roadClass": "branch_road",
+        "redLineWidthM": 18,
+        "hasSidewalk": true,
+        "hasBikeLane": false,
+        "isEntranceRestricted": false
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            114.05,
+            22.544
+          ],
+          [
+            114.054,
+            22.544
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "road_south",
+        "type": "RoadSegment",
+        "name": "南侧社区路",
+        "roadClass": "branch_road",
+        "redLineWidthM": 16,
+        "hasSidewalk": true,
+        "hasBikeLane": false,
+        "isEntranceRestricted": false
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            114.05,
+            22.54
+          ],
+          [
+            114.054,
+            22.54
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "road_middle",
+        "type": "RoadSegment",
+        "name": "中央慢行街",
+        "roadClass": "branch_road",
+        "redLineWidthM": 14,
+        "hasSidewalk": true,
+        "hasBikeLane": true,
+        "isEntranceRestricted": false
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            114.05,
+            22.542
+          ],
+          [
+            114.054,
+            22.542
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "road_west",
+        "type": "RoadSegment",
+        "name": "西侧主干路",
+        "roadClass": "arterial_road",
+        "redLineWidthM": 40,
+        "hasSidewalk": true,
+        "hasBikeLane": true,
+        "isEntranceRestricted": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            114.05,
+            22.54
+          ],
+          [
+            114.05,
+            22.544
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "road_center",
+        "type": "RoadSegment",
+        "name": "更新支路",
+        "roadClass": "secondary_road",
+        "redLineWidthM": 30,
+        "hasSidewalk": true,
+        "hasBikeLane": true,
+        "isEntranceRestricted": false
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            114.052,
+            22.54
+          ],
+          [
+            114.052,
+            22.544
+          ]
+        ]
+      }
+    }
+  ]
+}

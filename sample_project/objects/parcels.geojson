@@ -1,0 +1,644 @@
+{
+  "type": "FeatureCollection",
+  "name": "parcels",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "parcel_01",
+        "type": "Parcel",
+        "name": "旧住区更新地块 01",
+        "landUseCode": "0701",
+        "landUseName": "城镇住宅用地",
+        "blockId": "block_01",
+        "areaSqm": 18500,
+        "controls": {
+          "farMax": 4.2,
+          "buildingCoverageMax": 0.35,
+          "greenRatioMin": 0.3,
+          "heightMaxM": 100
+        },
+        "scenarioValues": {
+          "baseline": {
+            "far": 2.6,
+            "buildingCoverage": 0.42,
+            "greenRatio": 0.18,
+            "residentialGfaSqm": 43000,
+            "publicServiceGfaSqm": 300,
+            "openSpaceSqm": 700
+          },
+          "scenario_a": {
+            "far": 3.8,
+            "buildingCoverage": 0.31,
+            "greenRatio": 0.28,
+            "residentialGfaSqm": 61000,
+            "publicServiceGfaSqm": 1200,
+            "openSpaceSqm": 1600
+          },
+          "scenario_b": {
+            "far": 3.2,
+            "buildingCoverage": 0.29,
+            "greenRatio": 0.34,
+            "residentialGfaSqm": 52000,
+            "publicServiceGfaSqm": 1800,
+            "openSpaceSqm": 2400
+          }
+        },
+        "renewal": {
+          "currentMode": "old_residential_area",
+          "proposedMode": "comprehensive_improvement",
+          "baselineYear": 2026
+        },
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.0501,
+              22.5421
+            ],
+            [
+              114.05095,
+              22.5421
+            ],
+            [
+              114.05095,
+              22.5439
+            ],
+            [
+              114.0501,
+              22.5439
+            ],
+            [
+              114.0501,
+              22.5421
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "parcel_02",
+        "type": "Parcel",
+        "name": "旧住区更新地块 02",
+        "landUseCode": "0701",
+        "landUseName": "城镇住宅用地",
+        "blockId": "block_01",
+        "areaSqm": 18300,
+        "controls": {
+          "farMax": 3.6,
+          "buildingCoverageMax": 0.35,
+          "greenRatioMin": 0.3,
+          "heightMaxM": 80
+        },
+        "scenarioValues": {
+          "baseline": {
+            "far": 2.8,
+            "buildingCoverage": 0.39,
+            "greenRatio": 0.2,
+            "residentialGfaSqm": 45000,
+            "publicServiceGfaSqm": 200,
+            "openSpaceSqm": 650
+          },
+          "scenario_a": {
+            "far": 4.1,
+            "buildingCoverage": 0.37,
+            "greenRatio": 0.24,
+            "residentialGfaSqm": 69000,
+            "publicServiceGfaSqm": 500,
+            "openSpaceSqm": 900
+          },
+          "scenario_b": {
+            "far": 3.4,
+            "buildingCoverage": 0.32,
+            "greenRatio": 0.31,
+            "residentialGfaSqm": 56000,
+            "publicServiceGfaSqm": 1400,
+            "openSpaceSqm": 1900
+          }
+        },
+        "renewal": {
+          "currentMode": "old_residential_area",
+          "proposedMode": "demolition_rebuild",
+          "baselineYear": 2026
+        },
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.05105,
+              22.5421
+            ],
+            [
+              114.0519,
+              22.5421
+            ],
+            [
+              114.0519,
+              22.5439
+            ],
+            [
+              114.05105,
+              22.5439
+            ],
+            [
+              114.05105,
+              22.5421
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "parcel_03",
+        "type": "Parcel",
+        "name": "低效厂房转型地块",
+        "landUseCode": "1001",
+        "landUseName": "工业用地",
+        "blockId": "block_01",
+        "areaSqm": 18600,
+        "controls": {
+          "farMax": 3.0,
+          "buildingCoverageMax": 0.45,
+          "greenRatioMin": 0.2,
+          "heightMaxM": 60,
+          "allowedLandUseCodes": [
+            "1001",
+            "0901"
+          ]
+        },
+        "scenarioValues": {
+          "baseline": {
+            "far": 1.6,
+            "buildingCoverage": 0.48,
+            "greenRatio": 0.12,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 0,
+            "openSpaceSqm": 400
+          },
+          "scenario_a": {
+            "far": 3.2,
+            "buildingCoverage": 0.43,
+            "greenRatio": 0.18,
+            "residentialGfaSqm": 12000,
+            "publicServiceGfaSqm": 300,
+            "openSpaceSqm": 700,
+            "proposedLandUseCode": "0701"
+          },
+          "scenario_b": {
+            "far": 2.6,
+            "buildingCoverage": 0.38,
+            "greenRatio": 0.24,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 1600,
+            "openSpaceSqm": 1800,
+            "proposedLandUseCode": "0901"
+          }
+        },
+        "renewal": {
+          "currentMode": "old_industrial_area",
+          "proposedMode": "function_conversion",
+          "baselineYear": 2026
+        },
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.0501,
+              22.5401
+            ],
+            [
+              114.05095,
+              22.5401
+            ],
+            [
+              114.05095,
+              22.5419
+            ],
+            [
+              114.0501,
+              22.5419
+            ],
+            [
+              114.0501,
+              22.5401
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "parcel_04",
+        "type": "Parcel",
+        "name": "社区服务复合地块",
+        "landUseCode": "0806",
+        "landUseName": "社区服务设施用地",
+        "blockId": "block_01",
+        "areaSqm": 18400,
+        "controls": {
+          "farMax": 2.0,
+          "buildingCoverageMax": 0.4,
+          "greenRatioMin": 0.25,
+          "heightMaxM": 36
+        },
+        "scenarioValues": {
+          "baseline": {
+            "far": 1.1,
+            "buildingCoverage": 0.32,
+            "greenRatio": 0.22,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 700,
+            "openSpaceSqm": 900
+          },
+          "scenario_a": {
+            "far": 1.7,
+            "buildingCoverage": 0.34,
+            "greenRatio": 0.24,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 1800,
+            "openSpaceSqm": 1300
+          },
+          "scenario_b": {
+            "far": 1.6,
+            "buildingCoverage": 0.3,
+            "greenRatio": 0.32,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 2400,
+            "openSpaceSqm": 2100
+          }
+        },
+        "renewal": {
+          "currentMode": "public_facility_upgrade",
+          "proposedMode": "comprehensive_improvement",
+          "baselineYear": 2026
+        },
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.05105,
+              22.5401
+            ],
+            [
+              114.0519,
+              22.5401
+            ],
+            [
+              114.0519,
+              22.5419
+            ],
+            [
+              114.05105,
+              22.5419
+            ],
+            [
+              114.05105,
+              22.5401
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "parcel_05",
+        "type": "Parcel",
+        "name": "商住混合更新地块",
+        "landUseCode": "0701",
+        "landUseName": "城镇住宅用地",
+        "blockId": "block_02",
+        "areaSqm": 18500,
+        "controls": {
+          "farMax": 4.5,
+          "buildingCoverageMax": 0.4,
+          "greenRatioMin": 0.25,
+          "heightMaxM": 120
+        },
+        "scenarioValues": {
+          "baseline": {
+            "far": 2.2,
+            "buildingCoverage": 0.36,
+            "greenRatio": 0.18,
+            "residentialGfaSqm": 32000,
+            "publicServiceGfaSqm": 100,
+            "openSpaceSqm": 500
+          },
+          "scenario_a": {
+            "far": 4.3,
+            "buildingCoverage": 0.39,
+            "greenRatio": 0.25,
+            "residentialGfaSqm": 62000,
+            "publicServiceGfaSqm": 800,
+            "openSpaceSqm": 1200
+          },
+          "scenario_b": {
+            "far": 3.7,
+            "buildingCoverage": 0.34,
+            "greenRatio": 0.32,
+            "residentialGfaSqm": 52000,
+            "publicServiceGfaSqm": 1500,
+            "openSpaceSqm": 2200
+          }
+        },
+        "renewal": {
+          "currentMode": "mixed_old_area",
+          "proposedMode": "demolition_rebuild",
+          "baselineYear": 2026
+        },
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.0521,
+              22.5421
+            ],
+            [
+              114.05295,
+              22.5421
+            ],
+            [
+              114.05295,
+              22.5439
+            ],
+            [
+              114.0521,
+              22.5439
+            ],
+            [
+              114.0521,
+              22.5421
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "parcel_06",
+        "type": "Parcel",
+        "name": "保留整治居住地块",
+        "landUseCode": "0701",
+        "landUseName": "城镇住宅用地",
+        "blockId": "block_02",
+        "areaSqm": 18200,
+        "controls": {
+          "farMax": 3.2,
+          "buildingCoverageMax": 0.35,
+          "greenRatioMin": 0.3,
+          "heightMaxM": 80
+        },
+        "scenarioValues": {
+          "baseline": {
+            "far": 2.9,
+            "buildingCoverage": 0.41,
+            "greenRatio": 0.16,
+            "residentialGfaSqm": 47000,
+            "publicServiceGfaSqm": 150,
+            "openSpaceSqm": 500
+          },
+          "scenario_a": {
+            "far": 3.0,
+            "buildingCoverage": 0.36,
+            "greenRatio": 0.22,
+            "residentialGfaSqm": 49000,
+            "publicServiceGfaSqm": 350,
+            "openSpaceSqm": 900
+          },
+          "scenario_b": {
+            "far": 2.8,
+            "buildingCoverage": 0.31,
+            "greenRatio": 0.33,
+            "residentialGfaSqm": 45000,
+            "publicServiceGfaSqm": 900,
+            "openSpaceSqm": 1700
+          }
+        },
+        "renewal": {
+          "currentMode": "old_residential_area",
+          "proposedMode": "renovation_and_repair",
+          "baselineYear": 2026
+        },
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.05305,
+              22.5421
+            ],
+            [
+              114.0539,
+              22.5421
+            ],
+            [
+              114.0539,
+              22.5439
+            ],
+            [
+              114.05305,
+              22.5439
+            ],
+            [
+              114.05305,
+              22.5421
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "parcel_07",
+        "type": "Parcel",
+        "name": "口袋公园与慢行节点",
+        "landUseCode": "1401",
+        "landUseName": "公园绿地",
+        "blockId": "block_02",
+        "areaSqm": 18600,
+        "controls": {
+          "farMax": 0.2,
+          "buildingCoverageMax": 0.1,
+          "greenRatioMin": 0.65,
+          "heightMaxM": 12
+        },
+        "scenarioValues": {
+          "baseline": {
+            "far": 0.05,
+            "buildingCoverage": 0.03,
+            "greenRatio": 0.58,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 0,
+            "openSpaceSqm": 9000
+          },
+          "scenario_a": {
+            "far": 0.12,
+            "buildingCoverage": 0.08,
+            "greenRatio": 0.62,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 500,
+            "openSpaceSqm": 9800
+          },
+          "scenario_b": {
+            "far": 0.1,
+            "buildingCoverage": 0.06,
+            "greenRatio": 0.7,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 400,
+            "openSpaceSqm": 11500
+          }
+        },
+        "renewal": {
+          "currentMode": "green_space_upgrade",
+          "proposedMode": "comprehensive_improvement",
+          "baselineYear": 2026
+        },
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.0521,
+              22.5401
+            ],
+            [
+              114.05295,
+              22.5401
+            ],
+            [
+              114.05295,
+              22.5419
+            ],
+            [
+              114.0521,
+              22.5419
+            ],
+            [
+              114.0521,
+              22.5401
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "parcel_08",
+        "type": "Parcel",
+        "name": "街角商业与社区配套地块",
+        "landUseCode": "0901",
+        "landUseName": "商业服务业用地",
+        "blockId": "block_02",
+        "areaSqm": 18400,
+        "controls": {
+          "farMax": 3.0,
+          "buildingCoverageMax": 0.5,
+          "greenRatioMin": 0.2,
+          "heightMaxM": 60
+        },
+        "scenarioValues": {
+          "baseline": {
+            "far": 1.8,
+            "buildingCoverage": 0.46,
+            "greenRatio": 0.12,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 200,
+            "openSpaceSqm": 300
+          },
+          "scenario_a": {
+            "far": 3.1,
+            "buildingCoverage": 0.48,
+            "greenRatio": 0.19,
+            "residentialGfaSqm": 8000,
+            "publicServiceGfaSqm": 900,
+            "openSpaceSqm": 650
+          },
+          "scenario_b": {
+            "far": 2.6,
+            "buildingCoverage": 0.42,
+            "greenRatio": 0.24,
+            "residentialGfaSqm": 0,
+            "publicServiceGfaSqm": 1300,
+            "openSpaceSqm": 1300
+          }
+        },
+        "renewal": {
+          "currentMode": "street_commercial_area",
+          "proposedMode": "function_improvement",
+          "baselineYear": 2026
+        },
+        "evidenceRefs": [
+          "source_user_input_001"
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.05305,
+              22.5401
+            ],
+            [
+              114.0539,
+              22.5401
+            ],
+            [
+              114.0539,
+              22.5419
+            ],
+            [
+              114.05305,
+              22.5419
+            ],
+            [
+              114.05305,
+              22.5401
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

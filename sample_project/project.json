@@ -1,0 +1,20 @@
+{
+  "id": "project_demo_update_001",
+  "name": "城市更新片区样例",
+  "type": "urban_renewal",
+  "scale": "block_or_district",
+  "jurisdictionId": "CN-DEMO",
+  "studyBoundaryObjectId": "unit_001",
+  "defaultScenarioId": "scenario_a",
+  "planningHorizon": {
+    "baseYear": 2026,
+    "targetYear": 2035
+  },
+  "goals": [
+    "补齐公共服务设施",
+    "控制开发强度风险",
+    "改善慢行和出入口组织",
+    "提升绿地与公共开放空间"
+  ],
+  "notes": "本样例为毕业设计原型数据，不对应真实法定规划成果。"
+}

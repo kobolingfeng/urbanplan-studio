@@ -1,0 +1,94 @@
+{
+  "type": "FeatureCollection",
+  "name": "facilities",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "facility_elderly_01",
+        "type": "Facility",
+        "facilityType": "elderly_service",
+        "name": "嵌入式养老服务站",
+        "scenarioId": "scenario_a",
+        "serviceCapacityPeople": 1200,
+        "gfaSqm": 650,
+        "serviceRadiusM": 500,
+        "isMixedUse": true,
+        "locatedInObjectId": "parcel_04"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0515,
+          22.5412
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "facility_activity_01",
+        "type": "Facility",
+        "facilityType": "community_activity",
+        "name": "社区活动中心",
+        "scenarioId": "scenario_a",
+        "serviceCapacityPeople": 1800,
+        "gfaSqm": 900,
+        "serviceRadiusM": 500,
+        "isMixedUse": true,
+        "locatedInObjectId": "parcel_04"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0514,
+          22.5415
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "facility_kindergarten_01",
+        "type": "Facility",
+        "facilityType": "kindergarten",
+        "name": "幼儿园预留点",
+        "scenarioId": "scenario_b",
+        "serviceCapacityPeople": 900,
+        "gfaSqm": 2100,
+        "serviceRadiusM": 300,
+        "isMixedUse": false,
+        "locatedInObjectId": "parcel_04"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0516,
+          22.5416
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "facility_health_01",
+        "type": "Facility",
+        "facilityType": "community_health",
+        "name": "社区健康服务点",
+        "scenarioId": "scenario_b",
+        "serviceCapacityPeople": 2500,
+        "gfaSqm": 700,
+        "serviceRadiusM": 800,
+        "isMixedUse": true,
+        "locatedInObjectId": "parcel_08"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.0534,
+          22.5412
+        ]
+      }
+    }
+  ]
+}

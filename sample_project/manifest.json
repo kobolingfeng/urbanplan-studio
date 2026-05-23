@@ -1,0 +1,33 @@
+{
+  "format": "UPF",
+  "formatVersion": "0.1.0",
+  "createdAt": "2026-05-23T21:50:00+08:00",
+  "updatedAt": "2026-05-23T21:50:00+08:00",
+  "software": {
+    "name": "UrbanPlan Studio",
+    "version": "0.1.0-doc"
+  },
+  "coordinateReferenceSystem": "EPSG:4326",
+  "defaultScenarioId": "scenario_a",
+  "jurisdictionId": "CN-DEMO",
+  "contents": {
+    "project": "project.json",
+    "scenarios": "scenarios.json",
+    "objects": [
+      "objects/planning_units.geojson",
+      "objects/blocks.geojson",
+      "objects/parcels.geojson",
+      "objects/roads.geojson",
+      "objects/entrances.geojson",
+      "objects/facilities.geojson",
+      "objects/open_spaces.geojson",
+      "objects/control_lines.geojson"
+    ],
+    "rulesets": [
+      "rulesets/mvp_rules.json"
+    ],
+    "evidence": [
+      "evidence/sources.json"
+    ]
+  }
+}
