@@ -4,6 +4,7 @@ import {
     isStructuredEvidence,
     type EvidenceItem,
 } from './evidence';
+import { parseParcelIndicatorCsv } from './planning-csv';
 import { parseGeoJsonProject } from './planning-geojson';
 
 type AnyRecord = Record<string, unknown>;
@@ -114,7 +115,14 @@ export function parseUpfText<TProject extends ProjectLike>(
     text: string,
     fallbackProject: TProject,
 ): UpfParseResult<TProject> {
-    const data = JSON.parse(text) as AnyRecord;
+    let data: AnyRecord;
+    try {
+        data = JSON.parse(text) as AnyRecord;
+    } catch {
+        const csv = parseParcelIndicatorCsv(text, fallbackProject);
+        if (csv) return csv;
+        throw new Error('不是可识别的 UPF 文件');
+    }
     const activeScenarioId = String(data.activeScenarioId
         ?? (data.manifest as AnyRecord | undefined)?.activeScenarioId
         ?? fallbackProject.scenarios?.[0]?.id

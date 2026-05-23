@@ -769,6 +769,7 @@ function hasImportGeometry(object: Partial<PlanObject>): boolean {
 
 function importFormatFindings(raw: unknown, parsedProject: UrbanPlanProject): ImportFinding[] {
     if (isGeoJsonFeatureCollection(raw)) return auditGeoJsonImport(raw, parsedProject);
+    if (typeof raw === 'string') return auditCsvImport(raw, parsedProject);
     return schemaIssuesToImportFindings(validateUpfDocument(raw));
 }
 
@@ -815,6 +816,16 @@ function auditGeoJsonImport(
         });
     }
     return findings;
+}
+
+function auditCsvImport(input: string, parsedProject: UrbanPlanProject): ImportFinding[] {
+    const rowCount = Math.max(0, input.trim().split(/\r?\n/).filter(Boolean).length - 1);
+    const scenarioIds = parsedProject.scenarios.map(scenario => scenario.id).join('、') || '未声明';
+    return [{
+        severity: 'info',
+        objectId: 'CSV',
+        message: `已识别 CSV 指标表，通过 CSV 适配器读取 ${rowCount} 行，并更新地块方案指标。当前方案列表：${scenarioIds}。`,
+    }];
 }
 
 function finiteOr(value: unknown, fallback: number): number {
@@ -2423,7 +2434,7 @@ async function loadUpf() {
         try {
             const target = await dialog.openFile({
                 filters: [
-                    { name: 'UPF / GeoJSON', extensions: ['upf', 'json', 'geojson'] },
+                    { name: 'UPF / GeoJSON / CSV', extensions: ['upf', 'json', 'geojson', 'csv'] },
                     { name: '所有文件', extensions: ['*'] },
                 ],
             });
@@ -2443,7 +2454,7 @@ async function loadUpf() {
 }
 
 function loadUpfText(text: string, options: { sourceName?: string; showImportReport?: boolean } = {}) {
-    const raw = JSON.parse(text);
+    const raw = parseRawImportPayload(text);
     const parsed = parseUpfText(text, project);
     const parsedProject = parsed.project as UrbanPlanProject;
     const importSnapshot = snapshotImportedProject(parsedProject);
@@ -2466,6 +2477,14 @@ function loadUpfText(text: string, options: { sourceName?: string; showImportRep
     renderAll();
     if (options.showImportReport) {
         showModal('导入报告', buildImportReport(options.sourceName ?? 'UPF 文本'), project.project.name, 'import-report.md');
+    }
+}
+
+function parseRawImportPayload(text: string): unknown {
+    try {
+        return JSON.parse(text);
+    } catch {
+        return text;
     }
 }
 

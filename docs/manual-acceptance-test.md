@@ -80,8 +80,9 @@ Expected:
 5. Load `examples/luohu-case-v1.upf`.
 6. Confirm the project contains multiple parcels, roads, facilities, open space, heritage constraint, and three scenarios.
 7. Open `验证`; expected: validation pack reflects the loaded Luohu case.
-8. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, UPF structure findings, and dangling references if present.
-9. Load `examples/invalid.upf`; expected: import error modal.
+8. Load a parcel indicator CSV with `parcel_id` and `scenario_id`; expected: the import report names the CSV adapter and matching parcels receive updated scenario values.
+9. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, UPF structure findings, and dangling references if present.
+10. Load `examples/invalid.upf`; expected: import error modal.
 
 ## Data Integrity
 

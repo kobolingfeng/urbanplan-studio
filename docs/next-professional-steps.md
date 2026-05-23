@@ -44,7 +44,7 @@ This backlog is ordered by product risk, not by excitement.
 
 1. CRS transform support for imported GeoJSON FeatureCollections.
 2. DXF import for parcel and road layers.
-3. CSV import for parcel indicators.
+3. CSV import validation with rejected-row previews and column templates.
 4. POI import adapter.
 5. OSM/Overpass adapter for roads and facilities.
 6. Raster/remote-sensing metadata adapter.
