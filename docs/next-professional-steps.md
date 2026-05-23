@@ -28,7 +28,7 @@ This backlog is ordered by product risk, not by excitement.
 3. Extend keyboard navigation with a command palette and saved view bookmarks.
 4. Add saved object-filter presets and map-linked filter chips.
 5. Extend scenario table exports with XLSX formatting and chart templates.
-6. Add a proper rule catalog panel.
+6. Add rule-catalog filtering, grouping, and expert review status.
 
 ## P2: Engineering
 

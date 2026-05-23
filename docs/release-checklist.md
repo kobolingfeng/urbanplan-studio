@@ -30,6 +30,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click validation and confirm the case validation pack includes research questions, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
 - Click CSV and confirm a standalone long-form scenario metric CSV is available with `metric_id`, `value`, and `unit` columns.
 - Click quality and confirm it includes UPF structure validation, structured RuleSource metadata, evidence distribution, structured evidence coverage, and import audit.
+- Click rules and confirm the standalone rule catalog shows rule IDs, source levels, prototype flags, and formulas.
 - Click report and confirm sensitivity and data-quality summaries are included.
 - Click GeoJSON and confirm a FeatureCollection is exported with UPF object properties.
 - Use object search and high-risk filter to locate problem objects.

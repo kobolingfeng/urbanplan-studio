@@ -35,14 +35,16 @@ Expected:
 17. Confirm the modal contains scenario rows for score, population, floor area, risk counts, dimension scores, and dimension weights.
 18. Click `质检`.
 19. Confirm a data quality score, deduction table, UPF structure validation report, structured RuleSource metadata, evidence coverage, structured evidence coverage, evidence type distribution, and prototype-rule notes appear.
-20. Click `验证`.
-21. Confirm the report includes research questions, data overview, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
-22. Click `报告`.
-23. Confirm the report includes core metrics, dimension scores, risk register, sensitivity summary, data quality summary, method metadata, and limitations.
-24. Click `UPF`.
-25. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, `manifest.activeScenarioId`, and `evaluation.modelId`.
-26. Click `GeoJSON`.
-27. Confirm the modal contains a `FeatureCollection` with parcel, road, facility, entrance, open-space, and constraint features.
+20. Click `规则`.
+21. Confirm the modal lists rule IDs, domains, source levels, prototype flags, and calculation formulas.
+22. Click `验证`.
+23. Confirm the report includes research questions, data overview, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
+24. Click `报告`.
+25. Confirm the report includes core metrics, dimension scores, risk register, sensitivity summary, data quality summary, method metadata, and limitations.
+26. Click `UPF`.
+27. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, `manifest.activeScenarioId`, and `evaluation.modelId`.
+28. Click `GeoJSON`.
+29. Confirm the modal contains a `FeatureCollection` with parcel, road, facility, entrance, open-space, and constraint features.
 
 ## Object Editing
 

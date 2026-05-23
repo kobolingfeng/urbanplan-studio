@@ -250,6 +250,7 @@ const ui = {
     btnCompare: $('btn-compare') as HTMLButtonElement,
     btnCsv: $('btn-csv') as HTMLButtonElement,
     btnQuality: $('btn-quality') as HTMLButtonElement,
+    btnRules: $('btn-rules') as HTMLButtonElement,
     btnValidation: $('btn-validation') as HTMLButtonElement,
     btnReport: $('btn-report') as HTMLButtonElement,
     btnUpf: $('btn-upf') as HTMLButtonElement,
@@ -2572,6 +2573,7 @@ function bindControls() {
     ui.btnCompare.addEventListener('click', () => showModal('方案决策矩阵', buildDecisionMatrixReport(), project.project.name, 'scenario-decision-matrix.md'));
     ui.btnCsv.addEventListener('click', () => showModal('方案指标长表 CSV', buildScenarioDecisionLongCsv(collectScenarioDecisionRows()), project.project.name, 'scenario-decision-long.csv'));
     ui.btnQuality.addEventListener('click', () => showModal('数据质量诊断', buildQualityReport(), project.ruleset.version, 'data-quality-report.md'));
+    ui.btnRules.addEventListener('click', () => showModal('规则目录与验证口径', buildRuleCatalogReport(checks), project.ruleset.version, 'rule-catalog.md'));
     ui.btnValidation.addEventListener('click', () => showModal('案例验证包', buildCaseValidationReport(), project.project.name, 'case-validation-pack.md'));
     ui.btnReport.addEventListener('click', () => showModal('规划诊断报告', buildReport(), activeScenario().name, 'planning-report.md'));
     ui.btnUpf.addEventListener('click', () => showModal('UPF 数据', buildUpf(), `${project.format} ${project.formatVersion}`, `${project.project.id}.upf`));
