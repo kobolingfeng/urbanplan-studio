@@ -28,9 +28,14 @@ const minimal = parseUpfText(minimalText, fallback);
 assert(minimal.project.project?.id === 'minimal_demo', 'minimal project id mismatch');
 assert(minimal.activeScenarioId === 'scenario_base', 'minimal active scenario mismatch');
 
-const roundTrip = createUpfDocument(minimal.project, minimal.activeScenarioId, [], []);
+const roundTrip = createUpfDocument(minimal.project, minimal.activeScenarioId, [], [], {
+    scenarioId: minimal.activeScenarioId,
+    score: 88,
+    dimensions: [],
+});
 assert(roundTrip.manifest.software.version === '0.1.0', 'manifest software version mismatch');
 assert(roundTrip.manifest.unitSystem.metersPerCanvasUnit === 0.68, 'manifest unit system mismatch');
+assert((roundTrip.evaluation as { score?: number }).score === 88, 'evaluation export mismatch');
 const parsedRoundTrip = parseUpfText(JSON.stringify(roundTrip), fallback);
 assert(parsedRoundTrip.project.format === 'UPF', 'round-trip format mismatch');
 assert(parsedRoundTrip.project.objects?.length === 1, 'round-trip objects mismatch');

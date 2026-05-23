@@ -36,7 +36,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - A parcel overlapping heritage control and marked as demolition/rebuild creates a warning.
 - Deleting a parcel referenced by an entrance is blocked.
 - Scenario decision matrix lists all scenarios, scores, confidence, key metrics, and risk counts.
-- Data quality report exposes prototype rules, evidence coverage, evidence type distribution, and evidence gaps.
+- Data quality report exposes rule catalog, prototype rules, evidence coverage, evidence type distribution, and evidence gaps.
 - Evaluation smoke confirms six dimensions and parcel-level scoring.
 
 ## Known Limits

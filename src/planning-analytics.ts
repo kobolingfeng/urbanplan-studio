@@ -236,6 +236,12 @@ export function buildDataQualityReport(
         `- 地块方案值缺口：${quality.parcelScenarioGaps.length}`,
         `- 智能建议数量：${recommendations.length}`,
         '',
+        '## 规则依据清单',
+        '',
+        '| 规则 | 触发 | 最高等级 | 来源 |',
+        '|---|---:|---|---|',
+        ...quality.ruleCatalog.map(rule => `| ${rule.ruleId} | ${rule.count} | ${rule.maxSeverity} | ${rule.source} |`),
+        '',
         '## 证据类型分布',
         '',
         ...Object.entries(quality.evidenceTypeCounts).map(([kind, count]) => `- ${kind}：${count}`),
@@ -273,6 +279,7 @@ export function calculateDataQuality(
             return counts;
         }, {});
     const prototypeRuleCount = checks.filter(check => String(check.source ?? '').includes('原型')).length;
+    const ruleCatalog = buildRuleCatalog(checks);
     const unboundEntrances = objects.filter(object => object.type === 'entrance' && (!object.parcelId || !object.roadId));
     const scenarioIds = new Set((project.scenarios ?? []).map(scenario => scenario.id));
     const parcelScenarioGaps = objects
@@ -292,11 +299,35 @@ export function calculateDataQuality(
         evidenceCoverage,
         evidenceTypeCounts,
         basisCount: project.ruleset?.basis?.length ?? 0,
+        ruleCatalog,
         missingEvidence,
         prototypeRuleCount,
         unboundEntrances,
         parcelScenarioGaps,
     };
+}
+
+function buildRuleCatalog(checks: CheckLike[]) {
+    const rank: Record<string, number> = { ok: 0, info: 1, warning: 2, error: 3 };
+    const label: Record<string, string> = { ok: '通过', info: '提示', warning: '警告', error: '错误' };
+    const map = new Map<string, { ruleId: string; count: number; maxSeverity: string; source: string }>();
+    for (const check of checks) {
+        const ruleId = String(check.ruleId ?? 'unknown_rule');
+        const severity = String(check.severity ?? 'info');
+        const current = map.get(ruleId) ?? {
+            ruleId,
+            count: 0,
+            maxSeverity: severity,
+            source: String(check.source ?? '未声明'),
+        };
+        current.count += 1;
+        if ((rank[severity] ?? 1) > (rank[current.maxSeverity] ?? 1)) current.maxSeverity = severity;
+        if (current.source === '未声明' && check.source) current.source = check.source;
+        map.set(ruleId, current);
+    }
+    return [...map.values()]
+        .sort((a, b) => (rank[b.maxSeverity] ?? 0) - (rank[a.maxSeverity] ?? 0) || b.count - a.count)
+        .map(rule => ({ ...rule, maxSeverity: label[rule.maxSeverity] ?? rule.maxSeverity }));
 }
 
 function evidenceKind(text: string): string {
