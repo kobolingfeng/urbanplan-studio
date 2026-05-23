@@ -241,7 +241,7 @@ const RULE_CATALOG_DRAFT: RuleCatalogDraft[] = [
         jurisdiction: 'UrbanPlan prototype',
         basis: '道路出入口安全间距预警',
         clause: '机动车出入口接近交叉口时需交通组织论证',
-        formula: 'distance(entrance, nearestIntersection) < 90',
+        formula: 'distance(entrance, nearestIntersection) < thresholdByRoadLevel',
         prototype: true,
     },
     {
@@ -524,14 +524,15 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
         const intersection = nearestRoadIntersection(roads, entrance.point!);
         const intersectionDistance = intersection ? distance(entrance.point!, intersection) : Number.POSITIVE_INFINITY;
-        if (entrance.entranceType === '机动车' && intersectionDistance < 90) {
+        const intersectionThreshold = entranceIntersectionThreshold(road);
+        if (entrance.entranceType === '机动车' && intersectionDistance < intersectionThreshold) {
             add({
                 ruleId: 'entrance_intersection_distance',
                 objectId: entrance.id,
                 objectName: entrance.name,
                 severity: 'warning',
                 title: '出入口接近交叉口',
-                message: `距离主要交叉口约 ${format(intersectionDistance)} 米，需进一步交通组织论证。`,
+                message: `${road.level ?? '未声明等级'}建议控制在 ${format(intersectionThreshold)} 米以外，当前距离主要交叉口约 ${format(intersectionDistance)} 米。`,
                 source: ruleSource('entrance_intersection_distance', project.ruleset.version),
             });
         }
@@ -682,6 +683,16 @@ function roadRedLineMinimum(road: RuleObject): number {
     };
     const classMinimum = byClass[String(road.level ?? '')] ?? 12;
     return Math.max(classMinimum, number(road.lanes, 1) * 3.5 + 6);
+}
+
+function entranceIntersectionThreshold(road: RuleObject): number {
+    const byClass: Record<string, number> = {
+        '主干路': 120,
+        '次干路': 90,
+        '支路': 50,
+        '慢行街巷': 30,
+    };
+    return byClass[String(road.level ?? '')] ?? 60;
 }
 
 function isIndustrialLand(parcel: RuleObject): boolean {
