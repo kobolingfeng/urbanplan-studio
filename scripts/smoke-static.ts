@@ -85,6 +85,7 @@ for (const filterValue of ['parcel', 'road', 'facility', 'entrance', 'openSpace'
     assert(sourceHtml.includes(`value="${filterValue}"`), `object filter misses ${filterValue}`);
 }
 assert(sourceHtml.includes('.csv') && sourceHtml.includes('text/csv'), 'file input should accept CSV imports');
+assert(sourceMain.includes("'geojson', 'csv', 'md'"), 'native save dialog should expose GeoJSON and CSV export extensions');
 
 const invalid = JSON.parse(fileText(join(EXAMPLES, 'invalid.upf')));
 assert(invalid.format !== 'UPF' || !Array.isArray(invalid.objects), 'invalid.upf should remain invalid');

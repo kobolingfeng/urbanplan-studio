@@ -2406,7 +2406,7 @@ async function saveText(defaultName: string, content: string) {
             const target = await dialog.saveFile({
                 defaultName,
                 filters: [
-                    { name: 'UPF / 文本', extensions: ['upf', 'json', 'md', 'txt'] },
+                    { name: 'UrbanPlan 导出', extensions: ['upf', 'json', 'geojson', 'csv', 'md', 'txt'] },
                     { name: '所有文件', extensions: ['*'] },
                 ],
             });
