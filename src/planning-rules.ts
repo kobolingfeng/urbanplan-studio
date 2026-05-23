@@ -25,6 +25,8 @@ type RuleObject = {
     landUseName?: string;
     kind?: string;
     level?: string;
+    redLineWidthM?: number;
+    lanes?: number;
     controls?: {
         farMax?: number;
         buildingCoverageMax?: number;
@@ -243,6 +245,17 @@ const RULE_CATALOG_DRAFT: RuleCatalogDraft[] = [
         prototype: true,
     },
     {
+        id: 'road_redline_width_min',
+        name: '道路红线宽度与等级匹配',
+        domain: '交通组织',
+        defaultSeverity: 'warning',
+        jurisdiction: 'UrbanPlan prototype',
+        basis: '道路等级与车道数经验阈值',
+        clause: '道路红线宽度应覆盖道路等级下限和车道基本宽度',
+        formula: 'redLineWidthM < max(classMinimum, lanes * 3.5 + 6)',
+        prototype: true,
+    },
+    {
         id: 'facility_kindergarten_gap',
         name: '幼儿园学位容量缺口',
         domain: '公共服务',
@@ -422,6 +435,22 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
     }
 
     const parcelIds = new Set(parcels.map(parcel => parcel.id));
+    for (const road of roads) {
+        const width = number(road.redLineWidthM);
+        const minimum = roadRedLineMinimum(road);
+        if (width < minimum) {
+            add({
+                ruleId: 'road_redline_width_min',
+                objectId: road.id,
+                objectName: road.name,
+                severity: 'warning',
+                title: '道路红线宽度偏窄',
+                message: `${road.level ?? '未声明等级'}、${format(number(road.lanes))} 车道建议红线不低于 ${minimum.toFixed(1)} 米，当前 ${width.toFixed(1)} 米。`,
+                source: ruleSource('road_redline_width_min', project.ruleset.version),
+            });
+        }
+    }
+
     for (const entrance of project.objects.filter(object => object.type === 'entrance' && object.point)) {
         if (!entrance.parcelId || !parcelIds.has(entrance.parcelId)) {
             add({
@@ -564,6 +593,14 @@ function buildRecommendations(results: PlanningRuleResult[]): PlanningRecommenda
                 basis: result.source,
             });
         }
+        if (result.ruleId === 'road_redline_width_min') {
+            add({
+                objectId: result.objectId,
+                title: '复核道路红线与断面',
+                message: '建议按道路等级、车道数、慢行空间和绿化带重新核算断面，必要时调整车道组织而不是只压缩人行空间。',
+                basis: result.source,
+            });
+        }
         if (result.ruleId === 'landuse_industrial_residential_mix') {
             add({
                 objectId: result.objectId,
@@ -611,6 +648,17 @@ function coveredByFacility(facilities: RuleObject[], point: Point, kind: Facilit
     return facilities
         .filter(facility => facility.kind === kind && facility.point)
         .some(facility => distance(point, facility.point!) <= number(facility.serviceRadiusM));
+}
+
+function roadRedLineMinimum(road: RuleObject): number {
+    const byClass: Record<string, number> = {
+        '主干路': 30,
+        '次干路': 24,
+        '支路': 12,
+        '慢行街巷': 6,
+    };
+    const classMinimum = byClass[String(road.level ?? '')] ?? 12;
+    return Math.max(classMinimum, number(road.lanes, 1) * 3.5 + 6);
 }
 
 function isIndustrialLand(parcel: RuleObject): boolean {

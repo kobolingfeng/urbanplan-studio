@@ -127,6 +127,7 @@ for (const id of [
     'entrance_dangling_road',
     'entrance_arterial_risk',
     'entrance_intersection_distance',
+    'road_redline_width_min',
 ]) {
     assert(ids.has(id), `${id} did not trigger`);
     assert(catalogIds.has(id), `${id} missing from rule catalog`);

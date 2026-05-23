@@ -161,6 +161,18 @@ assertTriggers('entrance integrity and geometry', [
     'entrance_dangling_road',
 ]);
 
+assertTriggers('road redline width', [
+    {
+        id: 'road_too_narrow',
+        type: 'road',
+        name: 'Too Narrow Arterial',
+        level: '主干路',
+        redLineWidthM: 18,
+        lanes: 6,
+        points: [{ x: 0, y: 0 }, { x: 300, y: 0 }],
+    },
+], ['road_redline_width_min']);
+
 assertTriggers('facility capacity and coverage', [
     {
         ...badParcel,
