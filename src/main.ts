@@ -179,6 +179,11 @@ type CanvasViewBox = {
     height: number;
 };
 
+type NumericRange = {
+    min: number;
+    max: number;
+};
+
 type NumberFieldOptions = {
     min?: number;
     max?: number;
@@ -208,6 +213,27 @@ type UrbanPlanProject = {
 
 const SQM_PER_RESIDENT = SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident;
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const PARCEL_IMPORT_RANGES: Record<keyof Pick<ParcelScenarioValue, 'far' | 'buildingCoverage' | 'greenRatio' | 'residentialGfaSqm' | 'publicServiceGfaSqm'>, NumericRange> = {
+    far: { min: 0, max: 15 },
+    buildingCoverage: { min: 0, max: 1 },
+    greenRatio: { min: 0, max: 1 },
+    residentialGfaSqm: { min: 0, max: 5_000_000 },
+    publicServiceGfaSqm: { min: 0, max: 5_000_000 },
+};
+const PARCEL_CONTROL_IMPORT_RANGES: Record<keyof Parcel['controls'], NumericRange> = {
+    farMax: { min: 0, max: 15 },
+    buildingCoverageMax: { min: 0, max: 1 },
+    greenRatioMin: { min: 0, max: 1 },
+    heightMaxM: { min: 0, max: 1000 },
+};
+const ROAD_IMPORT_RANGES: Record<'redLineWidthM' | 'lanes', NumericRange> = {
+    redLineWidthM: { min: 0, max: 200 },
+    lanes: { min: 1, max: 12 },
+};
+const FACILITY_IMPORT_RANGES: Record<'capacity' | 'serviceRadiusM', NumericRange> = {
+    capacity: { min: 0, max: 200_000 },
+    serviceRadiusM: { min: 0, max: 10_000 },
+};
 const DEFAULT_SCENARIO_VALUE: ParcelScenarioValue = {
     far: 1,
     buildingCoverage: 0.25,
@@ -577,18 +603,18 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
         if (base.type === 'parcel') {
             base.points = validPoints(base.points, rect(120, 120, 120, 90));
             base.controls = {
-                farMax: finiteOr(base.controls?.farMax, 4),
-                buildingCoverageMax: finiteOr(base.controls?.buildingCoverageMax, 0.35),
-                greenRatioMin: finiteOr(base.controls?.greenRatioMin, 0.30),
-                heightMaxM: finiteOr(base.controls?.heightMaxM, 80),
+                farMax: numberInRangeOr(base.controls?.farMax, 4, PARCEL_CONTROL_IMPORT_RANGES.farMax),
+                buildingCoverageMax: numberInRangeOr(base.controls?.buildingCoverageMax, 0.35, PARCEL_CONTROL_IMPORT_RANGES.buildingCoverageMax),
+                greenRatioMin: numberInRangeOr(base.controls?.greenRatioMin, 0.30, PARCEL_CONTROL_IMPORT_RANGES.greenRatioMin),
+                heightMaxM: numberInRangeOr(base.controls?.heightMaxM, 80, PARCEL_CONTROL_IMPORT_RANGES.heightMaxM),
             };
             base.scenarioValues = base.scenarioValues ?? {};
             for (const scenarioId of scenarioIds) {
-                base.scenarioValues[scenarioId] = {
+                base.scenarioValues[scenarioId] = normalizeParcelScenarioValue({
                     ...DEFAULT_SCENARIO_VALUE,
                     ...(Object.values(base.scenarioValues)[0] ?? {}),
                     ...(base.scenarioValues[scenarioId] ?? {}),
-                };
+                });
             }
             base.landUseCode = base.landUseCode || '0701';
             base.landUseName = base.landUseName || '城镇住宅用地';
@@ -597,15 +623,15 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
         if (base.type === 'road') {
             base.points = validPoints(base.points, [{ x: 80, y: 300 }, { x: 820, y: 300 }], 2);
             base.level = base.level || '支路';
-            base.redLineWidthM = finiteOr(base.redLineWidthM, 18);
-            base.lanes = Math.round(finiteOr(base.lanes, 2));
+            base.redLineWidthM = numberInRangeOr(base.redLineWidthM, 18, ROAD_IMPORT_RANGES.redLineWidthM);
+            base.lanes = Math.round(numberInRangeOr(base.lanes, 2, ROAD_IMPORT_RANGES.lanes));
             return [base];
         }
         if (base.type === 'facility') {
             base.point = validPoint(base.point, { x: 420, y: 320 });
             base.kind = base.kind || '社区养老';
-            base.capacity = finiteOr(base.capacity, 80);
-            base.serviceRadiusM = finiteOr(base.serviceRadiusM, 500);
+            base.capacity = numberInRangeOr(base.capacity, 80, FACILITY_IMPORT_RANGES.capacity);
+            base.serviceRadiusM = numberInRangeOr(base.serviceRadiusM, 500, FACILITY_IMPORT_RANGES.serviceRadiusM);
             base.planned = Boolean(base.planned);
             return [base];
         }
@@ -855,6 +881,23 @@ function auditCsvImport(input: string, parsedProject: UrbanPlanProject, summary?
 
 function finiteOr(value: unknown, fallback: number): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function numberInRangeOr(value: unknown, fallback: number, range: NumericRange): number {
+    const next = finiteOr(value, fallback);
+    return next >= range.min && next <= range.max ? next : fallback;
+}
+
+function normalizeParcelScenarioValue(value: Partial<ParcelScenarioValue>): ParcelScenarioValue {
+    return {
+        far: numberInRangeOr(value.far, DEFAULT_SCENARIO_VALUE.far, PARCEL_IMPORT_RANGES.far),
+        buildingCoverage: numberInRangeOr(value.buildingCoverage, DEFAULT_SCENARIO_VALUE.buildingCoverage, PARCEL_IMPORT_RANGES.buildingCoverage),
+        greenRatio: numberInRangeOr(value.greenRatio, DEFAULT_SCENARIO_VALUE.greenRatio, PARCEL_IMPORT_RANGES.greenRatio),
+        residentialGfaSqm: numberInRangeOr(value.residentialGfaSqm, DEFAULT_SCENARIO_VALUE.residentialGfaSqm, PARCEL_IMPORT_RANGES.residentialGfaSqm),
+        publicServiceGfaSqm: numberInRangeOr(value.publicServiceGfaSqm, DEFAULT_SCENARIO_VALUE.publicServiceGfaSqm, PARCEL_IMPORT_RANGES.publicServiceGfaSqm),
+        updateMode: value.updateMode || DEFAULT_SCENARIO_VALUE.updateMode,
+        notes: value.notes || DEFAULT_SCENARIO_VALUE.notes,
+    };
 }
 
 function validPoint(point: unknown, fallback: Point): Point {
