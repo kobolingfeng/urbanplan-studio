@@ -1,4 +1,5 @@
 import type { EvidenceItem } from './evidence';
+import { markdownTableRow } from './markdown-table';
 import { SERVICE_DEMAND_ASSUMPTIONS } from './planning-assumptions';
 import {
     areaSqm,
@@ -328,15 +329,15 @@ export function buildRuleCatalogReport(triggered: PlanningRuleResult[] = []): st
         '',
         '| 领域 | 规则数 | 原型规则 | 本次触发次数 |',
         '|---|---:|---:|---:|',
-        ...domainRows.map(([domain, row]) => `| ${domain} | ${row.total} | ${row.prototype} | ${row.triggered} |`),
+        ...domainRows.map(([domain, row]) => markdownTableRow([domain, row.total, row.prototype, row.triggered])),
         '',
         '| 来源层级 | 规则数 |',
         '|---|---:|',
-        ...sourceRows.map(([level, count]) => `| ${level} | ${count} |`),
+        ...sourceRows.map(([level, count]) => markdownTableRow([level, count])),
         '',
         '| 规则 ID | 领域 | 默认等级 | 来源层级 | 原型 | 本次触发 | 适用范围 | 依据 | 条款/口径 | 计算公式 |',
         '|---|---|---|---|---:|---:|---|---|---|---|',
-        ...RULE_CATALOG.map(rule => `| ${rule.id} | ${rule.domain} | ${severityLabel(rule.defaultSeverity)} | ${sourceLevelLabel(rule.source.level)} | ${rule.prototype ? '是' : '否'} | ${counts[rule.id] ?? 0} | ${rule.source.jurisdiction} | ${rule.source.title} | ${rule.source.clause} | ${rule.formula} |`),
+        ...RULE_CATALOG.map(rule => markdownTableRow([rule.id, rule.domain, severityLabel(rule.defaultSeverity), sourceLevelLabel(rule.source.level), rule.prototype ? '是' : '否', counts[rule.id] ?? 0, rule.source.jurisdiction, rule.source.title, rule.source.clause, rule.formula])),
         '',
         '## 论文验证建议',
         '',

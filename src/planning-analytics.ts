@@ -4,6 +4,7 @@ import {
     isStructuredEvidence,
     type EvidenceItem,
 } from './evidence';
+import { markdownTableRow } from './markdown-table';
 import { parseParcelIndicatorCsv } from './planning-csv';
 import { parseGeoJsonProject } from './planning-geojson';
 
@@ -233,7 +234,7 @@ export function buildScenarioComparisonReport(
                 : row.avgFar > 4.5
                     ? '强度偏高'
                     : '需专项复核';
-            return `| ${row.scenario.name} | ${row.valuesCount}/${parcels.length} | ${row.missingParcels.length} | ${number(row.residentialGfa)} | ${number(row.residents)} | ${number(row.publicServiceGfa)} | ${row.avgFar.toFixed(2)} | ${(row.avgGreen * 100).toFixed(1)}% | ${judgement} |`;
+            return markdownTableRow([row.scenario.name, `${row.valuesCount}/${parcels.length}`, row.missingParcels.length, number(row.residentialGfa), number(row.residents), number(row.publicServiceGfa), row.avgFar.toFixed(2), `${(row.avgGreen * 100).toFixed(1)}%`, judgement]);
         }),
         '',
         `${heading(titleLevel + 1)} 方案数据缺口`,
@@ -280,13 +281,13 @@ export function buildDataQualityReport(
         '',
         '| 项目 | 数量 | 单项扣分 | 扣分 |',
         '|---|---:|---:|---:|',
-        ...quality.deductions.map(item => `| ${item.label} | ${item.count} | ${item.weight} | ${item.points} |`),
+        ...quality.deductions.map(item => markdownTableRow([item.label, item.count, item.weight, item.points])),
         '',
         '## 规则依据清单',
         '',
         '| 规则 | 触发 | 最高等级 | 来源 |',
         '|---|---:|---|---|',
-        ...quality.ruleCatalog.map(rule => `| ${rule.ruleId} | ${rule.count} | ${rule.maxSeverity} | ${rule.source} |`),
+        ...quality.ruleCatalog.map(rule => markdownTableRow([rule.ruleId, rule.count, rule.maxSeverity, rule.source])),
         '',
         '## 证据类型分布',
         '',

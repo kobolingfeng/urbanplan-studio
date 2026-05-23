@@ -1,3 +1,4 @@
+import { markdownTableRow, splitMarkdownTableRow } from '../src/markdown-table';
 import { markdownToHtml, renderModalContent } from '../src/markdown-renderer';
 
 function fail(message: string): never {
@@ -33,5 +34,12 @@ assert(!html.includes('<script>') && !html.includes('<img'), 'markdown renderer 
 
 const raw = renderModalContent('<svg onload=alert(1)>', 'export.CSV');
 assert(raw === '<pre class="modal-raw">&lt;svg onload=alert(1)&gt;</pre>', 'raw modal content should be escaped case-insensitively');
+
+const escapedRow = markdownTableRow(['A|B', 'line 1\nline 2', '<unsafe>']);
+assert(escapedRow === '| A\\|B | line 1 / line 2 | <unsafe> |', 'table row helper should escape pipes and flatten newlines');
+const split = splitMarkdownTableRow(escapedRow);
+assert(split.length === 3 && split[0] === 'A|B' && split[1] === 'line 1 / line 2', 'table row splitter should preserve escaped pipes');
+const tableHtml = markdownToHtml(['| 字段 | 值 |', '|---|---|', escapedRow].join('\n'));
+assert(tableHtml.includes('<td>A|B</td>') && tableHtml.includes('<td>&lt;unsafe&gt;</td>'), 'escaped table rows should render as safe table cells');
 
 console.log('markdown smoke passed');

@@ -3,6 +3,7 @@ import {
     isStructuredEvidence,
     type EvidenceItem,
 } from './evidence';
+import { markdownTableRow } from './markdown-table';
 import { SERVICE_DEMAND_ASSUMPTIONS, serviceDemandAssumptionText } from './planning-assumptions';
 import {
     areaSqm,
@@ -280,20 +281,20 @@ export function buildScenarioEvaluationReport(
         '',
         '| 维度 | 权重 | 得分 | 解释 |',
         '|---|---:|---:|---|',
-        ...evaluation.dimensions.map(item => `| ${item.name} | ${(item.weight * 100).toFixed(0)}% | ${item.score} | ${item.reason} |`),
+        ...evaluation.dimensions.map(item => markdownTableRow([item.name, `${(item.weight * 100).toFixed(0)}%`, item.score, item.reason])),
         '',
         '## 二、地块优先级',
         '',
         '| 地块 | 评分 | 状态 | 主要驱动因素 |',
         '|---|---:|---|---|',
-        ...evaluation.parcels.map(parcel => `| ${parcel.name} | ${parcel.score} | ${parcel.band} | ${parcel.drivers.join('；')} |`),
+        ...evaluation.parcels.map(parcel => markdownTableRow([parcel.name, parcel.score, parcel.band, parcel.drivers.join('；')])),
         '',
         '## 三、服务人口分摊',
         '',
         '| 地块 | 估算人口 | 幼儿园需求 | 养老服务需求 | 公服建面/千人 | 幼儿园覆盖 | 养老覆盖 |',
         '|---|---:|---:|---:|---:|---|---|',
         ...(serviceRows.length
-            ? serviceRows.map(row => `| ${row.name} | ${row.residents} | ${row.kindergartenNeed} | ${row.elderlyNeed} | ${row.publicServicePerThousand.toFixed(0)} | ${row.kindergartenCovered ? '是' : '否'} | ${row.elderlyCovered ? '是' : '否'} |`)
+            ? serviceRows.map(row => markdownTableRow([row.name, row.residents, row.kindergartenNeed, row.elderlyNeed, row.publicServicePerThousand.toFixed(0), row.kindergartenCovered ? '是' : '否', row.elderlyCovered ? '是' : '否']))
             : ['| 暂无 | 0 | 0 | 0 | 0 | - | - |']),
         '',
         '## 四、答辩可解释结论',

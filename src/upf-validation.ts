@@ -1,4 +1,5 @@
 import { isStructuredEvidence, normalizeEvidenceItem } from './evidence';
+import { markdownTableRow } from './markdown-table';
 
 type AnyRecord = Record<string, unknown>;
 
@@ -234,7 +235,7 @@ export function buildUpfValidationReport(issues: UpfValidationIssue[]): string {
         '| 等级 | 路径 | 问题 |',
         '|---|---|---|',
         ...(issues.length
-            ? issues.map(issue => `| ${severityLabel(issue.severity)} | ${issue.path} | ${issue.message} |`)
+            ? issues.map(issue => markdownTableRow([severityLabel(issue.severity), issue.path, issue.message]))
             : ['| 通过 | $ | 当前未发现结构问题 |']),
     ];
     return lines.join('\n');

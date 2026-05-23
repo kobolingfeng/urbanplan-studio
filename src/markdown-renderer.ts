@@ -1,3 +1,5 @@
+import { splitMarkdownTableRow } from './markdown-table';
+
 export function renderModalContent(text: string, defaultName: string): string {
     if (!defaultName.toLowerCase().endsWith('.md')) return `<pre class="modal-raw">${escapeHtml(text)}</pre>`;
     return markdownToHtml(text);
@@ -79,7 +81,7 @@ function isMarkdownTableStart(lines: string[], index: number): boolean {
 function markdownTableToHtml(lines: string[]): string {
     const rows = lines
         .filter((line, index) => index !== 1)
-        .map(line => line.split('|').slice(1, -1).map(cell => inlineMarkdown(cell.trim())));
+        .map(line => splitMarkdownTableRow(line).map(cell => inlineMarkdown(cell)));
     const [header = [], ...body] = rows;
     return [
         '<table>',
