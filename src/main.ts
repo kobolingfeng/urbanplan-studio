@@ -525,6 +525,7 @@ function markDirty(reason = '方案已修改') {
 function scheduleAutosave() {
     if (autosaveTimer) window.clearTimeout(autosaveTimer);
     autosaveTimer = window.setTimeout(() => {
+        autosaveTimer = undefined;
         try {
             localStorage.setItem('urbanplan.autosave', buildUpf());
             localStorage.setItem('urbanplan.autosaveAt', new Date().toISOString());
@@ -533,6 +534,10 @@ function scheduleAutosave() {
 }
 
 function clearAutosave() {
+    if (autosaveTimer) {
+        window.clearTimeout(autosaveTimer);
+        autosaveTimer = undefined;
+    }
     try {
         localStorage.removeItem('urbanplan.autosave');
         localStorage.removeItem('urbanplan.autosaveAt');
