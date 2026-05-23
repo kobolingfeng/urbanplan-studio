@@ -300,6 +300,7 @@ let dirty = false;
 let autosaveTimer: number | undefined;
 let objectSearchText = '';
 let objectFilter = 'all';
+let runtimeIdCounter = 0;
 const DEFAULT_CANVAS_VIEWBOX: CanvasViewBox = { x: 0, y: 0, width: 1000, height: 640 };
 let canvasViewBox: CanvasViewBox = { ...DEFAULT_CANVAS_VIEWBOX };
 
@@ -1809,7 +1810,7 @@ function resetCanvasView() {
 
 function addObjectAt(point: Point) {
     if (activeTool === 'parcel') {
-        const id = `parcel_${Date.now().toString(36)}`;
+        const id = nextObjectId('parcel');
         const newScenarioValues: Record<string, ParcelScenarioValue> = {};
         for (const scenario of project.scenarios) {
             newScenarioValues[scenario.id] = {
@@ -1836,7 +1837,7 @@ function addObjectAt(point: Point) {
         selectedId = id;
     }
     if (activeTool === 'facility') {
-        const id = `facility_${Date.now().toString(36)}`;
+        const id = nextObjectId('facility');
         project.objects.push({
             id,
             type: 'facility',
@@ -1851,7 +1852,7 @@ function addObjectAt(point: Point) {
         selectedId = id;
     }
     if (activeTool === 'entrance') {
-        const id = `entrance_${Date.now().toString(36)}`;
+        const id = nextObjectId('entrance');
         const parcel = containingParcel(point) ?? nearestParcel(point);
         const road = nearestRoad(point);
         project.objects.push({
@@ -1887,7 +1888,7 @@ function nearestParcel(point: Point): Parcel | undefined {
 
 function duplicateScenario() {
     const source = activeScenario();
-    const id = `scenario_${Date.now().toString(36)}`;
+    const id = nextScenarioId();
     project.scenarios.push({
         id,
         name: `${source.name} 副本`,
@@ -1901,6 +1902,23 @@ function duplicateScenario() {
     activeScenarioId = id;
     markDirty('已复制方案');
     renderAll();
+}
+
+function nextObjectId(prefix: ObjectType): string {
+    return nextUniqueId(prefix, new Set(project.objects.map(object => object.id)));
+}
+
+function nextScenarioId(): string {
+    return nextUniqueId('scenario', new Set(project.scenarios.map(scenario => scenario.id)));
+}
+
+function nextUniqueId(prefix: string, usedIds: Set<string>): string {
+    let next = '';
+    do {
+        runtimeIdCounter++;
+        next = `${prefix}_${Date.now().toString(36)}_${runtimeIdCounter.toString(36)}`;
+    } while (usedIds.has(next));
+    return next;
 }
 
 function applyScenarioOptimization() {
