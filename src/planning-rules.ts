@@ -303,6 +303,19 @@ export function buildRuleCatalogReport(triggered: PlanningRuleResult[] = []): st
         return next;
     }, {});
     const prototypeCount = RULE_CATALOG.filter(rule => rule.prototype).length;
+    const domainRows = Object.entries(RULE_CATALOG.reduce<Record<string, { total: number; prototype: number; triggered: number }>>((next, rule) => {
+        const row = next[rule.domain] ?? { total: 0, prototype: 0, triggered: 0 };
+        row.total += 1;
+        if (rule.prototype) row.prototype += 1;
+        if (counts[rule.id]) row.triggered += counts[rule.id];
+        next[rule.domain] = row;
+        return next;
+    }, {}));
+    const sourceRows = Object.entries(RULE_CATALOG.reduce<Record<string, number>>((next, rule) => {
+        const label = sourceLevelLabel(rule.source.level);
+        next[label] = (next[label] ?? 0) + 1;
+        return next;
+    }, {}));
     const lines = [
         '# 规则目录与验证口径',
         '',
@@ -310,6 +323,16 @@ export function buildRuleCatalogReport(triggered: PlanningRuleResult[] = []): st
         `原型启发式规则：${prototypeCount}`,
         `有触发记录的规则：${Object.keys(counts).length}`,
         `结构化 RuleSource：${RULE_CATALOG.filter(rule => rule.source).length}/${RULE_CATALOG.length}`,
+        '',
+        '## 规则分布',
+        '',
+        '| 领域 | 规则数 | 原型规则 | 本次触发次数 |',
+        '|---|---:|---:|---:|',
+        ...domainRows.map(([domain, row]) => `| ${domain} | ${row.total} | ${row.prototype} | ${row.triggered} |`),
+        '',
+        '| 来源层级 | 规则数 |',
+        '|---|---:|',
+        ...sourceRows.map(([level, count]) => `| ${level} | ${count} |`),
         '',
         '| 规则 ID | 领域 | 默认等级 | 来源层级 | 原型 | 本次触发 | 适用范围 | 依据 | 条款/口径 | 计算公式 |',
         '|---|---|---|---|---:|---:|---|---|---|---|',
