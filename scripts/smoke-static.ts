@@ -25,10 +25,10 @@ const config = JSON.parse(fileText(join(DIST, 'app.config.json')));
 const sourceHtml = fileText(join(ROOT, 'src', 'index.html'));
 
 assert(html.includes('UrbanPlan Studio'), 'index.html misses app title');
-for (const id of ['btn-run', 'btn-evaluation', 'btn-compare', 'btn-quality', 'btn-report', 'btn-upf', 'evaluation-list', 'plan-canvas']) {
+for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare', 'btn-quality', 'btn-report', 'btn-upf', 'evaluation-list', 'plan-canvas']) {
     assert(html.includes(`id="${id}"`), `index.html misses ${id}`);
 }
-for (const token of ['方案综合评估', '方案对比', '数据质量诊断', '不是可识别的 UPF 文件', '引用完整性保护']) {
+for (const token of ['方案综合评估', '权重敏感性分析', '导入审计', '方案对比', '数据质量诊断', '不是可识别的 UPF 文件', '引用完整性保护']) {
     assert(js.includes(token), `main bundle misses ${token}`);
 }
 
@@ -56,7 +56,7 @@ assert(config.permissions?.registry === false, 'registry namespace should be den
 assert(config.permissions?.dialog === true, 'dialog namespace should be allowed');
 assert(sourceHtml.includes('grid-template-columns: repeat(3, minmax(0, 1fr));'), 'bottom grid should fit the minimum desktop width');
 assert(sourceHtml.includes('.evaluation-row') && sourceHtml.includes('height: auto;'), 'evaluation rows should not inherit fixed button height');
-assert(sourceHtml.includes('grid-template-columns: minmax(200px, 240px) minmax(260px, 1fr) minmax(360px, 520px);'), 'topbar should not be stretched by button groups');
+assert(sourceHtml.includes('grid-template-columns: minmax(180px, 220px) minmax(230px, 1fr) minmax(500px, 560px);'), 'topbar should not be stretched by button groups');
 assert(sourceHtml.includes('overflow-x: auto;'), 'button groups should protect narrow desktop layouts');
 
 const invalid = JSON.parse(fileText(join(EXAMPLES, 'invalid.upf')));

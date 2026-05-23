@@ -19,18 +19,20 @@ Expected:
 1. Select parcel `A-01`.
 2. Change FAR from `4.6` to `4.0`.
 3. Confirm status bar indicates unsaved changes.
-4. Click `运行检查`.
+4. Click `检查`.
 5. Confirm rule count updates.
 6. Confirm the bottom `综合评估` section shows six dimension rows and a scenario score.
 7. Confirm parcel fill colors reflect score bands: lower scoring parcels are warmer, stable parcels are cooler/green.
 8. Click `评估`.
 9. Confirm the modal includes dimension scores, parcel priorities, highlights, and risk register.
-10. Click `对比`.
-11. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
-12. Click `质检`.
-13. Confirm a data quality score, rule catalog, evidence coverage, evidence type distribution, and prototype-rule notes appear.
-14. Click `UPF`.
-15. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, and `evaluation`.
+10. Click `敏感性`.
+11. Confirm the modal compares at least four weight models and reports whether the recommended scheme is stable.
+12. Click `对比`.
+13. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
+14. Click `质检`.
+15. Confirm a data quality score, rule catalog, evidence coverage, evidence type distribution, and prototype-rule notes appear.
+16. Click `UPF`.
+17. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, and `evaluation`.
 
 ## Object Editing
 
@@ -47,7 +49,8 @@ Expected:
 1. Click `保存` and save a `.upf`.
 2. Click `载入` and load the same file.
 3. Load `examples/minimal.upf`.
-4. Load `examples/invalid.upf`; expected: import error modal.
+4. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section.
+5. Load `examples/invalid.upf`; expected: import error modal.
 
 ## Data Integrity
 

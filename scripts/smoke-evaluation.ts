@@ -1,4 +1,8 @@
-import { evaluateScenario, buildScenarioEvaluationReport } from '../src/planning-evaluation';
+import {
+    EVALUATION_WEIGHT_PROFILES,
+    buildScenarioEvaluationReport,
+    evaluateScenario,
+} from '../src/planning-evaluation';
 import { runPlanningRules } from '../src/planning-rules';
 
 function fail(message: string): never {
@@ -97,9 +101,16 @@ const rules = runPlanningRules(project, 'scenario_update');
 const evaluation = evaluateScenario(project, 'scenario_update', rules.checks, rules.recommendations);
 
 assert(evaluation.score > 0 && evaluation.score <= 100, 'score should be normalized');
+assert(evaluation.modelName === '均衡模型', 'default model mismatch');
 assert(evaluation.dimensions.length === 6, 'dimension count mismatch');
 assert(evaluation.parcels.length === 1, 'parcel evaluation mismatch');
 assert(evaluation.highlights.length >= 2, 'highlights should explain the result');
 assert(buildScenarioEvaluationReport(project, 'scenario_update', rules.checks, rules.recommendations).includes('方案综合评估'), 'report title mismatch');
+
+for (const profile of EVALUATION_WEIGHT_PROFILES) {
+    const profiled = evaluateScenario(project, 'scenario_update', rules.checks, rules.recommendations, profile);
+    assert(profiled.modelName === profile.name, `${profile.name} model name mismatch`);
+    assert(profiled.dimensions.reduce((sum, item) => sum + item.weight, 0) > 0.99, `${profile.name} weights should sum close to 1`);
+}
 
 console.log('evaluation smoke passed');

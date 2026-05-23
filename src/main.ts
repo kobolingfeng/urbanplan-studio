@@ -16,6 +16,7 @@ import {
 } from './planning-analytics';
 import {
     buildScenarioEvaluationReport,
+    EVALUATION_WEIGHT_PROFILES,
     evaluateScenario,
     type ScenarioEvaluation,
 } from './planning-evaluation';
@@ -133,6 +134,12 @@ type Recommendation = {
     basis: string;
 };
 
+type ImportFinding = {
+    severity: 'warning' | 'info';
+    objectId: string;
+    message: string;
+};
+
 type UrbanPlanProject = {
     format: 'UPF';
     formatVersion: '0.1.0';
@@ -200,6 +207,7 @@ const ui = {
     fileInput: $('file-input') as HTMLInputElement,
     btnRun: $('btn-run') as HTMLButtonElement,
     btnEvaluation: $('btn-evaluation') as HTMLButtonElement,
+    btnSensitivity: $('btn-sensitivity') as HTMLButtonElement,
     btnCompare: $('btn-compare') as HTMLButtonElement,
     btnQuality: $('btn-quality') as HTMLButtonElement,
     btnReport: $('btn-report') as HTMLButtonElement,
@@ -226,6 +234,7 @@ let evaluation: ScenarioEvaluation = evaluateScenario(project, activeScenarioId,
 let modalContent = '';
 let modalDefaultName = 'project.upf';
 let currentFilePath = '';
+let importFindings: ImportFinding[] = [];
 let dirty = false;
 let autosaveTimer: number | undefined;
 
@@ -544,6 +553,51 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
     return normalized;
 }
 
+function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
+    const findings: ImportFinding[] = [];
+    const scenarios = Array.isArray(input.scenarios) ? input.scenarios.filter(scenario => scenario?.id) : [];
+    const scenarioIds = scenarios.map(scenario => scenario.id);
+    if (input.format !== 'UPF') {
+        findings.push({ severity: 'warning', objectId: 'project', message: '文件未声明 UPF 格式，已按兼容模式导入。' });
+    }
+    if (input.formatVersion !== '0.1.0') {
+        findings.push({ severity: 'info', objectId: 'project', message: `格式版本为 ${input.formatVersion || '未声明'}，已按 UPF 0.1.0 兼容。` });
+    }
+    if (!scenarios.length) {
+        findings.push({ severity: 'warning', objectId: 'project', message: '未找到有效方案列表，系统会使用演示方案结构补齐。' });
+    }
+    if (!Array.isArray(input.objects) || !input.objects.length) {
+        findings.push({ severity: 'warning', objectId: 'project', message: '未找到有效规划对象，导入后可能退回演示对象或空项目。' });
+    }
+    for (const raw of input.objects ?? []) {
+        const object = raw as Partial<PlanObject>;
+        const objectId = object.id || 'unknown_object';
+        if (!object.id) findings.push({ severity: 'warning', objectId, message: '对象缺少 id，兼容层会生成临时 id。' });
+        if (!object.name) findings.push({ severity: 'info', objectId, message: '对象缺少名称，兼容层会使用 id 代替。' });
+        if (!object.evidence?.length) findings.push({ severity: 'warning', objectId, message: '对象缺少证据来源，会降低数据质量和可信度。' });
+        if (object.type === 'parcel') {
+            const parcel = object as Partial<Parcel>;
+            if (!Array.isArray(parcel.points) || parcel.points.length < 3) findings.push({ severity: 'warning', objectId, message: '地块几何点不足，兼容层会补默认矩形。' });
+            if (!parcel.controls) findings.push({ severity: 'warning', objectId, message: '地块缺少控制指标，兼容层会补默认 FAR/密度/绿地率。' });
+            for (const scenarioId of scenarioIds) {
+                if (!parcel.scenarioValues?.[scenarioId]) findings.push({ severity: 'info', objectId, message: `地块缺少 ${scenarioId} 的方案值，兼容层会复制或补默认值。` });
+            }
+        } else if (object.type === 'road') {
+            const road = object as Partial<Road>;
+            if (!Array.isArray(road.points) || road.points.length < 2) findings.push({ severity: 'warning', objectId, message: '道路线位点不足，兼容层会补默认线段。' });
+        } else if (object.type === 'facility') {
+            const facility = object as Partial<Facility>;
+            if (!facility.point) findings.push({ severity: 'warning', objectId, message: '公共设施缺少点位，兼容层会补默认坐标。' });
+        } else if (object.type === 'entrance') {
+            const entrance = object as Partial<Entrance>;
+            if (!entrance.parcelId || !entrance.roadId) findings.push({ severity: 'warning', objectId, message: '出入口缺少地块或道路引用，需要导入后复核。' });
+        } else if (!['openSpace', 'constraint'].includes(String(object.type))) {
+            findings.push({ severity: 'warning', objectId, message: `未知对象类型 ${String(object.type)}，兼容层会过滤。` });
+        }
+    }
+    return findings.slice(0, 80);
+}
+
 function finiteOr(value: unknown, fallback: number): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
@@ -578,6 +632,10 @@ function formatArea(value: number): string {
 function formatCompactArea(value: number): string {
     if (value >= 10000) return `${formatNumber(value / 10000, 1)}万㎡`;
     return `${formatNumber(value)}㎡`;
+}
+
+function asPercent(value: number): string {
+    return `${(value * 100).toFixed(0)}%`;
 }
 
 function parcelResidents(parcel: Parcel): number {
@@ -687,6 +745,7 @@ function renderProjectSummary() {
         summaryLine('对象', `${project.objects.length} 个`),
         summaryLine('坐标', project.project.crs),
         summaryLine('文件', currentFilePath || '未保存'),
+        summaryLine('导入审计', importFindings.length ? `${importFindings.length} 项` : '无'),
         summaryLine('自动备份', autosaveLabel()),
     );
 }
@@ -1473,6 +1532,23 @@ function buildReport(): string {
     return lines.join('\n');
 }
 
+function buildQualityReport(): string {
+    const lines = [buildDataQualityReport(project, checks, recommendations)];
+    if (importFindings.length) {
+        lines.push(
+            '',
+            '## 导入审计',
+            '',
+            '| 等级 | 对象 | 问题 |',
+            '|---|---|---|',
+            ...importFindings.map(finding => `| ${finding.severity === 'warning' ? '警告' : '提示'} | ${finding.objectId} | ${finding.message} |`),
+        );
+    } else {
+        lines.push('', '## 导入审计', '', '- 当前项目没有记录到导入兼容修复项。');
+    }
+    return lines.join('\n');
+}
+
 function buildDecisionMatrixReport(): string {
     const rows = project.scenarios.map((scenario) => {
         const ruleResult = runPlanningRules(project, scenario.id);
@@ -1516,6 +1592,73 @@ function buildDecisionMatrixReport(): string {
         '## 四、原始指标表',
         '',
         buildScenarioComparisonReport(project, activeScenarioId),
+    ];
+    return lines.join('\n');
+}
+
+function buildWeightSensitivityReport(): string {
+    const scenarioRules = new Map(project.scenarios.map((scenario) => {
+        const result = runPlanningRules(project, scenario.id);
+        return [scenario.id, result] as const;
+    }));
+    const profileRows = EVALUATION_WEIGHT_PROFILES.map((profile) => {
+        const rows = project.scenarios
+            .map((scenario) => {
+                const ruleResult = scenarioRules.get(scenario.id)!;
+                return {
+                    scenario,
+                    evaluation: evaluateScenario(project, scenario.id, ruleResult.checks, ruleResult.recommendations, profile),
+                };
+            })
+            .sort((a, b) => b.evaluation.score - a.evaluation.score);
+        return {
+            profile,
+            rows,
+            winner: rows[0],
+            active: rows.find(row => row.scenario.id === activeScenarioId),
+            spread: rows.length ? rows[0].evaluation.score - rows[rows.length - 1].evaluation.score : 0,
+        };
+    });
+    const winnerCounts = profileRows.reduce<Record<string, number>>((counts, row) => {
+        const name = row.winner?.scenario.name ?? '暂无';
+        counts[name] = (counts[name] ?? 0) + 1;
+        return counts;
+    }, {});
+    const robustWinner = Object.entries(winnerCounts).sort((a, b) => b[1] - a[1])[0];
+    const lines = [
+        `# ${project.project.name} 权重敏感性分析`,
+        '',
+        `当前方案：${activeScenario().name}`,
+        `稳健推荐：${robustWinner ? `${robustWinner[0]}（${robustWinner[1]}/${EVALUATION_WEIGHT_PROFILES.length} 个模型排名第一）` : '暂无'}`,
+        `生成时间：${new Date().toLocaleString('zh-CN')}`,
+        '',
+        '## 一、模型对比',
+        '',
+        '| 权重模型 | 侧重点 | 第一名 | 当前方案得分 | 第一名得分 | 分差范围 |',
+        '|---|---|---|---:|---:|---:|',
+        ...profileRows.map(row => `| ${row.profile.name} | ${row.profile.description} | ${row.winner?.scenario.name ?? '暂无'} | ${row.active?.evaluation.score ?? '-'} | ${row.winner?.evaluation.score ?? '-'} | ${row.spread} |`),
+        '',
+        '## 二、权重表',
+        '',
+        '| 模型 | 控规符合性 | 公共服务 | 交通组织 | 生态开放空间 | 更新价值 | 证据可信度 |',
+        '|---|---:|---:|---:|---:|---:|---:|',
+        ...EVALUATION_WEIGHT_PROFILES.map(profile => `| ${profile.name} | ${asPercent(profile.weights.compliance)} | ${asPercent(profile.weights.publicService)} | ${asPercent(profile.weights.mobility)} | ${asPercent(profile.weights.ecology)} | ${asPercent(profile.weights.renewalValue)} | ${asPercent(profile.weights.evidence)} |`),
+        '',
+        '## 三、各模型排序',
+        '',
+        ...profileRows.flatMap(row => [
+            `### ${row.profile.name}`,
+            '',
+            '| 排名 | 方案 | 得分 | 状态 | 证据可信度 |',
+            '|---:|---|---:|---|---:|',
+            ...row.rows.map((item, index) => `| ${index + 1} | ${item.scenario.name} | ${item.evaluation.score} | ${item.evaluation.band} | ${item.evaluation.confidence} |`),
+            '',
+        ]),
+        '## 四、答辩解释',
+        '',
+        '- 如果多个权重模型推荐同一方案，可说明该方案对价值偏好变化较稳健。',
+        '- 如果推荐结果随权重变化明显，应把差异解释为规划价值取向不同，而不是简单说某方案绝对最优。',
+        '- 当前权重为原型内置模型，论文中可进一步用专家评分、AHP 或熵权法校准。',
     ];
     return lines.join('\n');
 }
@@ -1615,6 +1758,7 @@ async function loadUpf() {
 
 function loadUpfText(text: string) {
     const parsed = parseUpfText(text, project);
+    importFindings = auditImportedProject(parsed.project as UrbanPlanProject);
     project = normalizeProject(parsed.project as UrbanPlanProject);
     activeScenarioId = project.scenarios.some(scenario => scenario.id === parsed.activeScenarioId)
         ? parsed.activeScenarioId
@@ -1650,8 +1794,9 @@ function bindControls() {
     });
     ui.btnRun.addEventListener('click', renderAll);
     ui.btnEvaluation.addEventListener('click', () => showModal('方案综合评估', buildScenarioEvaluationReport(project, activeScenarioId, checks, recommendations), activeScenario().name, 'scenario-evaluation.md'));
+    ui.btnSensitivity.addEventListener('click', () => showModal('权重敏感性分析', buildWeightSensitivityReport(), project.project.name, 'weight-sensitivity-report.md'));
     ui.btnCompare.addEventListener('click', () => showModal('方案决策矩阵', buildDecisionMatrixReport(), project.project.name, 'scenario-decision-matrix.md'));
-    ui.btnQuality.addEventListener('click', () => showModal('数据质量诊断', buildDataQualityReport(project, checks, recommendations), project.ruleset.version, 'data-quality-report.md'));
+    ui.btnQuality.addEventListener('click', () => showModal('数据质量诊断', buildQualityReport(), project.ruleset.version, 'data-quality-report.md'));
     ui.btnReport.addEventListener('click', () => showModal('规划诊断报告', buildReport(), activeScenario().name, 'planning-report.md'));
     ui.btnUpf.addEventListener('click', () => showModal('UPF 数据', buildUpf(), `${project.format} ${project.formatVersion}`, `${project.project.id}.upf`));
     ui.btnSave.addEventListener('click', () => void saveText(`${project.project.id}.upf`, buildUpf()));
@@ -1663,6 +1808,7 @@ function bindControls() {
         selectedId = 'parcel_01';
         activeTool = 'select';
         currentFilePath = '';
+        importFindings = [];
         dirty = false;
         renderAll();
     });

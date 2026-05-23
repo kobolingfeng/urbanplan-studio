@@ -105,6 +105,7 @@ export type ParcelEvaluation = {
 export type ScenarioEvaluation = {
     scenarioId: string;
     scenarioName: string;
+    modelName: string;
     score: number;
     band: EvaluationBand;
     confidence: number;
@@ -114,8 +115,24 @@ export type ScenarioEvaluation = {
     riskRegister: string[];
 };
 
+export type EvaluationWeightSet = {
+    compliance: number;
+    publicService: number;
+    mobility: number;
+    ecology: number;
+    renewalValue: number;
+    evidence: number;
+};
+
+export type EvaluationWeightProfile = {
+    id: string;
+    name: string;
+    description: string;
+    weights: EvaluationWeightSet;
+};
+
 const SQM_PER_RESIDENT = 33;
-const SCORE_WEIGHTS = {
+export const DEFAULT_EVALUATION_WEIGHTS: EvaluationWeightSet = {
     compliance: 0.24,
     publicService: 0.22,
     mobility: 0.16,
@@ -124,11 +141,60 @@ const SCORE_WEIGHTS = {
     evidence: 0.10,
 };
 
+export const EVALUATION_WEIGHT_PROFILES: EvaluationWeightProfile[] = [
+    {
+        id: 'balanced',
+        name: '均衡模型',
+        description: '适合作为论文默认模型，兼顾规则、服务、交通、生态、价值和证据。',
+        weights: DEFAULT_EVALUATION_WEIGHTS,
+    },
+    {
+        id: 'public_service_first',
+        name: '公共服务优先',
+        description: '强调完整社区、设施补短板和公共性增益。',
+        weights: {
+            compliance: 0.20,
+            publicService: 0.32,
+            mobility: 0.13,
+            ecology: 0.14,
+            renewalValue: 0.11,
+            evidence: 0.10,
+        },
+    },
+    {
+        id: 'conservation_first',
+        name: '保护与生态优先',
+        description: '强调历史风貌、低冲击更新和蓝绿开放空间。',
+        weights: {
+            compliance: 0.24,
+            publicService: 0.16,
+            mobility: 0.12,
+            ecology: 0.28,
+            renewalValue: 0.08,
+            evidence: 0.12,
+        },
+    },
+    {
+        id: 'implementation_risk',
+        name: '实施风险优先',
+        description: '强调控规合规、证据可信度和可落地性。',
+        weights: {
+            compliance: 0.32,
+            publicService: 0.16,
+            mobility: 0.14,
+            ecology: 0.12,
+            renewalValue: 0.10,
+            evidence: 0.16,
+        },
+    },
+];
+
 export function evaluateScenario(
     project: ProjectLike,
     scenarioId: string,
     checks: CheckLike[] = [],
     recommendations: RecommendationLike[] = [],
+    weightProfile: EvaluationWeightProfile = EVALUATION_WEIGHT_PROFILES[0],
 ): ScenarioEvaluation {
     const objects = project.objects ?? [];
     const parcels = objects.filter(isParcel);
@@ -140,12 +206,12 @@ export function evaluateScenario(
     const totals = summarizeParcels(parcels, scenarioId);
 
     const dimensions: DimensionScore[] = [
-        complianceDimension(checks),
-        publicServiceDimension(parcels, facilities, scenarioId, totals.residents, totals.residentialGfa),
-        mobilityDimension(parcels, roads, entrances, checks),
-        ecologyDimension(parcels, openSpaces, scenarioId, totals.residents),
-        renewalValueDimension(project, parcels, scenarioId),
-        evidenceDimension(project, checks, recommendations),
+        complianceDimension(checks, weightProfile.weights.compliance),
+        publicServiceDimension(parcels, facilities, scenarioId, totals.residents, totals.residentialGfa, weightProfile.weights.publicService),
+        mobilityDimension(parcels, roads, entrances, checks, weightProfile.weights.mobility),
+        ecologyDimension(parcels, openSpaces, scenarioId, totals.residents, weightProfile.weights.ecology),
+        renewalValueDimension(project, parcels, scenarioId, weightProfile.weights.renewalValue),
+        evidenceDimension(project, checks, recommendations, weightProfile.weights.evidence),
     ];
 
     const totalWeight = dimensions.reduce((sum, item) => sum + item.weight, 0);
@@ -158,6 +224,7 @@ export function evaluateScenario(
     return {
         scenarioId,
         scenarioName: scenario?.name ?? scenarioId,
+        modelName: weightProfile.name,
         score,
         band: scoreBand(score),
         confidence,
@@ -180,6 +247,7 @@ export function buildScenarioEvaluationReport(
         `# ${projectName} 方案综合评估`,
         '',
         `当前方案：${evaluation.scenarioName}`,
+        `评价模型：${evaluation.modelName}`,
         `综合评分：${evaluation.score}/100（${evaluation.band}）`,
         `证据可信度：${evaluation.confidence}/100`,
         `规则版本：${project.ruleset?.version ?? '未声明'}`,
@@ -214,14 +282,14 @@ export function buildScenarioEvaluationReport(
     return lines.join('\n');
 }
 
-function complianceDimension(checks: CheckLike[]): DimensionScore {
+function complianceDimension(checks: CheckLike[], weight: number): DimensionScore {
     const score = clamp(100 - checks.reduce((sum, check) => sum + severityPenalty(check.severity), 0));
     const errors = checks.filter(check => check.severity === 'error').length;
     const warnings = checks.filter(check => check.severity === 'warning').length;
     return {
         id: 'compliance',
         name: '控规符合性',
-        weight: SCORE_WEIGHTS.compliance,
+        weight,
         score,
         reason: errors || warnings
             ? `${errors} 个错误、${warnings} 个警告拉低得分`
@@ -235,6 +303,7 @@ function publicServiceDimension(
     scenarioId: string,
     residents: number,
     residentialGfa: number,
+    weight: number,
 ): DimensionScore {
     const publicServiceGfa = parcels.reduce((sum, parcel) => sum + number(parcelValue(parcel, scenarioId).publicServiceGfaSqm), 0);
     const publicRatioScore = targetRatioScore(residentialGfa ? publicServiceGfa / residentialGfa : 0, 0.025);
@@ -245,7 +314,7 @@ function publicServiceDimension(
     return {
         id: 'publicService',
         name: '公共服务',
-        weight: SCORE_WEIGHTS.publicService,
+        weight,
         score,
         reason: `公服建面/住宅建面约 ${asPercent(residentialGfa ? publicServiceGfa / residentialGfa : 0)}，并综合幼儿园、养老、卫生覆盖`,
     };
@@ -256,6 +325,7 @@ function mobilityDimension(
     roads: PlanningObjectLike[],
     entrances: PlanningObjectLike[],
     checks: CheckLike[],
+    weight: number,
 ): DimensionScore {
     const areaHa = Math.max(0.1, parcels.reduce((sum, parcel) => sum + areaSqm(parcel.points ?? []), 0) / 10000);
     const roadDensity = roads.reduce((sum, road) => sum + polylineLength(road.points ?? []), 0) / areaHa;
@@ -269,7 +339,7 @@ function mobilityDimension(
     return {
         id: 'mobility',
         name: '交通组织',
-        weight: SCORE_WEIGHTS.mobility,
+        weight,
         score,
         reason: `路网密度约 ${roadDensity.toFixed(0)} m/ha，叠加出入口风险和地块到路网距离`,
     };
@@ -280,6 +350,7 @@ function ecologyDimension(
     openSpaces: PlanningObjectLike[],
     scenarioId: string,
     residents: number,
+    weight: number,
 ): DimensionScore {
     const parcelArea = parcels.reduce((sum, parcel) => sum + areaSqm(parcel.points ?? []), 0);
     const greenScore = parcelArea
@@ -296,13 +367,13 @@ function ecologyDimension(
     return {
         id: 'ecology',
         name: '生态与开放空间',
-        weight: SCORE_WEIGHTS.ecology,
+        weight,
         score,
         reason: `综合地块绿地率达标度和人均开放空间，开放空间约 ${Math.round(openSpaceSqm).toLocaleString('zh-CN')} 平方米`,
     };
 }
 
-function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike[], scenarioId: string): DimensionScore {
+function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike[], scenarioId: string, weight: number): DimensionScore {
     const baselineId = (project.scenarios ?? []).find(scenario => scenario.id.includes('baseline'))?.id;
     const fitScores = parcels.map(parcel => {
         const value = parcelValue(parcel, scenarioId);
@@ -324,7 +395,7 @@ function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike
     return {
         id: 'renewalValue',
         name: '更新价值',
-        weight: SCORE_WEIGHTS.renewalValue,
+        weight,
         score,
         reason: baselineId
             ? '比较现状基准与当前方案的强度适配和公服增量'
@@ -332,14 +403,14 @@ function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike
     };
 }
 
-function evidenceDimension(project: ProjectLike, checks: CheckLike[], recommendations: RecommendationLike[]): DimensionScore {
+function evidenceDimension(project: ProjectLike, checks: CheckLike[], recommendations: RecommendationLike[], weight: number): DimensionScore {
     const score = evidenceConfidence(project, checks, recommendations);
     const objects = project.objects ?? [];
     const evidenceObjects = objects.filter(object => object.evidence?.length).length;
     return {
         id: 'evidence',
         name: '证据可信度',
-        weight: SCORE_WEIGHTS.evidence,
+        weight,
         score,
         reason: `${evidenceObjects}/${objects.length || 1} 个对象有证据来源，规则依据 ${project.ruleset?.basis?.length ?? 0} 条`,
     };

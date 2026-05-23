@@ -8,8 +8,10 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Scenario switching and comparison.
 - Parcel inspector for FAR, coverage, green ratio, residential GFA, public-service GFA, and renewal mode.
 - Editable evidence traces per object, feeding data-quality and confidence scoring.
+- Import audit for missing fields, compatibility fixes, and objects that need review.
 - Rule checks for parcel intensity, green ratio, coverage, public-service gaps, entrance risks, and heritage overlay risks.
 - Multi-criteria scenario evaluation for compliance, public service, mobility, ecology, renewal value, and evidence confidence.
+- Weight-sensitivity analysis across balanced, public-service-first, conservation-first, and implementation-risk models.
 - Decision matrix that reruns checks and scoring across all scenarios and explains the recommended scenario.
 - Parcel score heatmap for quickly spotting priority intervention areas.
 - UPF export/import.

@@ -59,14 +59,14 @@ UPF/demo project
   -> runPlanningRules()
   -> checks + recommendations
   -> evaluateScenario()
-  -> report / decision matrix / data-quality / UPF export
+  -> report / decision matrix / sensitivity analysis / data-quality / UPF export
 ```
 
 ## Current Boundaries
 
 - UI rendering is still mostly in `main.ts`.
 - Rules have moved to `planning-rules.ts`, but rule metadata is not yet declarative.
-- Scenario evaluation uses transparent prototype weights; expert-calibrated AHP/entropy weights are future work.
+- Scenario evaluation uses transparent prototype weights and built-in sensitivity profiles; expert-calibrated AHP/entropy weights are future work.
 - Geometry uses a demo canvas unit system.
 - UPF validation is normalization-based, not JSON-Schema-based.
 - Facility coverage uses straight-line distance.

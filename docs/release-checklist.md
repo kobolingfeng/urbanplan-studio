@@ -24,8 +24,10 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click a parcel and edit FAR; status bar should show unsaved state.
 - Click UPF and confirm top-level `format` and `formatVersion` exist.
 - Click evaluation and confirm the modal includes score, confidence, dimensions, parcel priorities, and risk register.
+- Click sensitivity and confirm four weight profiles produce a model comparison and scenario rankings.
 - Save a `.upf`, then load it back.
 - Load `examples/minimal.upf`.
+- Confirm quality report includes import audit when compatibility fixes were applied.
 - Try `examples/invalid.upf`; it should show an import error.
 
 ## Planning Logic Smoke

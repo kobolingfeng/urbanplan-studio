@@ -200,7 +200,7 @@
         .topbar {
             height: 66px;
             display: grid;
-            grid-template-columns: minmax(200px, 240px) minmax(260px, 1fr) minmax(360px, 520px);
+            grid-template-columns: minmax(180px, 220px) minmax(230px, 1fr) minmax(500px, 560px);
             align-items: center;
             gap: 14px;
             padding: 10px 16px;
@@ -254,7 +254,7 @@
         .scenario-strip {
             min-width: 0;
             display: grid;
-            grid-template-columns: auto minmax(180px, 280px) minmax(120px, 1fr);
+            grid-template-columns: auto minmax(150px, 280px) minmax(0, 1fr);
             gap: 8px;
             align-items: center;
         }
@@ -887,6 +887,8 @@
 
         @media (max-width: 1180px) {
             .workspace { grid-template-columns: 260px minmax(460px, 1fr) 310px; }
+            .scenario-strip { grid-template-columns: auto minmax(150px, 1fr); }
+            .scenario-strip .scenario-note { display: none; }
             .metrics-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .canvas-toolbar {
                 height: auto;
@@ -953,8 +955,9 @@
                 <span class="scenario-note" id="scenario-note"></span>
             </div>
             <div class="top-actions">
-                <button id="btn-run" class="primary" title="运行规则检查">运行检查</button>
+                <button id="btn-run" class="primary" title="运行规则检查">检查</button>
                 <button id="btn-evaluation" title="查看当前方案综合评估">评估</button>
+                <button id="btn-sensitivity" title="查看权重敏感性分析">敏感</button>
                 <button id="btn-compare" title="比较不同规划方案">对比</button>
                 <button id="btn-quality" title="检查 UPF 数据质量">质检</button>
                 <button id="btn-report" title="生成诊断报告">报告</button>
