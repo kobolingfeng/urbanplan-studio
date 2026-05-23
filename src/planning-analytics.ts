@@ -264,6 +264,12 @@ export function buildDataQualityReport(
         `- 地块方案值缺口：${quality.parcelScenarioGaps.length}`,
         `- 智能建议数量：${recommendations.length}`,
         '',
+        '## 扣分项',
+        '',
+        '| 项目 | 数量 | 单项扣分 | 扣分 |',
+        '|---|---:|---:|---:|',
+        ...quality.deductions.map(item => `| ${item.label} | ${item.count} | ${item.weight} | ${item.points} |`),
+        '',
         '## 规则依据清单',
         '',
         '| 规则 | 触发 | 最高等级 | 来源 |',
@@ -325,13 +331,15 @@ export function calculateDataQuality(
         .filter(object => object.type === 'parcel')
         .flatMap(object => [...scenarioIds].filter(id => !object.scenarioValues?.[id]).map(id => `${object.name ?? object.id} 缺少 ${id}`));
 
-    const score = Math.max(0, Math.min(100, 100
-        - missingEvidence.length * 8
-        - Math.max(0, objects.length - structuredEvidenceObjects) * 3
-        - prototypeRuleCount * 4
-        - entranceReferenceIssues.length * 12
-        - parcelScenarioGaps.length * 10
-        - Math.max(0, recommendations.length - 8)));
+    const deductions = [
+        deduction('缺少证据来源', missingEvidence.length, 8),
+        deduction('缺少结构化证据', Math.max(0, objects.length - structuredEvidenceObjects), 3),
+        deduction('原型规则触发', prototypeRuleCount, 4),
+        deduction('出入口引用问题', entranceReferenceIssues.length, 12),
+        deduction('地块方案值缺口', parcelScenarioGaps.length, 10),
+        deduction('建议过多需归并', Math.max(0, recommendations.length - 8), 1),
+    ];
+    const score = Math.max(0, Math.min(100, 100 - deductions.reduce((sum, item) => sum + item.points, 0)));
 
     return {
         score,
@@ -341,6 +349,7 @@ export function calculateDataQuality(
         structuredEvidenceObjects,
         averageEvidenceConfidence,
         evidenceTypeCounts,
+        deductions,
         basisCount: project.ruleset?.basis?.length ?? 0,
         ruleCatalog,
         missingEvidence,
@@ -365,6 +374,15 @@ function buildEntranceReferenceIssues(objects: PlanningObjectLike[]): string[] {
             else if (!roadIds.has(object.roadId)) issues.push(`${name} 引用不存在的道路 ${object.roadId}`);
             return issues;
         });
+}
+
+function deduction(label: string, count: number, weight: number) {
+    return {
+        label,
+        count,
+        weight,
+        points: count * weight,
+    };
 }
 
 function buildRuleCatalog(checks: CheckLike[]) {

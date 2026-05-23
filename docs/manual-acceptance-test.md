@@ -34,7 +34,7 @@ Expected:
 16. Click `CSV`.
 17. Confirm the modal contains `scenario_id`, scores, population, floor area, and risk-count columns.
 18. Click `质检`.
-19. Confirm a data quality score, UPF structure validation report, structured RuleSource metadata, evidence coverage, structured evidence coverage, evidence type distribution, and prototype-rule notes appear.
+19. Confirm a data quality score, deduction table, UPF structure validation report, structured RuleSource metadata, evidence coverage, structured evidence coverage, evidence type distribution, and prototype-rule notes appear.
 20. Click `验证`.
 21. Confirm the report includes research questions, data overview, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
 22. Click `报告`.

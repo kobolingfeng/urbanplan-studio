@@ -30,6 +30,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - GeoJSON export for semantic objects and active-scenario parcel indicators.
 - Markdown planning diagnosis report.
 - Data-quality report for evidence coverage, structured evidence coverage, scenario completeness, prototype rules, and dangling references.
+- Data-quality score deduction table for explaining each penalty source.
 - Geometry, UPF, rule catalog, rule fixture, evaluation, and static build smoke checks.
 
 ## Commands

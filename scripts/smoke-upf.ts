@@ -123,6 +123,7 @@ assert(quality.entranceReferenceIssues.length === 2, 'dangling entrance referenc
 const qualityReport = buildDataQualityReport(analyticsFixture, [], []);
 assert(qualityReport.includes('引用完整性问题'), 'quality report should expose reference issues');
 assert(qualityReport.includes('结构化证据覆盖率'), 'quality report should expose structured evidence coverage');
+assert(qualityReport.includes('扣分项') && qualityReport.includes('出入口引用问题'), 'quality report should explain score deductions');
 const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
 assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
 
