@@ -647,6 +647,56 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
     return findings.slice(0, 80);
 }
 
+function importFormatFindings(raw: unknown, parsedProject: UrbanPlanProject): ImportFinding[] {
+    if (isGeoJsonFeatureCollection(raw)) return auditGeoJsonImport(raw, parsedProject);
+    return schemaIssuesToImportFindings(validateUpfDocument(raw));
+}
+
+function isGeoJsonFeatureCollection(input: unknown): input is { type: 'FeatureCollection'; upf?: unknown; features: unknown[] } {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return false;
+    const data = input as { type?: unknown; features?: unknown };
+    return data.type === 'FeatureCollection' && Array.isArray(data.features);
+}
+
+function auditGeoJsonImport(
+    input: { upf?: unknown; features: unknown[] },
+    parsedProject: UrbanPlanProject,
+): ImportFinding[] {
+    const upf = input.upf && typeof input.upf === 'object' && !Array.isArray(input.upf)
+        ? input.upf as Record<string, unknown>
+        : undefined;
+    const featureCount = input.features.length;
+    const importedCount = parsedProject.objects.length;
+    const skippedCount = Math.max(0, featureCount - importedCount);
+    const findings: ImportFinding[] = [{
+        severity: 'info',
+        objectId: 'GeoJSON',
+        message: `已识别 GeoJSON FeatureCollection，通过 GeoJSON 适配器导入 ${importedCount}/${featureCount} 个要素。`,
+    }];
+
+    if (skippedCount) {
+        findings.push({
+            severity: 'warning',
+            objectId: 'GeoJSON',
+            message: `${skippedCount} 个要素缺少可支持几何或 UPF 类型，已跳过。`,
+        });
+    }
+    if (!upf) {
+        findings.push({
+            severity: 'info',
+            objectId: 'GeoJSON',
+            message: '文件缺少 upf 元数据，已使用当前项目的场景、规则集和默认 CRS 兼容导入。',
+        });
+    } else {
+        findings.push({
+            severity: 'info',
+            objectId: 'GeoJSON',
+            message: `GeoJSON 元数据：当前方案 ${String(upf.activeScenarioId ?? '未声明')}，CRS ${String(upf.crs ?? '未声明')}。`,
+        });
+    }
+    return findings;
+}
+
 function finiteOr(value: unknown, fallback: number): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
@@ -2271,7 +2321,7 @@ function loadUpfText(text: string, options: { sourceName?: string; showImportRep
     const raw = JSON.parse(text);
     const parsed = parseUpfText(text, project);
     importFindings = [
-        ...schemaIssuesToImportFindings(validateUpfDocument(raw)),
+        ...importFormatFindings(raw, parsed.project as UrbanPlanProject),
         ...auditImportedProject(parsed.project as UrbanPlanProject),
     ].slice(0, 120);
     project = normalizeProject(parsed.project as UrbanPlanProject);
