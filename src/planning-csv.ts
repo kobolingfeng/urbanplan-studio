@@ -52,6 +52,16 @@ type CsvProjectLike = {
 export type CsvParseResult<TProject> = {
     project: TProject;
     activeScenarioId: string;
+    importSummary: CsvImportSummary;
+};
+
+export type CsvImportSummary = {
+    format: 'csv';
+    rowCount: number;
+    updatedRows: number;
+    skippedRows: number;
+    unmatchedParcelIds: string[];
+    scenarioIds: string[];
 };
 
 export function buildScenarioDecisionCsv(rows: ScenarioDecisionCsvRow[]): string {
@@ -100,13 +110,22 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
     const parcels = new Map(objects.filter(object => object.type === 'parcel' && object.id).map(object => [String(object.id), object]));
     let activeScenarioId = fallbackProject.scenarios?.[0]?.id ?? 'scenario_csv';
     let updatedRows = 0;
+    let skippedRows = 0;
+    const unmatchedParcelIds = new Set<string>();
 
     for (const row of rows) {
         const parcelId = cell(row, 'parcel_id', 'object_id', 'id');
         const scenarioId = cell(row, 'scenario_id', 'scenario');
-        if (!parcelId || !scenarioId) continue;
+        if (!parcelId || !scenarioId) {
+            skippedRows++;
+            continue;
+        }
         const parcel = parcels.get(parcelId);
-        if (!parcel) continue;
+        if (!parcel) {
+            unmatchedParcelIds.add(parcelId);
+            skippedRows++;
+            continue;
+        }
         if (!scenarioIds.has(scenarioId)) {
             scenarios.push({ id: scenarioId, name: scenarioId, description: '由 CSV 指标表导入。' });
             scenarioIds.add(scenarioId);
@@ -135,6 +154,14 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
             objects,
         } as TProject,
         activeScenarioId,
+        importSummary: {
+            format: 'csv',
+            rowCount: rows.length,
+            updatedRows,
+            skippedRows,
+            unmatchedParcelIds: [...unmatchedParcelIds].slice(0, 12),
+            scenarioIds: [...scenarioIds],
+        },
     };
 }
 

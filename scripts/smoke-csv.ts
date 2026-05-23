@@ -66,10 +66,13 @@ const fallback = {
 const parcelCsv = [
     'parcel_id,scenario_id,far,building_coverage,green_ratio,residential_gfa_sqm,public_service_gfa_sqm,update_mode,notes',
     'parcel_a,update,2.6,0.31,0.36,42000,900,综合整治,"quoted, note"',
+    'missing_parcel,update,1.2,0.2,0.3,1000,50,综合整治,should skip',
 ].join('\n');
 const parsedCsv = parseParcelIndicatorCsv(parcelCsv, fallback);
 assert(parsedCsv?.activeScenarioId === 'update', 'CSV import should activate imported scenario');
 assert(parsedCsv?.project.scenarios.some(scenario => scenario.id === 'update'), 'CSV import should add missing scenario');
+assert(parsedCsv?.importSummary.updatedRows === 1 && parsedCsv.importSummary.skippedRows === 1, 'CSV import should summarize updated and skipped rows');
+assert(parsedCsv?.importSummary.unmatchedParcelIds.includes('missing_parcel'), 'CSV import should report unmatched parcel IDs');
 const importedParcel = parsedCsv?.project.objects.find(object => object.id === 'parcel_a');
 assert(importedParcel?.scenarioValues?.update?.far === 2.6, 'CSV import should update FAR');
 assert(importedParcel?.scenarioValues?.update?.notes === 'quoted, note', 'CSV import should parse quoted cells');

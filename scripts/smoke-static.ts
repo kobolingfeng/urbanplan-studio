@@ -34,7 +34,7 @@ for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare',
 for (const token of ['方案综合评估', '服务人口分摊', '服务人口分摊假设', '权重敏感性分析', '方案指标长表 CSV', 'scenario-decision-long.csv', 'metric_id', '案例验证包', '验证就绪度', 'UPF 结构校验报告', '规则目录与验证口径', '结构化 RuleSource', '用地兼容', 'DemoCanvasMetric', 'GeoJSON 数据', 'GeoJSON 适配器', 'CSV 适配器', '兼容层已补齐', '导入报告', 'ArrowDown', '导入审计', '扣分项', 'service-radius-shape', '方案对比', '数据质量诊断', '结构化证据覆盖率', '不是可识别的 UPF 文件', '引用完整性保护']) {
     assert(js.includes(token), `main bundle misses ${token}`);
 }
-for (const token of ['panCanvas', 'zoomCanvas', 'resetCanvasView', 'shiftKey']) {
+for (const token of ['panCanvas', 'zoomCanvas', 'resetCanvasView', 'shiftKey', 'unmatchedParcelIds']) {
     assert(sourceMain.includes(token), `main source misses canvas keyboard token ${token}`);
 }
 

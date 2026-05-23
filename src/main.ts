@@ -25,7 +25,7 @@ import {
     createUpfDocument,
     parseUpfText,
 } from './planning-analytics';
-import { buildScenarioDecisionCsv, buildScenarioDecisionLongCsv } from './planning-csv';
+import { buildScenarioDecisionCsv, buildScenarioDecisionLongCsv, type CsvImportSummary } from './planning-csv';
 import {
     buildScenarioEvaluationReport,
     EVALUATION_WEIGHT_PROFILES,
@@ -768,9 +768,9 @@ function hasImportGeometry(object: Partial<PlanObject>): boolean {
     return false;
 }
 
-function importFormatFindings(raw: unknown, parsedProject: UrbanPlanProject): ImportFinding[] {
+function importFormatFindings(raw: unknown, parsedProject: UrbanPlanProject, csvSummary?: CsvImportSummary): ImportFinding[] {
     if (isGeoJsonFeatureCollection(raw)) return auditGeoJsonImport(raw, parsedProject);
-    if (typeof raw === 'string') return auditCsvImport(raw, parsedProject);
+    if (typeof raw === 'string') return auditCsvImport(raw, parsedProject, csvSummary);
     return schemaIssuesToImportFindings(validateUpfDocument(raw));
 }
 
@@ -819,14 +819,23 @@ function auditGeoJsonImport(
     return findings;
 }
 
-function auditCsvImport(input: string, parsedProject: UrbanPlanProject): ImportFinding[] {
-    const rowCount = Math.max(0, input.trim().split(/\r?\n/).filter(Boolean).length - 1);
-    const scenarioIds = parsedProject.scenarios.map(scenario => scenario.id).join('、') || '未声明';
-    return [{
+function auditCsvImport(input: string, parsedProject: UrbanPlanProject, summary?: CsvImportSummary): ImportFinding[] {
+    const rowCount = summary?.rowCount ?? Math.max(0, input.trim().split(/\r?\n/).filter(Boolean).length - 1);
+    const updatedRows = summary?.updatedRows ?? 0;
+    const scenarioIds = (summary?.scenarioIds ?? parsedProject.scenarios.map(scenario => scenario.id)).join('、') || '未声明';
+    const findings: ImportFinding[] = [{
         severity: 'info',
         objectId: 'CSV',
-        message: `已识别 CSV 指标表，通过 CSV 适配器读取 ${rowCount} 行，并更新地块方案指标。当前方案列表：${scenarioIds}。`,
+        message: `已识别 CSV 指标表，通过 CSV 适配器读取 ${rowCount} 行，更新 ${updatedRows} 行地块方案指标。当前方案列表：${scenarioIds}。`,
     }];
+    if (summary?.skippedRows) {
+        findings.push({
+            severity: 'warning',
+            objectId: 'CSV',
+            message: `${summary.skippedRows} 行未匹配地块或缺少必需列，已跳过。${summary.unmatchedParcelIds.length ? `未匹配地块：${summary.unmatchedParcelIds.join('、')}` : ''}`,
+        });
+    }
+    return findings;
 }
 
 function finiteOr(value: unknown, fallback: number): number {
@@ -2458,8 +2467,9 @@ function loadUpfText(text: string, options: { sourceName?: string; showImportRep
     const raw = parseRawImportPayload(text);
     const parsed = parseUpfText(text, project);
     const parsedProject = parsed.project as UrbanPlanProject;
+    const csvSummary = (parsed as { importSummary?: CsvImportSummary }).importSummary;
     const importSnapshot = snapshotImportedProject(parsedProject);
-    const formatFindings = importFormatFindings(raw, parsedProject);
+    const formatFindings = importFormatFindings(raw, parsedProject, csvSummary);
     const compatibilityFindings = auditImportedProject(parsedProject);
     const normalizedProject = normalizeProject(parsedProject);
     importFindings = [
