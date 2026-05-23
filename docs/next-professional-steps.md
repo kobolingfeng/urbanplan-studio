@@ -36,7 +36,7 @@ This backlog is ordered by product risk, not by excitement.
 2. Move UI rendering into view modules.
 3. Add fixture-based tests for each rule group.
 4. Add release smoke that verifies zip contents and SHA256.
-5. Add CI workflow once this becomes a git repository.
+5. Extend CI with release packaging, artifact upload, and signed release checks.
 6. Extend native Windows metadata with icon branding, publisher, signing, and installer manifests.
 7. Add installer/signing path for real distribution.
 
