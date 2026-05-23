@@ -1,0 +1,4 @@
+parcel_id,scenario_id,far,building_coverage,green_ratio,residential_gfa_sqm,public_service_gfa_sqm,update_mode,notes
+parcel_01,scenario_public,3.6,0.30,0.35,59000,1800,综合整治,CSV 模板：公共服务优先回填
+parcel_02,scenario_public,4.4,0.38,0.29,31000,1300,功能置换,CSV 模板：混合地块公服增强
+parcel_03,scenario_public,2.6,0.34,0.33,10000,2000,综合整治,CSV 模板：产业空间公共性提升

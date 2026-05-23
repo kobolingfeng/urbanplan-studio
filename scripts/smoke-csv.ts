@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { join, resolve } from 'path';
 import {
     buildScenarioDecisionCsv,
     buildScenarioDecisionLongCsv,
@@ -5,6 +7,8 @@ import {
     type ScenarioDecisionCsvRow,
 } from '../src/planning-csv';
 import { parseUpfText } from '../src/planning-analytics';
+
+const ROOT = resolve(import.meta.dir, '..');
 
 function fail(message: string): never {
     console.error(`csv smoke failed: ${message}`);
@@ -71,5 +75,19 @@ assert(importedParcel?.scenarioValues?.update?.far === 2.6, 'CSV import should u
 assert(importedParcel?.scenarioValues?.update?.notes === 'quoted, note', 'CSV import should parse quoted cells');
 const parsedViaUpf = parseUpfText(parcelCsv, fallback);
 assert(parsedViaUpf.activeScenarioId === 'update', 'UPF parser should accept parcel CSV');
+
+const exampleCsv = readFileSync(join(ROOT, 'examples', 'parcel-indicators.csv'), 'utf8');
+const exampleFallback = {
+    scenarios: [{ id: 'scenario_public', name: 'Public', description: 'Existing scenario' }],
+    objects: ['parcel_01', 'parcel_02', 'parcel_03'].map(id => ({
+        id,
+        type: 'parcel',
+        name: id,
+        scenarioValues: {} as Record<string, { far?: number; publicServiceGfaSqm?: number }>,
+    })),
+};
+const parsedExample = parseParcelIndicatorCsv(exampleCsv, exampleFallback);
+assert(parsedExample?.project.objects[0].scenarioValues.scenario_public?.far === 3.6, 'example CSV should update parcel_01 FAR');
+assert(parsedExample?.project.objects[2].scenarioValues.scenario_public?.publicServiceGfaSqm === 2000, 'example CSV should update parcel_03 public service GFA');
 
 console.log('csv smoke passed');

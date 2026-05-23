@@ -90,6 +90,7 @@ bun run verify:release
 - `examples/minimal.upf`：最小可导入样例。
 - `examples/luohu-demo.upf`：罗湖城市更新片区样例。
 - `examples/luohu-case-v1.upf`：面向案例验证的罗湖片区样例，包含 3 个地块、3 条道路、3 类设施、开放空间、风貌约束和 3 个方案。
+- `examples/parcel-indicators.csv`：地块情景指标导入模板，可用于回填 FAR、绿地率、住宅建面和公服建面。
 - `examples/invalid.upf`：故意无效样例，用于导入校验和 smoke test。
 - `schemas/upf-0.1.schema.json`：UPF 0.1 JSON Schema 草案，用于论文和后续工具链说明。
 

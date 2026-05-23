@@ -61,6 +61,8 @@ assert(luohuCase.scenarios.length >= 3, 'luohu-case-v1 should contain at least t
 assert(luohuCase.objects.filter((item: { type?: string }) => item.type === 'parcel').length >= 3, 'luohu-case-v1 should contain at least three parcels');
 assert(luohuCase.objects.some((item: { type?: string }) => item.type === 'openSpace'), 'luohu-case-v1 should contain open space');
 assert(luohuCase.objects.some((item: { type?: string }) => item.type === 'constraint'), 'luohu-case-v1 should contain constraints');
+const parcelIndicatorCsv = fileText(join(EXAMPLES, 'parcel-indicators.csv'));
+assert(parcelIndicatorCsv.includes('parcel_id,scenario_id') && parcelIndicatorCsv.includes('parcel_01'), 'parcel indicator CSV example missing required columns');
 
 assert(config.app?.version === '0.1.0', 'app version missing from config');
 assert(config.permissions?.shell === false, 'shell namespace should be denied');
