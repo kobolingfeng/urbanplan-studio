@@ -1,4 +1,12 @@
 import { areaSqm, type Point } from './planning-geometry';
+import {
+    FACILITY_RANGES,
+    PARCEL_CONTROL_RANGES,
+    PARCEL_SCENARIO_VALUE_RANGES,
+    ROAD_RANGES,
+    integerInRangeOr,
+    numberInRangeOr,
+} from './planning-ranges';
 
 type UnitSystemLike = {
     name: string;
@@ -75,11 +83,6 @@ type GeoJsonGeometryLike = {
 };
 
 type AnyRecord = Record<string, unknown>;
-
-const ROAD_RED_LINE_WIDTH_RANGE = { min: 0, max: 200 };
-const ROAD_LANES_RANGE = { min: 1, max: 12 };
-const FACILITY_CAPACITY_RANGE = { min: 0, max: 200_000 };
-const FACILITY_SERVICE_RADIUS_RANGE = { min: 0, max: 10_000 };
 
 export type GeoJsonParseResult<TProject> = {
     project: TProject;
@@ -269,21 +272,21 @@ function parseGeoJsonFeature(feature: unknown, activeScenarioId: string, index: 
         const points = polygonPoints(geometry);
         if (points.length < 3) return undefined;
         if (objectType === 'parcel') {
-            const far = numberInRange(properties.far, 1, 0, 15);
-            const buildingCoverage = numberInRange(properties.buildingCoverage, 0.25, 0, 1);
-            const greenRatio = numberInRange(properties.greenRatio, 0.30, 0, 1);
-            const residentialGfaSqm = numberInRange(properties.residentialGfaSqm, 0, 0, 5_000_000);
-            const publicServiceGfaSqm = numberInRange(properties.publicServiceGfaSqm, 0, 0, 5_000_000);
+            const far = numberInRangeOr(properties.far, 1, PARCEL_SCENARIO_VALUE_RANGES.far);
+            const buildingCoverage = numberInRangeOr(properties.buildingCoverage, 0.25, PARCEL_SCENARIO_VALUE_RANGES.buildingCoverage);
+            const greenRatio = numberInRangeOr(properties.greenRatio, 0.30, PARCEL_SCENARIO_VALUE_RANGES.greenRatio);
+            const residentialGfaSqm = numberInRangeOr(properties.residentialGfaSqm, 0, PARCEL_SCENARIO_VALUE_RANGES.residentialGfaSqm);
+            const publicServiceGfaSqm = numberInRangeOr(properties.publicServiceGfaSqm, 0, PARCEL_SCENARIO_VALUE_RANGES.publicServiceGfaSqm);
             return {
                 ...base,
                 points,
                 landUseCode: textOr(properties.landUseCode, '0701'),
                 landUseName: textOr(properties.landUseName, '城镇住宅用地'),
                 controls: {
-                    farMax: numberInRange(properties.farMax, Math.max(4, far), 0, 15),
-                    buildingCoverageMax: numberInRange(properties.buildingCoverageMax, Math.max(0.35, buildingCoverage), 0, 1),
-                    greenRatioMin: numberInRange(properties.greenRatioMin, Math.min(0.30, greenRatio), 0, 1),
-                    heightMaxM: numberInRange(properties.heightMaxM, 80, 0, 1000),
+                    farMax: numberInRangeOr(properties.farMax, Math.max(4, far), PARCEL_CONTROL_RANGES.farMax),
+                    buildingCoverageMax: numberInRangeOr(properties.buildingCoverageMax, Math.max(0.35, buildingCoverage), PARCEL_CONTROL_RANGES.buildingCoverageMax),
+                    greenRatioMin: numberInRangeOr(properties.greenRatioMin, Math.min(0.30, greenRatio), PARCEL_CONTROL_RANGES.greenRatioMin),
+                    heightMaxM: numberInRangeOr(properties.heightMaxM, 80, PARCEL_CONTROL_RANGES.heightMaxM),
                 },
                 scenarioValues: {
                     [activeScenarioId]: {
@@ -312,8 +315,8 @@ function parseGeoJsonFeature(feature: unknown, activeScenarioId: string, index: 
             ...base,
             points,
             level: textOr(properties.level, '支路'),
-            redLineWidthM: numberInRange(properties.redLineWidthM, 18, ROAD_RED_LINE_WIDTH_RANGE.min, ROAD_RED_LINE_WIDTH_RANGE.max),
-            lanes: Math.round(numberInRange(properties.lanes, 2, ROAD_LANES_RANGE.min, ROAD_LANES_RANGE.max)),
+            redLineWidthM: numberInRangeOr(properties.redLineWidthM, 18, ROAD_RANGES.redLineWidthM),
+            lanes: integerInRangeOr(properties.lanes, 2, ROAD_RANGES.lanes),
         };
     }
 
@@ -333,8 +336,8 @@ function parseGeoJsonFeature(feature: unknown, activeScenarioId: string, index: 
             ...base,
             point,
             kind: textOr(properties.kind, '社区养老'),
-            capacity: numberInRange(properties.capacity, 80, FACILITY_CAPACITY_RANGE.min, FACILITY_CAPACITY_RANGE.max),
-            serviceRadiusM: numberInRange(properties.serviceRadiusM, 500, FACILITY_SERVICE_RADIUS_RANGE.min, FACILITY_SERVICE_RADIUS_RANGE.max),
+            capacity: numberInRangeOr(properties.capacity, 80, FACILITY_RANGES.capacity),
+            serviceRadiusM: numberInRangeOr(properties.serviceRadiusM, 500, FACILITY_RANGES.serviceRadiusM),
             planned: booleanOr(properties.planned, false),
         };
     }
@@ -406,20 +409,6 @@ function textOr(value: unknown, fallback: string): string {
     if (typeof value === 'string' && value.trim()) return value;
     if (typeof value === 'number' && Number.isFinite(value)) return String(value);
     return fallback;
-}
-
-function numberOr(value: unknown, fallback: number): number {
-    if (typeof value === 'number' && Number.isFinite(value)) return value;
-    if (typeof value === 'string' && value.trim()) {
-        const parsed = Number(value);
-        if (Number.isFinite(parsed)) return parsed;
-    }
-    return fallback;
-}
-
-function numberInRange(value: unknown, fallback: number, min: number, max: number): number {
-    const parsed = numberOr(value, fallback);
-    return parsed >= min && parsed <= max ? parsed : fallback;
 }
 
 function booleanOr(value: unknown, fallback: boolean): boolean {

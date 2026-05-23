@@ -46,6 +46,14 @@ import {
 } from './planning-geometry';
 import { buildGeoJsonText } from './planning-geojson';
 import { buildRuleCatalogReport, RULE_CATALOG, runPlanningRules } from './planning-rules';
+import {
+    FACILITY_RANGES as FACILITY_IMPORT_RANGES,
+    PARCEL_CONTROL_RANGES as PARCEL_CONTROL_IMPORT_RANGES,
+    PARCEL_SCENARIO_VALUE_RANGES as PARCEL_IMPORT_RANGES,
+    ROAD_RANGES as ROAD_IMPORT_RANGES,
+    integerInRangeOr,
+    numberInRangeOr,
+} from './planning-ranges';
 import { buildUpfValidationReport, validateUpfDocument, type UpfValidationIssue } from './upf-validation';
 
 type Tool = 'select' | 'parcel' | 'facility' | 'entrance';
@@ -179,11 +187,6 @@ type CanvasViewBox = {
     height: number;
 };
 
-type NumericRange = {
-    min: number;
-    max: number;
-};
-
 type NumberFieldOptions = {
     min?: number;
     max?: number;
@@ -213,27 +216,6 @@ type UrbanPlanProject = {
 
 const SQM_PER_RESIDENT = SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident;
 const SVG_NS = 'http://www.w3.org/2000/svg';
-const PARCEL_IMPORT_RANGES: Record<keyof Pick<ParcelScenarioValue, 'far' | 'buildingCoverage' | 'greenRatio' | 'residentialGfaSqm' | 'publicServiceGfaSqm'>, NumericRange> = {
-    far: { min: 0, max: 15 },
-    buildingCoverage: { min: 0, max: 1 },
-    greenRatio: { min: 0, max: 1 },
-    residentialGfaSqm: { min: 0, max: 5_000_000 },
-    publicServiceGfaSqm: { min: 0, max: 5_000_000 },
-};
-const PARCEL_CONTROL_IMPORT_RANGES: Record<keyof Parcel['controls'], NumericRange> = {
-    farMax: { min: 0, max: 15 },
-    buildingCoverageMax: { min: 0, max: 1 },
-    greenRatioMin: { min: 0, max: 1 },
-    heightMaxM: { min: 0, max: 1000 },
-};
-const ROAD_IMPORT_RANGES: Record<'redLineWidthM' | 'lanes', NumericRange> = {
-    redLineWidthM: { min: 0, max: 200 },
-    lanes: { min: 1, max: 12 },
-};
-const FACILITY_IMPORT_RANGES: Record<'capacity' | 'serviceRadiusM', NumericRange> = {
-    capacity: { min: 0, max: 200_000 },
-    serviceRadiusM: { min: 0, max: 10_000 },
-};
 const DEFAULT_SCENARIO_VALUE: ParcelScenarioValue = {
     far: 1,
     buildingCoverage: 0.25,
@@ -624,7 +606,7 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
             base.points = validPoints(base.points, [{ x: 80, y: 300 }, { x: 820, y: 300 }], 2);
             base.level = base.level || '支路';
             base.redLineWidthM = numberInRangeOr(base.redLineWidthM, 18, ROAD_IMPORT_RANGES.redLineWidthM);
-            base.lanes = Math.round(numberInRangeOr(base.lanes, 2, ROAD_IMPORT_RANGES.lanes));
+            base.lanes = integerInRangeOr(base.lanes, 2, ROAD_IMPORT_RANGES.lanes);
             return [base];
         }
         if (base.type === 'facility') {
@@ -881,11 +863,6 @@ function auditCsvImport(input: string, parsedProject: UrbanPlanProject, summary?
 
 function finiteOr(value: unknown, fallback: number): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-}
-
-function numberInRangeOr(value: unknown, fallback: number, range: NumericRange): number {
-    const next = finiteOr(value, fallback);
-    return next >= range.min && next <= range.max ? next : fallback;
 }
 
 function normalizeParcelScenarioValue(value: Partial<ParcelScenarioValue>): ParcelScenarioValue {

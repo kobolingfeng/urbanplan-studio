@@ -1,5 +1,13 @@
 import { isStructuredEvidence, normalizeEvidenceItem } from './evidence';
 import { markdownTableRow } from './markdown-table';
+import {
+    FACILITY_RANGES as FACILITY_NUMERIC_RANGES,
+    PARCEL_CONTROL_RANGES,
+    PARCEL_SCENARIO_VALUE_RANGES as PARCEL_NUMERIC_RANGES,
+    ROAD_RANGES as ROAD_NUMERIC_RANGES,
+    formatRange,
+    type NumericRange,
+} from './planning-ranges';
 
 type AnyRecord = Record<string, unknown>;
 
@@ -12,31 +20,10 @@ export type UpfValidationIssue = {
 };
 
 const OBJECT_TYPES = new Set(['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint']);
-const PARCEL_NUMERIC_RANGES: Record<string, { min: number; max: number }> = {
-    far: { min: 0, max: 15 },
-    buildingCoverage: { min: 0, max: 1 },
-    greenRatio: { min: 0, max: 1 },
-    residentialGfaSqm: { min: 0, max: 5_000_000 },
-    publicServiceGfaSqm: { min: 0, max: 5_000_000 },
-};
-const PARCEL_CONTROL_RANGES: Record<string, { min: number; max: number }> = {
-    farMax: { min: 0, max: 15 },
-    buildingCoverageMax: { min: 0, max: 1 },
-    greenRatioMin: { min: 0, max: 1 },
-    heightMaxM: { min: 0, max: 1000 },
-};
-const ROAD_NUMERIC_RANGES: Record<string, { min: number; max: number }> = {
-    redLineWidthM: { min: 0, max: 200 },
-    lanes: { min: 1, max: 12 },
-};
-const FACILITY_NUMERIC_RANGES: Record<string, { min: number; max: number }> = {
-    capacity: { min: 0, max: 200_000 },
-    serviceRadiusM: { min: 0, max: 10_000 },
-};
-const PARCEL_NUMERIC_VALUES = Object.keys(PARCEL_NUMERIC_RANGES);
-const PARCEL_CONTROL_VALUES = Object.keys(PARCEL_CONTROL_RANGES);
-const ROAD_NUMERIC_VALUES = Object.keys(ROAD_NUMERIC_RANGES);
-const FACILITY_NUMERIC_VALUES = Object.keys(FACILITY_NUMERIC_RANGES);
+const PARCEL_NUMERIC_VALUES = Object.keys(PARCEL_NUMERIC_RANGES) as Array<keyof typeof PARCEL_NUMERIC_RANGES>;
+const PARCEL_CONTROL_VALUES = Object.keys(PARCEL_CONTROL_RANGES) as Array<keyof typeof PARCEL_CONTROL_RANGES>;
+const ROAD_NUMERIC_VALUES = Object.keys(ROAD_NUMERIC_RANGES) as Array<keyof typeof ROAD_NUMERIC_RANGES>;
+const FACILITY_NUMERIC_VALUES = Object.keys(FACILITY_NUMERIC_RANGES) as Array<keyof typeof FACILITY_NUMERIC_RANGES>;
 
 export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
     const issues: UpfValidationIssue[] = [];
@@ -293,7 +280,7 @@ function validateNumberInRange(
     field: string,
     path: string,
     label: string,
-    range: { min: number; max: number } | undefined,
+    range: NumericRange | undefined,
     add: (severity: UpfValidationSeverity, path: string, message: string) => void,
 ) {
     const value = record[field];
@@ -304,10 +291,6 @@ function validateNumberInRange(
     if (range && (value < range.min || value > range.max)) {
         add('error', `${path}.${field}`, `${label} 超出允许范围 ${formatRange(range)}。`);
     }
-}
-
-function formatRange(range: { min: number; max: number }): string {
-    return `${range.min}-${range.max}`;
 }
 
 function validatePolygonGeometry(

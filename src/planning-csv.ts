@@ -1,3 +1,9 @@
+import {
+    PARCEL_SCENARIO_VALUE_RANGES,
+    UNBOUNDED_RANGE,
+    type NumericRange,
+} from './planning-ranges';
+
 export type ScenarioDecisionCsvRow = {
     scenario: {
         id: string;
@@ -313,9 +319,7 @@ function textField(row: Record<string, string>, key: keyof CsvScenarioValueLike,
     return value ? { [key]: value } : {};
 }
 
-function numberRange(key: keyof CsvScenarioValueLike): { min: number; max: number } {
-    if (key === 'far') return { min: 0, max: 15 };
-    if (key === 'buildingCoverage' || key === 'greenRatio') return { min: 0, max: 1 };
-    if (key === 'residentialGfaSqm' || key === 'publicServiceGfaSqm') return { min: 0, max: 5_000_000 };
-    return { min: Number.NEGATIVE_INFINITY, max: Number.POSITIVE_INFINITY };
+function numberRange(key: keyof CsvScenarioValueLike): NumericRange {
+    const ranges: Record<string, NumericRange> = PARCEL_SCENARIO_VALUE_RANGES;
+    return ranges[String(key)] ?? UNBOUNDED_RANGE;
 }
