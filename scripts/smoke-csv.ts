@@ -79,6 +79,15 @@ assert(importedParcel?.scenarioValues?.update?.notes === 'quoted, note', 'CSV im
 const parsedViaUpf = parseUpfText(parcelCsv, fallback);
 assert(parsedViaUpf.activeScenarioId === 'update', 'UPF parser should accept parcel CSV');
 
+const invalidValueCsv = [
+    'parcel_id,scenario_id,far,building_coverage,green_ratio,residential_gfa_sqm',
+    'parcel_a,stress,99,1.4,-0.1,not_a_number',
+].join('\n');
+const parsedInvalidValues = parseParcelIndicatorCsv(invalidValueCsv, fallback);
+assert(parsedInvalidValues?.importSummary.invalidFields.length === 4, 'CSV import should summarize invalid numeric fields');
+const stressParcel = parsedInvalidValues?.project.objects.find(object => object.id === 'parcel_a');
+assert(stressParcel?.scenarioValues?.stress && !('far' in stressParcel.scenarioValues.stress), 'CSV import should ignore invalid FAR');
+
 const exampleCsv = readFileSync(join(ROOT, 'examples', 'parcel-indicators.csv'), 'utf8');
 const exampleFallback = {
     scenarios: [{ id: 'scenario_public', name: 'Public', description: 'Existing scenario' }],

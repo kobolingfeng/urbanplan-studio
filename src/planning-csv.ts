@@ -61,6 +61,7 @@ export type CsvImportSummary = {
     updatedRows: number;
     skippedRows: number;
     unmatchedParcelIds: string[];
+    invalidFields: string[];
     scenarioIds: string[];
 };
 
@@ -112,6 +113,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
     let updatedRows = 0;
     let skippedRows = 0;
     const unmatchedParcelIds = new Set<string>();
+    const invalidFields: string[] = [];
 
     for (const row of rows) {
         const parcelId = cell(row, 'parcel_id', 'object_id', 'id');
@@ -135,11 +137,11 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
         parcel.scenarioValues = parcel.scenarioValues ?? {};
         parcel.scenarioValues[scenarioId] = {
             ...current,
-            ...numberField(row, 'far'),
-            ...numberField(row, 'buildingCoverage', 'building_coverage', 'building_coverage_ratio'),
-            ...numberField(row, 'greenRatio', 'green_ratio', 'green_ratio_min'),
-            ...numberField(row, 'residentialGfaSqm', 'residential_gfa_sqm', 'residential_gfa'),
-            ...numberField(row, 'publicServiceGfaSqm', 'public_service_gfa_sqm', 'public_service_gfa'),
+            ...numberField(row, 'far', parcelId, invalidFields),
+            ...numberField(row, 'buildingCoverage', parcelId, invalidFields, 'building_coverage', 'building_coverage_ratio'),
+            ...numberField(row, 'greenRatio', parcelId, invalidFields, 'green_ratio', 'green_ratio_min'),
+            ...numberField(row, 'residentialGfaSqm', parcelId, invalidFields, 'residential_gfa_sqm', 'residential_gfa'),
+            ...numberField(row, 'publicServiceGfaSqm', parcelId, invalidFields, 'public_service_gfa_sqm', 'public_service_gfa'),
             ...textField(row, 'updateMode', 'update_mode'),
             ...textField(row, 'notes', 'note'),
         };
@@ -160,6 +162,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
             updatedRows,
             skippedRows,
             unmatchedParcelIds: [...unmatchedParcelIds].slice(0, 12),
+            invalidFields: invalidFields.slice(0, 20),
             scenarioIds: [...scenarioIds],
         },
     };
@@ -276,14 +279,32 @@ function cell(row: Record<string, string>, ...names: string[]): string {
     return '';
 }
 
-function numberField(row: Record<string, string>, key: keyof CsvScenarioValueLike, ...names: string[]): Partial<CsvScenarioValueLike> {
+function numberField(
+    row: Record<string, string>,
+    key: keyof CsvScenarioValueLike,
+    rowLabel: string,
+    invalidFields: string[],
+    ...names: string[]
+): Partial<CsvScenarioValueLike> {
     const value = cell(row, String(key), ...names);
     if (!value) return {};
     const numeric = Number(value);
-    return Number.isFinite(numeric) ? { [key]: numeric } : {};
+    const range = numberRange(key);
+    if (!Number.isFinite(numeric) || numeric < range.min || numeric > range.max) {
+        invalidFields.push(`${rowLabel}.${normalizeHeader(String(key))}`);
+        return {};
+    }
+    return { [key]: numeric };
 }
 
 function textField(row: Record<string, string>, key: keyof CsvScenarioValueLike, ...names: string[]): Partial<CsvScenarioValueLike> {
     const value = cell(row, String(key), ...names);
     return value ? { [key]: value } : {};
+}
+
+function numberRange(key: keyof CsvScenarioValueLike): { min: number; max: number } {
+    if (key === 'far') return { min: 0, max: 15 };
+    if (key === 'buildingCoverage' || key === 'greenRatio') return { min: 0, max: 1 };
+    if (key === 'residentialGfaSqm' || key === 'publicServiceGfaSqm') return { min: 0, max: 5_000_000 };
+    return { min: Number.NEGATIVE_INFINITY, max: Number.POSITIVE_INFINITY };
 }

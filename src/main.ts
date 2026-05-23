@@ -835,6 +835,13 @@ function auditCsvImport(input: string, parsedProject: UrbanPlanProject, summary?
             message: `${summary.skippedRows} 行未匹配地块或缺少必需列，已跳过。${summary.unmatchedParcelIds.length ? `未匹配地块：${summary.unmatchedParcelIds.join('、')}` : ''}`,
         });
     }
+    if (summary?.invalidFields.length) {
+        findings.push({
+            severity: 'warning',
+            objectId: 'CSV',
+            message: `以下 CSV 数值超出允许范围或不是数字，已忽略：${summary.invalidFields.join('、')}`,
+        });
+    }
     return findings;
 }
 
