@@ -24,7 +24,7 @@ This backlog is ordered by product risk, not by excitement.
 ## P1: Product Experience
 
 1. Add recent files and current project path.
-2. Extend the import report with before/after normalized field diffs and rejected-object previews.
+2. Extend the import report with field-level before/after diffs and richer rejected-object previews.
 3. Extend keyboard navigation with map panning, zoom, and command palette workflows.
 4. Add saved object-filter presets and map-linked filter chips.
 5. Extend scenario table exports with XLSX formatting and chart templates.

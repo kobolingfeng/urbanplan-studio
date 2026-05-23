@@ -154,6 +154,22 @@ type ImportFinding = {
     message: string;
 };
 
+type ImportObjectSnapshot = {
+    id: string;
+    type: string;
+    knownType: boolean;
+    hasEvidence: boolean;
+    hasGeometry: boolean;
+    hasControls: boolean;
+    scenarioIds: string[];
+};
+
+type ImportProjectSnapshot = {
+    objectCount: number;
+    scenarioIds: string[];
+    objects: ImportObjectSnapshot[];
+};
+
 type UrbanPlanProject = {
     format: 'UPF';
     formatVersion: '0.1.0';
@@ -646,6 +662,100 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
         }
     }
     return findings.slice(0, 80);
+}
+
+function snapshotImportedProject(input: UrbanPlanProject): ImportProjectSnapshot {
+    const scenarioIds = Array.isArray(input.scenarios)
+        ? input.scenarios.map(scenario => scenario?.id).filter(Boolean)
+        : [];
+    const objects = Array.isArray(input.objects) ? input.objects : [];
+    return {
+        objectCount: objects.length,
+        scenarioIds,
+        objects: objects.map((object, index) => {
+            const raw = object as Partial<PlanObject>;
+            const type = String(raw.type ?? '');
+            return {
+                id: String(raw.id || `objects[${index}]`),
+                type,
+                knownType: ['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint'].includes(type),
+                hasEvidence: Boolean(raw.evidence?.length),
+                hasGeometry: hasImportGeometry(raw),
+                hasControls: type !== 'parcel' || Boolean((raw as Partial<Parcel>).controls),
+                scenarioIds: type === 'parcel'
+                    ? Object.keys((raw as Partial<Parcel>).scenarioValues ?? {})
+                    : [],
+            };
+        }),
+    };
+}
+
+function auditNormalizationChanges(
+    before: ImportProjectSnapshot,
+    normalized: UrbanPlanProject,
+): ImportFinding[] {
+    const findings: ImportFinding[] = [];
+    if (before.objectCount !== normalized.objects.length) {
+        findings.push({
+            severity: 'warning',
+            objectId: 'objects',
+            message: `导入前 ${before.objectCount} 个对象，归一化后 ${normalized.objects.length} 个对象；未知类型或无效对象已被过滤。`,
+        });
+    }
+    const normalizedById = new Map(normalized.objects.map(object => [object.id, object]));
+    for (const item of before.objects) {
+        const normalizedObject = normalizedById.get(item.id);
+        if (!normalizedObject) {
+            if (!item.knownType) {
+                findings.push({
+                    severity: 'warning',
+                    objectId: item.id,
+                    message: `未知对象类型 ${item.type || '未声明'} 已被过滤。`,
+                });
+            }
+            continue;
+        }
+        if (!item.hasEvidence) {
+            findings.push({
+                severity: 'info',
+                objectId: item.id,
+                message: '兼容层已补齐证据占位，请在质检后替换为真实 EvidenceSource。',
+            });
+        }
+        if (!item.hasGeometry) {
+            findings.push({
+                severity: 'info',
+                objectId: item.id,
+                message: '兼容层已补齐默认几何或点位，请在图面中复核位置。',
+            });
+        }
+        if (item.type === 'parcel' && !item.hasControls) {
+            findings.push({
+                severity: 'info',
+                objectId: item.id,
+                message: '兼容层已补齐地块控制指标默认值。',
+            });
+        }
+        const missingScenarioIds = before.scenarioIds.filter(id => !item.scenarioIds.includes(id));
+        if (item.type === 'parcel' && missingScenarioIds.length) {
+            findings.push({
+                severity: 'info',
+                objectId: item.id,
+                message: `兼容层已补齐 ${missingScenarioIds.join('、')} 的地块方案值。`,
+            });
+        }
+    }
+    return findings.slice(0, 60);
+}
+
+function hasImportGeometry(object: Partial<PlanObject>): boolean {
+    if (object.type === 'parcel' || object.type === 'openSpace' || object.type === 'constraint') {
+        return Array.isArray((object as Partial<Parcel | OpenSpace | ConstraintOverlay>).points)
+            && ((object as Partial<Parcel | OpenSpace | ConstraintOverlay>).points?.length ?? 0) >= 3;
+    }
+    if (object.type === 'road') return Array.isArray((object as Partial<Road>).points) && ((object as Partial<Road>).points?.length ?? 0) >= 2;
+    if (object.type === 'facility' || object.type === 'entrance') return Boolean((object as Partial<Facility | Entrance>).point);
+    return false;
 }
 
 function importFormatFindings(raw: unknown, parsedProject: UrbanPlanProject): ImportFinding[] {
@@ -2286,11 +2396,17 @@ async function loadUpf() {
 function loadUpfText(text: string, options: { sourceName?: string; showImportReport?: boolean } = {}) {
     const raw = JSON.parse(text);
     const parsed = parseUpfText(text, project);
+    const parsedProject = parsed.project as UrbanPlanProject;
+    const importSnapshot = snapshotImportedProject(parsedProject);
+    const formatFindings = importFormatFindings(raw, parsedProject);
+    const compatibilityFindings = auditImportedProject(parsedProject);
+    const normalizedProject = normalizeProject(parsedProject);
     importFindings = [
-        ...importFormatFindings(raw, parsed.project as UrbanPlanProject),
-        ...auditImportedProject(parsed.project as UrbanPlanProject),
+        ...formatFindings,
+        ...compatibilityFindings,
+        ...auditNormalizationChanges(importSnapshot, normalizedProject),
     ].slice(0, 120);
-    project = normalizeProject(parsed.project as UrbanPlanProject);
+    project = normalizedProject;
     activeScenarioId = project.scenarios.some(scenario => scenario.id === parsed.activeScenarioId)
         ? parsed.activeScenarioId
         : project.scenarios[0]?.id ?? '';
