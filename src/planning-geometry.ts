@@ -31,6 +31,7 @@ export function areaSqm(points: Point[]): number {
 }
 
 export function centroid(points: Point[]): Point {
+    if (!points.length) return { x: 0, y: 0 };
     const areaRaw = points.reduce((sum, point, index) => {
         const next = points[(index + 1) % points.length];
         return sum + point.x * next.y - next.x * point.y;
@@ -74,6 +75,9 @@ export function distanceToPolyline(point: Point, points: Point[]): number {
 }
 
 export function pointInPolygon(point: Point, points: Point[]): boolean {
+    for (let index = 0; index < points.length; index++) {
+        if (onSegment(points[index], points[(index + 1) % points.length], point)) return true;
+    }
     let inside = false;
     for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
         const pi = points[i];

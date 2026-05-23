@@ -1,6 +1,7 @@
 import {
     UNIT_SYSTEM,
     areaSqm,
+    centroid,
     distance,
     pointInPolygon,
     polygonsOverlap,
@@ -22,7 +23,10 @@ const expectedArea = 100 * UNIT_SYSTEM.metersPerCanvasUnit ** 2;
 assert(Math.abs(areaSqm(square) - expectedArea) < 0.0001, 'area scale mismatch');
 assert(Math.abs(distance({ x: 0, y: 0 }, { x: 10, y: 0 }) - 10 * UNIT_SYSTEM.metersPerCanvasUnit) < 0.0001, 'distance scale mismatch');
 assert(pointInPolygon({ x: 5, y: 5 }, square), 'point should be inside polygon');
+assert(pointInPolygon({ x: 10, y: 5 }, square), 'point on polygon boundary should count as inside');
 assert(!pointInPolygon({ x: 15, y: 5 }, square), 'point should be outside polygon');
+const emptyCentroid = centroid([]);
+assert(emptyCentroid.x === 0 && emptyCentroid.y === 0, 'empty centroid should be stable');
 assert(polygonsOverlap(square, rect(8, 8, 10, 10)), 'polygons should overlap');
 assert(!polygonsOverlap(square, rect(20, 20, 5, 5)), 'polygons should not overlap');
 
