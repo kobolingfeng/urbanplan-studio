@@ -51,11 +51,12 @@ Expected:
 1. Choose the parcel tool.
 2. Click the canvas to create a new parcel.
 3. Confirm the tool returns to select mode.
-4. Edit the new parcel values in the inspector.
-5. Edit `证据来源（每行一条）` with one plain text line and one JSON EvidenceSource line, then run quality check and confirm evidence counts plus structured evidence coverage update.
-6. Use the object search and `高风险` filter; expected: the list narrows without changing the selected object.
-7. Press `Esc`; expected: select mode remains active.
-8. Press `Delete`; expected: selected deletable object is removed, unless it is referenced.
+4. Edit the new parcel values in the inspector, including control FAR, control building coverage, control green ratio, and height limit.
+5. Enter an out-of-range number such as `150` for a percent field; expected: the inspector clamps it back into a valid range.
+6. Edit `证据来源（每行一条）` with one plain text line and one JSON EvidenceSource line, then run quality check and confirm evidence counts plus structured evidence coverage update.
+7. Use the object search and `高风险` filter; expected: the list narrows without changing the selected object.
+8. Press `Esc`; expected: select mode remains active.
+9. Press `Delete`; expected: selected deletable object is removed, unless it is referenced.
 
 ## Keyboard Flow
 
@@ -83,8 +84,9 @@ Expected:
 6. Confirm the project contains multiple parcels, roads, facilities, open space, heritage constraint, and three scenarios.
 7. Open `验证`; expected: validation pack reflects the loaded Luohu case.
 8. Load `examples/parcel-indicators.csv`; expected: the import report names the CSV adapter and matching parcels receive updated scenario values.
-9. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, UPF structure findings, and dangling references if present.
-10. Load `examples/invalid.upf`; expected: import error modal.
+9. Load a CSV with valid headers but unmatched parcel IDs; expected: the import report still names the CSV adapter and reports skipped rows.
+10. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, UPF structure findings, and dangling references if present.
+11. Load `examples/invalid.upf`; expected: import error modal.
 
 ## Data Integrity
 

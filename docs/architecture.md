@@ -46,8 +46,9 @@ src/
 6. Scenario evaluation smoke tests.
 7. GeoJSON import/export smoke tests.
 8. Scenario CSV smoke tests.
-9. Full frontend + native build.
-10. Static build smoke tests.
+9. Markdown renderer/table escaping smoke tests.
+10. Full frontend + native build.
+11. Static build smoke tests.
 
 Release verification:
 
