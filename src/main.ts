@@ -848,7 +848,7 @@ function auditCsvImport(input: string, parsedProject: UrbanPlanProject, summary?
         findings.push({
             severity: 'warning',
             objectId: 'CSV',
-            message: `${summary.skippedRows} 行未匹配地块或缺少必需列，已跳过。${summary.unmatchedParcelIds.length ? `未匹配地块：${summary.unmatchedParcelIds.join('、')}` : ''}`,
+            message: `${summary.skippedRows} 行未匹配地块、缺少必需列或没有可更新字段，已跳过。${summary.unmatchedParcelIds.length ? `未匹配地块：${summary.unmatchedParcelIds.join('、')}` : ''}`,
         });
     }
     if (summary?.invalidFields.length) {

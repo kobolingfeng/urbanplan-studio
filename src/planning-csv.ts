@@ -134,6 +134,19 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
             skippedRows++;
             continue;
         }
+        const patch: Partial<CsvScenarioValueLike> = {
+            ...numberField(row, 'far', parcelId, invalidFields),
+            ...numberField(row, 'buildingCoverage', parcelId, invalidFields, 'building_coverage', 'building_coverage_ratio'),
+            ...numberField(row, 'greenRatio', parcelId, invalidFields, 'green_ratio', 'green_ratio_min'),
+            ...numberField(row, 'residentialGfaSqm', parcelId, invalidFields, 'residential_gfa_sqm', 'residential_gfa'),
+            ...numberField(row, 'publicServiceGfaSqm', parcelId, invalidFields, 'public_service_gfa_sqm', 'public_service_gfa'),
+            ...textField(row, 'updateMode', 'update_mode'),
+            ...textField(row, 'notes', 'note'),
+        };
+        if (!Object.keys(patch).length) {
+            skippedRows++;
+            continue;
+        }
         if (!scenarioIds.has(scenarioId)) {
             scenarios.push({ id: scenarioId, name: scenarioId, description: '由 CSV 指标表导入。' });
             scenarioIds.add(scenarioId);
@@ -143,13 +156,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
         parcel.scenarioValues = parcel.scenarioValues ?? {};
         parcel.scenarioValues[scenarioId] = {
             ...current,
-            ...numberField(row, 'far', parcelId, invalidFields),
-            ...numberField(row, 'buildingCoverage', parcelId, invalidFields, 'building_coverage', 'building_coverage_ratio'),
-            ...numberField(row, 'greenRatio', parcelId, invalidFields, 'green_ratio', 'green_ratio_min'),
-            ...numberField(row, 'residentialGfaSqm', parcelId, invalidFields, 'residential_gfa_sqm', 'residential_gfa'),
-            ...numberField(row, 'publicServiceGfaSqm', parcelId, invalidFields, 'public_service_gfa_sqm', 'public_service_gfa'),
-            ...textField(row, 'updateMode', 'update_mode'),
-            ...textField(row, 'notes', 'note'),
+            ...patch,
         };
         updatedRows++;
     }

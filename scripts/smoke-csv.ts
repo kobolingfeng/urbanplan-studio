@@ -106,9 +106,18 @@ const invalidValueCsv = [
     'parcel_a,stress,99,1.4,-0.1,not_a_number',
 ].join('\n');
 const parsedInvalidValues = parseParcelIndicatorCsv(invalidValueCsv, fallback);
+assert(parsedInvalidValues?.importSummary.updatedRows === 0 && parsedInvalidValues.importSummary.skippedRows === 1, 'CSV import should not count invalid-only rows as updates');
 assert(parsedInvalidValues?.importSummary.invalidFields.length === 4, 'CSV import should summarize invalid numeric fields');
 const stressParcel = parsedInvalidValues?.project.objects.find(object => object.id === 'parcel_a');
-assert(stressParcel?.scenarioValues?.stress && !('far' in stressParcel.scenarioValues.stress), 'CSV import should ignore invalid FAR');
+assert(!stressParcel?.scenarioValues?.stress, 'CSV import should not create scenario values when every field is invalid');
+
+const noUpdateCsv = [
+    'parcel_id,scenario_id',
+    'parcel_a,empty_update',
+].join('\n');
+const parsedNoUpdate = parseParcelIndicatorCsv(noUpdateCsv, fallback);
+assert(parsedNoUpdate?.importSummary.updatedRows === 0 && parsedNoUpdate.importSummary.skippedRows === 1, 'CSV import should skip matched rows without update fields');
+assert(!parsedNoUpdate?.project.scenarios.some(scenario => scenario.id === 'empty_update'), 'CSV import should not create scenarios for no-op rows');
 
 const exampleCsv = readFileSync(join(ROOT, 'examples', 'parcel-indicators.csv'), 'utf8');
 const exampleFallback = {
