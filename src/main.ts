@@ -571,14 +571,19 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
 
     if (!normalized.scenarios.length) normalized.scenarios = fallback.scenarios;
     const scenarioIds = normalized.scenarios.map(scenario => scenario.id);
+    const usedObjectIds = new Set<string>();
+    normalized.objects = normalized.objects.flatMap((object, index): PlanObject[] => {
+        if (!object || typeof object !== 'object' || !('type' in object)) return [];
+        const base = object as PlanObject;
+        base.id = normalizeImportedObjectId(base.id, index, usedObjectIds);
+        base.name = normalizeImportedObjectName(base.name, base.id);
+        return [base];
+    });
     const firstParcel = normalized.objects.find((object): object is Parcel => object.type === 'parcel');
     const firstRoad = normalized.objects.find((object): object is Road => object.type === 'road');
 
     normalized.objects = normalized.objects.flatMap((object): PlanObject[] => {
-        if (!object || typeof object !== 'object' || !('type' in object)) return [];
         const base = object as PlanObject;
-        base.id = base.id || `object_${Date.now().toString(36)}`;
-        base.name = base.name || base.id;
         base.evidence = normalizeEvidenceList(base.evidence, [
             evidenceSource('导入数据缺少证据来源，已由兼容层标记', 'user_input', '导入时', '待复核', 0.25, '用户导入'),
         ]);
@@ -875,6 +880,23 @@ function normalizeParcelScenarioValue(value: Partial<ParcelScenarioValue>): Parc
         updateMode: value.updateMode || DEFAULT_SCENARIO_VALUE.updateMode,
         notes: value.notes || DEFAULT_SCENARIO_VALUE.notes,
     };
+}
+
+function normalizeImportedObjectId(value: unknown, index: number, usedIds: Set<string>): string {
+    const raw = typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
+    const stem = raw || `object_${index + 1}`;
+    let next = stem;
+    let suffix = 2;
+    while (usedIds.has(next)) {
+        next = `${stem}_${suffix}`;
+        suffix++;
+    }
+    usedIds.add(next);
+    return next;
+}
+
+function normalizeImportedObjectName(value: unknown, fallback: string): string {
+    return typeof value === 'string' && value.trim() ? value.trim() : fallback;
 }
 
 function validPoint(point: unknown, fallback: Point): Point {
