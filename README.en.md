@@ -22,7 +22,7 @@ UrbanPlan Studio is a planning-native desktop prototype. It is not a CAD plug-in
 - Object search and risk filters for quickly locating problematic parcels or facilities.
 - Scenario optimization presets for compliance, public-service-first, and ecology-first adjustments.
 - Map explanation aids: scenario scores in the scenario list and selected-facility service-radius overlays.
-- Keyboard workflow for search, checks, save, and load.
+- Keyboard workflow for search, object-list navigation, checks, save, and load.
 - UPF export/import.
 - Markdown planning diagnosis report.
 - Data-quality report for evidence coverage, structured evidence coverage, scenario completeness, prototype rules, and dangling references.

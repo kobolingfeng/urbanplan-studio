@@ -843,7 +843,7 @@ function renderObjectList() {
     ui.objectSearch.value = objectSearchText;
     ui.objectFilter.value = objectFilter;
     ui.objectList.replaceChildren();
-    const objects = project.objects.filter(objectMatchesListFilter);
+    const objects = visibleObjectList();
     if (!objects.length) {
         const empty = document.createElement('div');
         empty.className = 'empty-state';
@@ -858,6 +858,10 @@ function renderObjectList() {
         row.append(typeDot(object), rowText(object.name, objectMeta(object)), issuePill(object.id));
         ui.objectList.append(row);
     }
+}
+
+function visibleObjectList(): PlanObject[] {
+    return project.objects.filter(objectMatchesListFilter);
 }
 
 function objectMatchesListFilter(object: PlanObject): boolean {
@@ -1255,8 +1259,26 @@ function emptyInspector() {
 function selectObject(id: string) {
     selectedId = id;
     renderObjectList();
+    ui.objectList.querySelector('.object-row.selected')?.scrollIntoView({ block: 'nearest' });
     renderCanvas();
     renderInspector();
+}
+
+function selectAdjacentObject(delta: number) {
+    const visible = visibleObjectList();
+    if (!visible.length) return;
+    const currentIndex = Math.max(0, visible.findIndex(object => object.id === selectedId));
+    const nextIndex = Math.min(visible.length - 1, Math.max(0, currentIndex + delta));
+    selectObject(visible[nextIndex].id);
+    setStatus(`已选择 ${visible[nextIndex].name}`, `${nextIndex + 1}/${visible.length}`);
+}
+
+function selectEdgeObject(edge: 'first' | 'last') {
+    const visible = visibleObjectList();
+    if (!visible.length) return;
+    const nextIndex = edge === 'first' ? 0 : visible.length - 1;
+    selectObject(visible[nextIndex].id);
+    setStatus(`已选择 ${visible[nextIndex].name}`, `${nextIndex + 1}/${visible.length}`);
 }
 
 function countType(type: ObjectType): number {
@@ -2424,9 +2446,18 @@ function bindControls() {
             activeTool = 'select';
             renderCanvas();
         }
+        const active = document.activeElement;
+        const editingText = active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement;
+        if (!editingText && (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End')) {
+            event.preventDefault();
+            if (event.key === 'ArrowDown') selectAdjacentObject(1);
+            if (event.key === 'ArrowUp') selectAdjacentObject(-1);
+            if (event.key === 'Home') selectEdgeObject('first');
+            if (event.key === 'End') selectEdgeObject('last');
+            return;
+        }
         if (event.key === 'Delete' || event.key === 'Backspace') {
-            const active = document.activeElement;
-            if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement) return;
+            if (editingText) return;
             deleteSelected();
         }
     });

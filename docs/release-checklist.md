@@ -30,7 +30,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click report and confirm sensitivity and data-quality summaries are included.
 - Use object search and high-risk filter to locate problem objects.
 - Apply public-service and ecology optimization presets on a duplicated scenario.
-- Test `Ctrl+F`, `Ctrl+Enter`, and `Ctrl+S` keyboard flow.
+- Test `Ctrl+F`, arrow-key object navigation, `Ctrl+Enter`, and `Ctrl+S` keyboard flow.
 - Save a `.upf`, then load it back.
 - Confirm the 导入报告 modal appears after loading, with object counts and compatibility findings.
 - Load `examples/minimal.upf`.

@@ -54,9 +54,10 @@ Expected:
 ## Keyboard Flow
 
 1. Press `Ctrl+F`; expected: object search receives focus.
-2. Press `Ctrl+Enter`; expected: checks and evaluation rerun.
-3. Press `Ctrl+S`; expected: save dialog or browser download for UPF.
-4. Open a report modal, press `Ctrl+S`; expected: the modal content saves with its report filename.
+2. Press `ArrowDown`, `ArrowUp`, `Home`, and `End` outside inputs; expected: selected object moves within the current filtered list.
+3. Press `Ctrl+Enter`; expected: checks and evaluation rerun.
+4. Press `Ctrl+S`; expected: save dialog or browser download for UPF.
+5. Open a report modal, press `Ctrl+S`; expected: the modal content saves with its report filename.
 
 ## Scenario Optimization
 
