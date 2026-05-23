@@ -148,7 +148,6 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
         updatedRows++;
     }
 
-    if (!updatedRows) return undefined;
     return {
         project: {
             ...fallbackProject,

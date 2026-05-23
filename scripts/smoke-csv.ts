@@ -79,6 +79,18 @@ assert(importedParcel?.scenarioValues?.update?.notes === 'quoted, note', 'CSV im
 const parsedViaUpf = parseUpfText(parcelCsv, fallback);
 assert(parsedViaUpf.activeScenarioId === 'update', 'UPF parser should accept parcel CSV');
 
+const unmatchedOnlyCsv = [
+    'parcel_id,scenario_id,far',
+    'missing_a,update,2.0',
+    'missing_b,update,3.0',
+].join('\n');
+const parsedUnmatchedOnly = parseParcelIndicatorCsv(unmatchedOnlyCsv, fallback);
+assert(parsedUnmatchedOnly?.importSummary.updatedRows === 0, 'CSV import should recognize unmatched-only indicator files');
+assert(parsedUnmatchedOnly?.importSummary.skippedRows === 2, 'CSV import should report all unmatched rows as skipped');
+assert(parsedUnmatchedOnly?.importSummary.unmatchedParcelIds.join(',') === 'missing_a,missing_b', 'CSV import should keep unmatched parcel IDs when no rows update');
+const parsedUnmatchedViaUpf = parseUpfText(unmatchedOnlyCsv, fallback);
+assert((parsedUnmatchedViaUpf as { importSummary?: { updatedRows?: number } }).importSummary?.updatedRows === 0, 'UPF parser should surface unmatched-only CSV import summaries');
+
 const multilineCsv = [
     'parcel_id,scenario_id,far,notes',
     'parcel_a,multiline,2.1,"line 1',
