@@ -25,6 +25,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click UPF and confirm top-level `format` and `formatVersion` exist.
 - Click evaluation and confirm the modal includes score, confidence, dimensions, parcel priorities, and risk register.
 - Click sensitivity and confirm four weight profiles produce a model comparison and scenario rankings.
+- Click report and confirm sensitivity and data-quality summaries are included.
 - Use object search and high-risk filter to locate problem objects.
 - Save a `.upf`, then load it back.
 - Load `examples/minimal.upf`.

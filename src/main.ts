@@ -1522,6 +1522,9 @@ function buildUpf(): string {
 function buildReport(): string {
     const errors = checks.filter(check => check.severity === 'error');
     const warnings = checks.filter(check => check.severity === 'warning');
+    const quality = calculateDataQuality(project, checks, recommendations);
+    const sensitivityRows = buildSensitivityRows();
+    const robustWinner = robustSensitivityWinner(sensitivityRows);
     const lines = [
         `# ${project.project.name} 规划诊断报告`,
         '',
@@ -1562,7 +1565,22 @@ function buildReport(): string {
         '',
         ...evaluation.highlights.map(item => `- ${item}`),
         '',
-        '## 七、说明',
+        '## 七、权重敏感性摘要',
+        '',
+        `- 稳健推荐：${robustWinner ? `${robustWinner[0]}（${robustWinner[1]}/${sensitivityRows.length} 个模型排名第一）` : '暂无'}`,
+        '',
+        '| 权重模型 | 第一名 | 当前方案得分 | 分差范围 |',
+        '|---|---|---:|---:|',
+        ...sensitivityRows.map(row => `| ${row.profile.name} | ${row.winner?.scenario.name ?? '暂无'} | ${row.active?.evaluation.score ?? '-'} | ${row.spread} |`),
+        '',
+        '## 八、数据质量摘要',
+        '',
+        `- 数据质量分：${quality.score}/100`,
+        `- 证据覆盖率：${quality.evidenceCoverage.toFixed(1)}%`,
+        `- 导入审计：${importFindings.length} 项`,
+        `- 规则依据：${quality.basisCount} 条`,
+        '',
+        '## 九、说明',
         '',
         '本报告来自 UPF 0.1 原型规则引擎，是规划辅助判断，不替代法定审查、专项交通影响评价、消防审查或正式控规成果。',
     ];
@@ -1634,34 +1652,8 @@ function buildDecisionMatrixReport(): string {
 }
 
 function buildWeightSensitivityReport(): string {
-    const scenarioRules = new Map(project.scenarios.map((scenario) => {
-        const result = runPlanningRules(project, scenario.id);
-        return [scenario.id, result] as const;
-    }));
-    const profileRows = EVALUATION_WEIGHT_PROFILES.map((profile) => {
-        const rows = project.scenarios
-            .map((scenario) => {
-                const ruleResult = scenarioRules.get(scenario.id)!;
-                return {
-                    scenario,
-                    evaluation: evaluateScenario(project, scenario.id, ruleResult.checks, ruleResult.recommendations, profile),
-                };
-            })
-            .sort((a, b) => b.evaluation.score - a.evaluation.score);
-        return {
-            profile,
-            rows,
-            winner: rows[0],
-            active: rows.find(row => row.scenario.id === activeScenarioId),
-            spread: rows.length ? rows[0].evaluation.score - rows[rows.length - 1].evaluation.score : 0,
-        };
-    });
-    const winnerCounts = profileRows.reduce<Record<string, number>>((counts, row) => {
-        const name = row.winner?.scenario.name ?? '暂无';
-        counts[name] = (counts[name] ?? 0) + 1;
-        return counts;
-    }, {});
-    const robustWinner = Object.entries(winnerCounts).sort((a, b) => b[1] - a[1])[0];
+    const profileRows = buildSensitivityRows();
+    const robustWinner = robustSensitivityWinner(profileRows);
     const lines = [
         `# ${project.project.name} 权重敏感性分析`,
         '',
@@ -1698,6 +1690,40 @@ function buildWeightSensitivityReport(): string {
         '- 当前权重为原型内置模型，论文中可进一步用专家评分、AHP 或熵权法校准。',
     ];
     return lines.join('\n');
+}
+
+function buildSensitivityRows() {
+    const scenarioRules = new Map(project.scenarios.map((scenario) => {
+        const result = runPlanningRules(project, scenario.id);
+        return [scenario.id, result] as const;
+    }));
+    return EVALUATION_WEIGHT_PROFILES.map((profile) => {
+        const rows = project.scenarios
+            .map((scenario) => {
+                const ruleResult = scenarioRules.get(scenario.id)!;
+                return {
+                    scenario,
+                    evaluation: evaluateScenario(project, scenario.id, ruleResult.checks, ruleResult.recommendations, profile),
+                };
+            })
+            .sort((a, b) => b.evaluation.score - a.evaluation.score);
+        return {
+            profile,
+            rows,
+            winner: rows[0],
+            active: rows.find(row => row.scenario.id === activeScenarioId),
+            spread: rows.length ? rows[0].evaluation.score - rows[rows.length - 1].evaluation.score : 0,
+        };
+    });
+}
+
+function robustSensitivityWinner(profileRows: ReturnType<typeof buildSensitivityRows>): [string, number] | undefined {
+    const winnerCounts = profileRows.reduce<Record<string, number>>((counts, row) => {
+        const name = row.winner?.scenario.name ?? '暂无';
+        counts[name] = (counts[name] ?? 0) + 1;
+        return counts;
+    }, {});
+    return Object.entries(winnerCounts).sort((a, b) => b[1] - a[1])[0];
 }
 
 function scenarioResidentialGfa(scenarioId: string): number {

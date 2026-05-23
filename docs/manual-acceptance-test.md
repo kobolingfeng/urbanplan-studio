@@ -31,8 +31,10 @@ Expected:
 13. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
 14. Click `质检`.
 15. Confirm a data quality score, rule catalog, evidence coverage, evidence type distribution, and prototype-rule notes appear.
-16. Click `UPF`.
-17. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, and `evaluation`.
+16. Click `报告`.
+17. Confirm the report includes core metrics, dimension scores, sensitivity summary, data quality summary, and limitations.
+18. Click `UPF`.
+19. Confirm exported JSON has top-level `format`, `formatVersion`, `manifest.software.version`, and `evaluation`.
 
 ## Object Editing
 
