@@ -2392,19 +2392,21 @@ function parcelScenario(parcel: Parcel, scenarioId: string): ParcelScenarioValue
 }
 
 function showModal(title: string, text: string, meta = 'UrbanPlan Studio', defaultName = 'urbanplan-output.txt') {
+    const safeDefaultName = sanitizeDefaultName(defaultName);
     modalContent = text;
-    modalDefaultName = defaultName;
+    modalDefaultName = safeDefaultName;
     ui.modalTitle.textContent = title;
-    ui.modalText.innerHTML = renderModalContent(text, defaultName);
+    ui.modalText.innerHTML = renderModalContent(text, safeDefaultName);
     ui.modalMeta.textContent = meta;
     ui.modal.classList.add('open');
 }
 
 async function saveText(defaultName: string, content: string) {
+    const safeDefaultName = sanitizeDefaultName(defaultName);
     if (isNativeRuntime) {
         try {
             const target = await dialog.saveFile({
-                defaultName,
+                defaultName: safeDefaultName,
                 filters: [
                     { name: 'UrbanPlan 导出', extensions: ['upf', 'json', 'geojson', 'csv', 'md', 'txt'] },
                     { name: '所有文件', extensions: ['*'] },
@@ -2412,7 +2414,7 @@ async function saveText(defaultName: string, content: string) {
             });
             if (target) {
                 await fs.writeTextFile(target, content);
-                if (defaultName.endsWith('.upf')) {
+                if (safeDefaultName.endsWith('.upf')) {
                     currentFilePath = target;
                     dirty = false;
                     clearAutosave();
@@ -2431,13 +2433,23 @@ async function saveText(defaultName: string, content: string) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = defaultName;
+    anchor.download = safeDefaultName;
     anchor.click();
     URL.revokeObjectURL(url);
-    if (defaultName.endsWith('.upf')) {
+    if (safeDefaultName.endsWith('.upf')) {
         dirty = false;
         clearAutosave();
     }
+}
+
+function sanitizeDefaultName(value: string): string {
+    return value
+        .split(/[\\/]+/)
+        .pop()!
+        .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/[. ]+$/g, '') || 'urbanplan-output.txt';
 }
 
 async function loadUpf() {
