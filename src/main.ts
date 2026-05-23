@@ -1994,6 +1994,59 @@ function buildScenarioDecisionCsv(rows: ReturnType<typeof collectScenarioDecisio
     return [header.join(','), ...body].join('\n');
 }
 
+function buildScenarioDecisionLongCsv(rows: ReturnType<typeof collectScenarioDecisionRows>): string {
+    const header = [
+        'scenario_id',
+        'scenario_name',
+        'metric_group',
+        'metric_id',
+        'metric_name',
+        'value',
+        'unit',
+    ];
+    const body = rows.flatMap(row => [
+        metricRow(row, 'summary', 'score', '综合评分', row.evaluation.score, 'score'),
+        metricRow(row, 'summary', 'confidence', '可信度', row.evaluation.confidence, 'score'),
+        metricRow(row, 'capacity', 'residents', '估算人口', row.residents, 'people'),
+        metricRow(row, 'capacity', 'residential_gfa_sqm', '住宅建面', Math.round(row.residentialGfa), 'sqm'),
+        metricRow(row, 'capacity', 'public_service_gfa_sqm', '公服建面', Math.round(row.publicServiceGfa), 'sqm'),
+        metricRow(row, 'rules', 'rule_errors', '规则错误', row.errors, 'count'),
+        metricRow(row, 'rules', 'rule_warnings', '规则警告', row.warnings, 'count'),
+        ...row.evaluation.dimensions.flatMap(dimension => [
+            metricRow(row, 'dimension_score', `${dimension.id}_score`, `${dimension.name}得分`, dimension.score, 'score'),
+            metricRow(row, 'dimension_weight', `${dimension.id}_weight`, `${dimension.name}权重`, Number((dimension.weight * 100).toFixed(2)), 'percent'),
+        ]),
+    ]).map(row => [
+        row.scenarioId,
+        row.scenarioName,
+        row.metricGroup,
+        row.metricId,
+        row.metricName,
+        row.value,
+        row.unit,
+    ].map(csvCell).join(','));
+    return [header.join(','), ...body].join('\n');
+}
+
+function metricRow(
+    row: ReturnType<typeof collectScenarioDecisionRows>[number],
+    metricGroup: string,
+    metricId: string,
+    metricName: string,
+    value: number,
+    unit: string,
+) {
+    return {
+        scenarioId: row.scenario.id,
+        scenarioName: row.scenario.name,
+        metricGroup,
+        metricId,
+        metricName,
+        value,
+        unit,
+    };
+}
+
 function csvCell(value: string | number): string {
     const text = String(value);
     if (!/[",\n]/.test(text)) return text;
@@ -2419,7 +2472,7 @@ function bindControls() {
     ui.btnEvaluation.addEventListener('click', () => showModal('方案综合评估', buildScenarioEvaluationReport(project, activeScenarioId, checks, recommendations), activeScenario().name, 'scenario-evaluation.md'));
     ui.btnSensitivity.addEventListener('click', () => showModal('权重敏感性分析', buildWeightSensitivityReport(), project.project.name, 'weight-sensitivity-report.md'));
     ui.btnCompare.addEventListener('click', () => showModal('方案决策矩阵', buildDecisionMatrixReport(), project.project.name, 'scenario-decision-matrix.md'));
-    ui.btnCsv.addEventListener('click', () => showModal('方案决策 CSV', buildScenarioDecisionCsv(collectScenarioDecisionRows()), project.project.name, 'scenario-decision-matrix.csv'));
+    ui.btnCsv.addEventListener('click', () => showModal('方案指标长表 CSV', buildScenarioDecisionLongCsv(collectScenarioDecisionRows()), project.project.name, 'scenario-decision-long.csv'));
     ui.btnQuality.addEventListener('click', () => showModal('数据质量诊断', buildQualityReport(), project.ruleset.version, 'data-quality-report.md'));
     ui.btnValidation.addEventListener('click', () => showModal('案例验证包', buildCaseValidationReport(), project.project.name, 'case-validation-pack.md'));
     ui.btnReport.addEventListener('click', () => showModal('规划诊断报告', buildReport(), activeScenario().name, 'planning-report.md'));

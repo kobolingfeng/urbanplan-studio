@@ -28,7 +28,7 @@ Use this before handing UrbanPlan Studio to another person for review.
 - Click evaluation and confirm the modal includes score, confidence, dimensions, parcel priorities, service population allocation, and risk register.
 - Click sensitivity and confirm four weight profiles produce a model comparison and scenario rankings.
 - Click validation and confirm the case validation pack includes research questions, decision matrix, sensitivity summary, experiment record table, expert review table, and CSV appendix.
-- Click CSV and confirm a standalone scenario-decision CSV is available.
+- Click CSV and confirm a standalone long-form scenario metric CSV is available with `metric_id`, `value`, and `unit` columns.
 - Click quality and confirm it includes UPF structure validation, structured RuleSource metadata, evidence distribution, structured evidence coverage, and import audit.
 - Click report and confirm sensitivity and data-quality summaries are included.
 - Click GeoJSON and confirm a FeatureCollection is exported with UPF object properties.

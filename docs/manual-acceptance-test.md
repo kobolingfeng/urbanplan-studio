@@ -31,8 +31,8 @@ Expected:
 13. Confirm the modal compares at least four weight models and reports whether the recommended scheme is stable.
 14. Click `对比`.
 15. Confirm all scenarios appear in a decision matrix with score, confidence, population, public-service GFA, and risk counts.
-16. Click `CSV`.
-17. Confirm the modal contains `scenario_id`, scores, population, floor area, and risk-count columns.
+16. Click `CSV` and confirm the output uses long-form `metric_id,value,unit` rows for charting.
+17. Confirm the modal contains scenario rows for score, population, floor area, risk counts, dimension scores, and dimension weights.
 18. Click `质检`.
 19. Confirm a data quality score, deduction table, UPF structure validation report, structured RuleSource metadata, evidence coverage, structured evidence coverage, evidence type distribution, and prototype-rule notes appear.
 20. Click `验证`.
