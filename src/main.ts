@@ -165,6 +165,7 @@ type ImportFinding = {
 };
 
 type ImportObjectSnapshot = {
+    index: number;
     id: string;
     type: string;
     knownType: boolean;
@@ -707,7 +708,8 @@ function snapshotImportedProject(input: UrbanPlanProject): ImportProjectSnapshot
             const raw = object as Partial<PlanObject>;
             const type = String(raw.type ?? '');
             return {
-                id: String(raw.id || `objects[${index}]`),
+                index,
+                id: importObjectIdLabel(raw.id, index),
                 type,
                 knownType: ['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint'].includes(type),
                 hasEvidence: Boolean(raw.evidence?.length),
@@ -735,7 +737,7 @@ function auditNormalizationChanges(
     }
     const normalizedById = new Map(normalized.objects.map(object => [object.id, object]));
     for (const item of before.objects) {
-        const normalizedObject = normalizedById.get(item.id);
+        const normalizedObject = normalizedObjectForSnapshot(item, normalized, normalizedById);
         if (!normalizedObject) {
             if (!item.knownType) {
                 findings.push({
@@ -745,6 +747,13 @@ function auditNormalizationChanges(
                 });
             }
             continue;
+        }
+        if (item.knownType && normalizedObject.id !== item.id) {
+            findings.push({
+                severity: 'info',
+                objectId: item.id,
+                message: `兼容层已将对象 id 规范为 ${normalizedObject.id}，以保证导入后对象标识唯一。`,
+            });
         }
         if (!item.hasEvidence) {
             findings.push({
@@ -777,6 +786,24 @@ function auditNormalizationChanges(
         }
     }
     return findings.slice(0, 60);
+}
+
+function normalizedObjectForSnapshot(
+    item: ImportObjectSnapshot,
+    normalized: UrbanPlanProject,
+    normalizedById: Map<string, PlanObject>,
+): PlanObject | undefined {
+    const byIndex = normalized.objects[item.index];
+    if (byIndex?.type === item.type) return byIndex;
+    return normalizedById.get(item.id);
+}
+
+function importObjectIdLabel(value: unknown, index: number): string {
+    if (typeof value === 'string' || typeof value === 'number') {
+        const text = String(value).trim();
+        if (text) return text;
+    }
+    return `objects[${index}]`;
 }
 
 function hasImportGeometry(object: Partial<PlanObject>): boolean {
