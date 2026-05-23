@@ -42,6 +42,11 @@ assert(minimal.project.project?.id === 'minimal_demo', 'minimal project id misma
 assert(minimal.activeScenarioId === 'scenario_base', 'minimal active scenario mismatch');
 const minimalObjects = minimal.project.objects as Array<{ evidence?: unknown[] }> | undefined;
 assert(typeof minimalObjects?.[0]?.evidence?.[0] === 'object', 'minimal evidence should demonstrate structured EvidenceSource');
+const stringConfidenceRaw = JSON.parse(minimalText);
+stringConfidenceRaw.objects[0].evidence[0].confidence = '0.82';
+const stringConfidenceIssues = validateUpfDocument(stringConfidenceRaw);
+assert(stringConfidenceIssues.some(issue => issue.severity === 'info' && issue.path.endsWith('.confidence') && issue.message.includes('字符串数字')), 'numeric-string confidence should be reported as compatible');
+assert(!stringConfidenceIssues.some(issue => issue.severity === 'warning' && issue.path.endsWith('.confidence')), 'numeric-string confidence should not be warned as invalid');
 
 const roundTrip = createUpfDocument(minimal.project, minimal.activeScenarioId, [], [], {
     scenarioId: minimal.activeScenarioId,

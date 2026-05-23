@@ -167,8 +167,13 @@ function validateEvidenceList(
         if (!isNonEmptyString(normalized.precision)) add('info', `${itemPath}.precision`, '建议补充精度或适用尺度。');
         if (!isNonEmptyString(normalized.license)) add('info', `${itemPath}.license`, '建议补充许可或使用约束。');
         const raw = asRecord(item);
-        if (raw && raw.confidence !== undefined && (!isFiniteNumber(raw.confidence) || raw.confidence < 0 || raw.confidence > 100)) {
-            add('warning', `${itemPath}.confidence`, 'confidence 应为 0-1 或 0-100 区间数值。');
+        if (raw && raw.confidence !== undefined) {
+            const confidence = numberLike(raw.confidence);
+            if (confidence === undefined || confidence < 0 || confidence > 100) {
+                add('warning', `${itemPath}.confidence`, 'confidence 应为 0-1 或 0-100 区间数值。');
+            } else if (typeof raw.confidence === 'string') {
+                add('info', `${itemPath}.confidence`, 'confidence 为字符串数字，兼容层可解析；建议导出为 JSON number。');
+            }
         }
     });
 }
@@ -332,6 +337,15 @@ function isNonEmptyString(value: unknown): value is string {
 
 function isFiniteNumber(value: unknown): value is number {
     return typeof value === 'number' && Number.isFinite(value);
+}
+
+function numberLike(value: unknown): number | undefined {
+    if (isFiniteNumber(value)) return value;
+    if (typeof value === 'string' && value.trim()) {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    return undefined;
 }
 
 function isPoint(value: unknown): boolean {
