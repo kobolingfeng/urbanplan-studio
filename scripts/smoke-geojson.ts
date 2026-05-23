@@ -6,12 +6,17 @@ type ImportedObject = {
     id?: string;
     type?: string;
     points?: Array<{ x: number; y: number }>;
+    point?: { x: number; y: number };
     controls?: {
         farMax?: number;
         buildingCoverageMax?: number;
         greenRatioMin?: number;
         heightMaxM?: number;
     };
+    redLineWidthM?: number;
+    lanes?: number;
+    capacity?: number;
+    serviceRadiusM?: number;
     scenarioValues?: Record<string, {
         far?: number;
         buildingCoverage?: number;
@@ -152,6 +157,16 @@ invalidNumberGeoJson.features[0].properties = {
     greenRatioMin: 2,
     heightMaxM: 1200,
 };
+invalidNumberGeoJson.features[1].properties = {
+    ...invalidNumberGeoJson.features[1].properties,
+    redLineWidthM: -5,
+    lanes: 99,
+};
+invalidNumberGeoJson.features[2].properties = {
+    ...invalidNumberGeoJson.features[2].properties,
+    capacity: -10,
+    serviceRadiusM: 50_000,
+};
 const parsedInvalidNumbers = parseGeoJsonProject(invalidNumberGeoJson, fallback);
 const safeParcel = parsedInvalidNumbers?.project.objects.find(object => object.id === 'parcel_a');
 assert(safeParcel?.scenarioValues?.base?.far === 1, 'GeoJSON import should ignore out-of-range FAR');
@@ -160,5 +175,9 @@ assert(safeParcel?.scenarioValues?.base?.greenRatio === 0.30, 'GeoJSON import sh
 assert(safeParcel?.scenarioValues?.base?.residentialGfaSqm === 0, 'GeoJSON import should ignore negative residential GFA');
 assert(safeParcel?.scenarioValues?.base?.publicServiceGfaSqm === 0, 'GeoJSON import should ignore excessive public service GFA');
 assert(safeParcel?.controls?.farMax === 4 && safeParcel.controls.heightMaxM === 80, 'GeoJSON import should keep parcel controls in valid ranges');
+const safeRoad = parsedInvalidNumbers?.project.objects.find(object => object.id === 'road_a');
+const safeFacility = parsedInvalidNumbers?.project.objects.find(object => object.id === 'facility_a');
+assert(safeRoad?.redLineWidthM === 18 && safeRoad.lanes === 2, 'GeoJSON import should ignore out-of-range road dimensions');
+assert(safeFacility?.capacity === 80 && safeFacility.serviceRadiusM === 500, 'GeoJSON import should ignore out-of-range facility service values');
 
 console.log('geojson smoke passed');

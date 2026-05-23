@@ -76,6 +76,11 @@ type GeoJsonGeometryLike = {
 
 type AnyRecord = Record<string, unknown>;
 
+const ROAD_RED_LINE_WIDTH_RANGE = { min: 0, max: 200 };
+const ROAD_LANES_RANGE = { min: 1, max: 12 };
+const FACILITY_CAPACITY_RANGE = { min: 0, max: 200_000 };
+const FACILITY_SERVICE_RADIUS_RANGE = { min: 0, max: 10_000 };
+
 export type GeoJsonParseResult<TProject> = {
     project: TProject;
     activeScenarioId: string;
@@ -307,8 +312,8 @@ function parseGeoJsonFeature(feature: unknown, activeScenarioId: string, index: 
             ...base,
             points,
             level: textOr(properties.level, '支路'),
-            redLineWidthM: numberOr(properties.redLineWidthM, 18),
-            lanes: Math.max(1, Math.round(numberOr(properties.lanes, 2))),
+            redLineWidthM: numberInRange(properties.redLineWidthM, 18, ROAD_RED_LINE_WIDTH_RANGE.min, ROAD_RED_LINE_WIDTH_RANGE.max),
+            lanes: Math.round(numberInRange(properties.lanes, 2, ROAD_LANES_RANGE.min, ROAD_LANES_RANGE.max)),
         };
     }
 
@@ -328,8 +333,8 @@ function parseGeoJsonFeature(feature: unknown, activeScenarioId: string, index: 
             ...base,
             point,
             kind: textOr(properties.kind, '社区养老'),
-            capacity: numberOr(properties.capacity, 80),
-            serviceRadiusM: numberOr(properties.serviceRadiusM, 500),
+            capacity: numberInRange(properties.capacity, 80, FACILITY_CAPACITY_RANGE.min, FACILITY_CAPACITY_RANGE.max),
+            serviceRadiusM: numberInRange(properties.serviceRadiusM, 500, FACILITY_SERVICE_RADIUS_RANGE.min, FACILITY_SERVICE_RADIUS_RANGE.max),
             planned: booleanOr(properties.planned, false),
         };
     }
