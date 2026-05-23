@@ -2223,7 +2223,7 @@ async function loadUpf() {
                 ],
             });
             if (typeof target === 'string') {
-                loadUpfText(await fs.readTextFile(target));
+                loadUpfText(await fs.readTextFile(target), { sourceName: target, showImportReport: true });
                 currentFilePath = target;
                 dirty = false;
                 clearAutosave();
@@ -2237,7 +2237,7 @@ async function loadUpf() {
     ui.fileInput.click();
 }
 
-function loadUpfText(text: string) {
+function loadUpfText(text: string, options: { sourceName?: string; showImportReport?: boolean } = {}) {
     const raw = JSON.parse(text);
     const parsed = parseUpfText(text, project);
     importFindings = [
@@ -2252,6 +2252,54 @@ function loadUpfText(text: string) {
     objectSearchText = '';
     objectFilter = 'all';
     renderAll();
+    if (options.showImportReport) {
+        showModal('导入报告', buildImportReport(options.sourceName ?? 'UPF 文本'), project.project.name, 'import-report.md');
+    }
+}
+
+function buildImportReport(sourceName: string): string {
+    const warnings = importFindings.filter(finding => finding.severity === 'warning');
+    const infos = importFindings.filter(finding => finding.severity === 'info');
+    const counts = project.objects.reduce<Record<string, number>>((next, object) => {
+        next[object.type] = (next[object.type] ?? 0) + 1;
+        return next;
+    }, {});
+    const lines = [
+        `# ${project.project.name} 导入报告`,
+        '',
+        `来源：${sourceName}`,
+        `UPF 版本：${project.formatVersion}`,
+        `坐标系统：${project.project.crs}`,
+        `当前方案：${activeScenario().name}`,
+        `导入审计：${warnings.length} 个警告，${infos.length} 个提示`,
+        '',
+        '## 对象统计',
+        '',
+        '| 类型 | 数量 |',
+        '|---|---:|',
+        `| 地块 | ${counts.parcel ?? 0} |`,
+        `| 道路 | ${counts.road ?? 0} |`,
+        `| 公共服务设施 | ${counts.facility ?? 0} |`,
+        `| 出入口 | ${counts.entrance ?? 0} |`,
+        `| 开放空间 | ${counts.openSpace ?? 0} |`,
+        `| 约束控制线 | ${counts.constraint ?? 0} |`,
+        '',
+        '## 兼容与校验发现',
+        '',
+        ...(importFindings.length
+            ? [
+                '| 等级 | 对象/路径 | 问题 |',
+                '|---|---|---|',
+                ...importFindings.map(finding => `| ${finding.severity === 'warning' ? '警告' : '提示'} | ${finding.objectId} | ${finding.message} |`),
+            ]
+            : ['- 未发现需要兼容修复或人工复核的问题。']),
+        '',
+        '## 下一步',
+        '',
+        '- 先查看对象列表和图面是否完整，再运行规则检查。',
+        '- 若存在警告，请优先进入质检报告查看 UPF 结构校验和规则目录。',
+    ];
+    return lines.join('\n');
 }
 
 async function copyModal() {
@@ -2325,7 +2373,7 @@ function bindControls() {
         const reader = new FileReader();
         reader.addEventListener('load', () => {
             try {
-                loadUpfText(String(reader.result ?? ''));
+                loadUpfText(String(reader.result ?? ''), { sourceName: file.name, showImportReport: true });
                 currentFilePath = file.name;
                 dirty = false;
                 clearAutosave();

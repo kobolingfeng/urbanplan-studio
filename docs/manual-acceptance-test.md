@@ -69,12 +69,13 @@ Expected:
 
 1. Click `保存` and save a `.upf`.
 2. Click `载入` and load the same file.
-3. Load `examples/minimal.upf`.
-4. Load `examples/luohu-case-v1.upf`.
-5. Confirm the project contains multiple parcels, roads, facilities, open space, heritage constraint, and three scenarios.
-6. Open `验证`; expected: validation pack reflects the loaded Luohu case.
-7. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, UPF structure findings, and dangling references if present.
-8. Load `examples/invalid.upf`; expected: import error modal.
+3. Confirm the import report opens with object counts, active scenario, and compatibility findings.
+4. Load `examples/minimal.upf`.
+5. Load `examples/luohu-case-v1.upf`.
+6. Confirm the project contains multiple parcels, roads, facilities, open space, heritage constraint, and three scenarios.
+7. Open `验证`; expected: validation pack reflects the loaded Luohu case.
+8. Open `质检`; expected: imported files with missing/defaulted fields show an import audit section, UPF structure findings, and dangling references if present.
+9. Load `examples/invalid.upf`; expected: import error modal.
 
 ## Data Integrity
 

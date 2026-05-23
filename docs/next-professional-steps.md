@@ -24,7 +24,7 @@ This backlog is ordered by product risk, not by excitement.
 ## P1: Product Experience
 
 1. Add recent files and current project path.
-2. Add an import report with warnings, normalized fields, and rejected objects.
+2. Extend the import report with before/after normalized field diffs and rejected-object previews.
 3. Add keyboard navigation over canvas objects.
 4. Add object search and filtering.
 5. Add export of scenario comparison tables.
