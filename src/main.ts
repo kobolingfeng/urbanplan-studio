@@ -1343,7 +1343,7 @@ function renderRecommendations() {
 function renderInspector() {
     ui.inspector.replaceChildren();
     const object = getObject(selectedId);
-    ui.btnDelete.disabled = !object || object.type === 'road' || object.type === 'constraint';
+    ui.btnDelete.disabled = !object;
     if (!object) {
         ui.inspector.append(emptyInspector());
         return;
@@ -1871,11 +1871,15 @@ function appendScenarioNote(note: string, addition: string): string {
     return note.includes(addition) ? note : `${note.trim()} ${addition}`.trim();
 }
 
+function referencedEntrancesForObject(objectId: string): Entrance[] {
+    return project.objects.filter((item): item is Entrance => item.type === 'entrance'
+        && (item.parcelId === objectId || item.roadId === objectId));
+}
+
 function deleteSelected() {
     const object = getObject(selectedId);
-    if (!object || object.type === 'road' || object.type === 'constraint') return;
-    const references = project.objects.filter(item => item.type === 'entrance'
-        && (item.parcelId === object.id || item.roadId === object.id));
+    if (!object) return;
+    const references = referencedEntrancesForObject(object.id);
     if (references.length) {
         showModal(
             '无法删除对象',
