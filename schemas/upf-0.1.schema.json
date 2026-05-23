@@ -8,6 +8,33 @@
     "format": { "const": "UPF" },
     "formatVersion": { "const": "0.1.0" },
     "activeScenarioId": { "type": "string" },
+    "manifest": {
+      "type": "object",
+      "properties": {
+        "format": { "const": "UPF" },
+        "formatVersion": { "type": "string" },
+        "exportedAt": { "type": "string" },
+        "software": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "channel": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "unitSystem": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "metersPerCanvasUnit": { "type": "number" }
+          },
+          "additionalProperties": true
+        },
+        "activeScenarioId": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
     "project": {
       "type": "object",
       "required": ["id", "name", "city", "district", "planningType", "planningHorizon", "crs"],

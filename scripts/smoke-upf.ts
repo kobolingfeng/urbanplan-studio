@@ -129,6 +129,7 @@ assert(comparison.includes('参与地块') && comparison.includes('Update 缺失
 
 const schema = JSON.parse(readFileSync(join(schemas, 'upf-0.1.schema.json'), 'utf8'));
 assert(schema.title === 'Urban Planning Format 0.1', 'json schema title mismatch');
+assert(schema.properties?.manifest?.properties?.unitSystem?.properties?.metersPerCanvasUnit, 'json schema should describe UPF manifest unit system');
 
 const mixedCoordinateIssues = validateUpfDocument({
     format: 'UPF',
