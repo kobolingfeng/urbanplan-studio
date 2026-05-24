@@ -291,6 +291,48 @@ const undefinedReferenceIssues = validateUpfDocument({
 });
 assert(undefinedReferenceIssues.some(issue => issue.path === 'objects[2].parcelId' && issue.message.includes('不存在')), 'UPF validation should not treat missing object ids as undefined references');
 
+const trimmedReferenceIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'trimmed_ref', name: 'Trimmed Ref', city: '深圳市', district: '罗湖区', planningType: 'Reference smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: ' base ', name: 'Base', description: 'Reference fixture' }],
+    activeScenarioId: ' base ',
+    objects: [{
+        id: ' parcel_trim ',
+        type: 'parcel',
+        name: 'Trim Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: 3, buildingCoverageMax: 0.35, greenRatioMin: 0.3, heightMaxM: 80 },
+        scenarioValues: {
+            base: { far: 2, buildingCoverage: 0.3, greenRatio: 0.31, residentialGfaSqm: 10000, publicServiceGfaSqm: 300, updateMode: '综合整治' },
+        },
+    }, {
+        id: ' road_trim ',
+        type: 'road',
+        name: 'Road Trim',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 90 }, { x: 80, y: 90 }],
+        level: '支路',
+        redLineWidthM: 18,
+        lanes: 2,
+    }, {
+        id: 'entrance_trim',
+        type: 'entrance',
+        name: 'Trim Entrance',
+        evidence: ['fixture'],
+        point: { x: 10, y: 10 },
+        entranceType: '机动车',
+        parcelId: 'parcel_trim',
+        roadId: ' road_trim ',
+    }],
+});
+assert(!trimmedReferenceIssues.some(issue => issue.message.includes('不存在')), 'UPF validation should trim ids before reference checks');
+assert(!trimmedReferenceIssues.some(issue => issue.path === 'activeScenarioId'), 'UPF validation should trim active scenario ids');
+
 try {
     const invalidText = readFileSync(join(examples, 'invalid.upf'), 'utf8');
     const invalidIssues = validateUpfDocument(JSON.parse(invalidText));

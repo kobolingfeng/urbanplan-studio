@@ -68,14 +68,15 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
             add('error', path, '情景方案必须是对象。');
             return;
         }
-        if (!isNonEmptyString(item.id)) add('error', `${path}.id`, '情景方案缺少 id。');
-        else if (scenarioIds.has(item.id)) add('error', `${path}.id`, `情景方案 id 重复：${item.id}`);
-        else scenarioIds.add(item.id);
+        const scenarioId = identifierText(item.id);
+        if (!scenarioId) add('error', `${path}.id`, '情景方案缺少 id。');
+        else if (scenarioIds.has(scenarioId)) add('error', `${path}.id`, `情景方案 id 重复：${scenarioId}`);
+        else scenarioIds.add(scenarioId);
         if (!isNonEmptyString(item.name)) add('error', `${path}.name`, '情景方案缺少名称。');
         if (!isNonEmptyString(item.description)) add('info', `${path}.description`, '建议补充情景说明，便于论文解释方案差异。');
     });
 
-    const activeScenarioId = String(data.activeScenarioId ?? manifest?.activeScenarioId ?? '');
+    const activeScenarioId = identifierText(data.activeScenarioId ?? manifest?.activeScenarioId) ?? '';
     if (activeScenarioId && !scenarioIds.has(activeScenarioId)) add('warning', 'activeScenarioId', `当前方案 ${activeScenarioId} 不在 scenarios 中。`);
 
     const objects = Array.isArray(data.objects) ? data.objects : [];
@@ -88,9 +89,10 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
             add('error', path, '规划对象必须是对象。');
             return;
         }
-        if (!isNonEmptyString(item.id)) add('error', `${path}.id`, '对象缺少 id。');
-        else if (objectIds.has(item.id)) add('error', `${path}.id`, `对象 id 重复：${item.id}`);
-        else objectIds.add(item.id);
+        const objectId = identifierText(item.id);
+        if (!objectId) add('error', `${path}.id`, '对象缺少 id。');
+        else if (objectIds.has(objectId)) add('error', `${path}.id`, `对象 id 重复：${objectId}`);
+        else objectIds.add(objectId);
         if (!isNonEmptyString(item.name)) add('warning', `${path}.name`, '对象缺少名称。');
         validateEvidenceList(item.evidence, `${path}.evidence`, add);
         if (!isNonEmptyString(item.type) || !OBJECT_TYPES.has(item.type)) {
@@ -99,8 +101,8 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         }
     });
 
-    const parcelIds = new Set(objects.map(asRecord).filter(item => item?.type === 'parcel').map(item => item?.id).filter(isNonEmptyString));
-    const roadIds = new Set(objects.map(asRecord).filter(item => item?.type === 'road').map(item => item?.id).filter(isNonEmptyString));
+    const parcelIds = new Set(objects.map(asRecord).filter(item => item?.type === 'parcel').map(item => identifierText(item?.id)).filter((id): id is string => Boolean(id)));
+    const roadIds = new Set(objects.map(asRecord).filter(item => item?.type === 'road').map(item => identifierText(item?.id)).filter((id): id is string => Boolean(id)));
 
     objects.forEach((object, index) => {
         const item = asRecord(object);
@@ -124,10 +126,12 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         if (item.type === 'entrance') {
             if (!isPoint(item.point)) add('error', `${path}.point`, '出入口缺少有效点位。');
             if (!isNonEmptyString(item.entranceType)) add('warning', `${path}.entranceType`, '出入口缺少类型。');
-            if (!isNonEmptyString(item.parcelId)) add('error', `${path}.parcelId`, '出入口缺少地块引用。');
-            else if (!parcelIds.has(item.parcelId)) add('error', `${path}.parcelId`, `出入口引用不存在的地块：${item.parcelId}`);
-            if (!isNonEmptyString(item.roadId)) add('error', `${path}.roadId`, '出入口缺少道路引用。');
-            else if (!roadIds.has(item.roadId)) add('error', `${path}.roadId`, `出入口引用不存在的道路：${item.roadId}`);
+            const parcelId = identifierText(item.parcelId);
+            const roadId = identifierText(item.roadId);
+            if (!parcelId) add('error', `${path}.parcelId`, '出入口缺少地块引用。');
+            else if (!parcelIds.has(parcelId)) add('error', `${path}.parcelId`, `出入口引用不存在的地块：${parcelId}`);
+            if (!roadId) add('error', `${path}.roadId`, '出入口缺少道路引用。');
+            else if (!roadIds.has(roadId)) add('error', `${path}.roadId`, `出入口引用不存在的道路：${roadId}`);
         }
         if (item.type === 'openSpace' || item.type === 'constraint') {
             if (!hasPoints(item.points, 3)) add('error', `${path}.points`, '面状对象至少需要 3 个点。');
@@ -333,6 +337,12 @@ function asRecord(value: unknown): AnyRecord | undefined {
 
 function isNonEmptyString(value: unknown): value is string {
     return typeof value === 'string' && value.trim().length > 0;
+}
+
+function identifierText(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const text = value.trim();
+    return text || undefined;
 }
 
 function isFiniteNumber(value: unknown): value is number {
