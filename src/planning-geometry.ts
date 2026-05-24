@@ -127,7 +127,15 @@ function onSegment(a: Point, b: Point, p: Point): boolean {
 export function segmentIntersection(a: Point, b: Point, c: Point, d: Point): Point | null {
     if (!segmentsIntersect(a, b, c, d)) return null;
     const denominator = (a.x - b.x) * (c.y - d.y) - (a.y - b.y) * (c.x - d.x);
-    if (Math.abs(denominator) < 0.0001) return null;
+    if (Math.abs(denominator) < 0.0001) {
+        for (const point of [a, b]) {
+            if (onSegment(c, d, point)) return point;
+        }
+        for (const point of [c, d]) {
+            if (onSegment(a, b, point)) return point;
+        }
+        return null;
+    }
     const x = ((a.x * b.y - a.y * b.x) * (c.x - d.x) - (a.x - b.x) * (c.x * d.y - c.y * d.x)) / denominator;
     const y = ((a.x * b.y - a.y * b.x) * (c.y - d.y) - (a.y - b.y) * (c.x * d.y - c.y * d.x)) / denominator;
     return { x, y };

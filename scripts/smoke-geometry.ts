@@ -39,4 +39,7 @@ assert(intersection?.x === 5 && intersection.y === 5, 'segment intersection mism
 const endpointIntersection = segmentIntersection({ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 });
 assert(endpointIntersection?.x === 10 && endpointIntersection.y === 0, 'endpoint intersection mismatch');
 
+const collinearEndpointIntersection = segmentIntersection({ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 0 }, { x: 20, y: 0 });
+assert(collinearEndpointIntersection?.x === 10 && collinearEndpointIntersection.y === 0, 'collinear endpoint intersection mismatch');
+
 console.log('geometry smoke passed');
