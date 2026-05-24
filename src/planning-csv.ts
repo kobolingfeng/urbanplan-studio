@@ -323,7 +323,7 @@ function numberField(
 ): Partial<CsvScenarioValueLike> {
     const value = cell(row, String(key), ...names);
     if (!value) return {};
-    const numeric = Number(value);
+    const numeric = parseCsvNumber(key, value);
     const range = numberRange(key);
     if (!Number.isFinite(numeric) || numeric < range.min || numeric > range.max) {
         invalidFields.push(`${rowLabel}.${normalizeHeader(String(key))}`);
@@ -335,6 +335,19 @@ function numberField(
 function textField(row: Record<string, string>, key: keyof CsvScenarioValueLike, ...names: string[]): Partial<CsvScenarioValueLike> {
     const value = cell(row, String(key), ...names);
     return value ? { [key]: value } : {};
+}
+
+function parseCsvNumber(key: keyof CsvScenarioValueLike, value: string): number {
+    const text = value.trim().replace(/,/g, '');
+    if (text.endsWith('%')) {
+        const percent = Number(text.slice(0, -1));
+        return isRatioField(key) && Number.isFinite(percent) ? percent / 100 : Number.NaN;
+    }
+    return Number(text);
+}
+
+function isRatioField(key: keyof CsvScenarioValueLike): boolean {
+    return key === 'buildingCoverage' || key === 'greenRatio';
 }
 
 function numberRange(key: keyof CsvScenarioValueLike): NumericRange {

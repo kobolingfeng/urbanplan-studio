@@ -60,7 +60,7 @@ const fallback = {
         name: 'Parcel A',
         scenarioValues: {
             base: { far: 1, buildingCoverage: 0.2, greenRatio: 0.25 },
-        } as Record<string, { far?: number; buildingCoverage?: number; greenRatio?: number; notes?: string }>,
+        } as Record<string, { far?: number; buildingCoverage?: number; greenRatio?: number; residentialGfaSqm?: number; publicServiceGfaSqm?: number; notes?: string }>,
     }],
 };
 const parcelCsv = [
@@ -100,6 +100,17 @@ const parsedMultiline = parseParcelIndicatorCsv(multilineCsv, fallback);
 const multilineParcel = parsedMultiline?.project.objects.find(object => object.id === 'parcel_a');
 assert(parsedMultiline?.importSummary.rowCount === 1, 'CSV import should treat quoted newlines as one row');
 assert(multilineParcel?.scenarioValues?.multiline?.notes === 'line 1\nline 2, with comma and "quote"', 'CSV import should parse quoted multiline notes');
+
+const formattedNumberCsv = [
+    'parcel_id,scenario_id,far,building_coverage,green_ratio,residential_gfa_sqm,public_service_gfa_sqm',
+    'parcel_a,formatted,2.8,31%,36%,"42,000","1,200"',
+].join('\n');
+const parsedFormattedNumbers = parseParcelIndicatorCsv(formattedNumberCsv, fallback);
+const formattedParcel = parsedFormattedNumbers?.project.objects.find(object => object.id === 'parcel_a');
+assert(formattedParcel?.scenarioValues?.formatted?.buildingCoverage === 0.31, 'CSV import should parse percentage building coverage');
+assert(formattedParcel?.scenarioValues?.formatted?.greenRatio === 0.36, 'CSV import should parse percentage green ratio');
+assert(formattedParcel?.scenarioValues?.formatted?.residentialGfaSqm === 42000, 'CSV import should parse thousands-separated residential GFA');
+assert(formattedParcel?.scenarioValues?.formatted?.publicServiceGfaSqm === 1200, 'CSV import should parse thousands-separated public service GFA');
 
 const invalidValueCsv = [
     'parcel_id,scenario_id,far,building_coverage,green_ratio,residential_gfa_sqm',
