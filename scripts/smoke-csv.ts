@@ -119,6 +119,22 @@ const parsedNoUpdate = parseParcelIndicatorCsv(noUpdateCsv, fallback);
 assert(parsedNoUpdate?.importSummary.updatedRows === 0 && parsedNoUpdate.importSummary.skippedRows === 1, 'CSV import should skip matched rows without update fields');
 assert(!parsedNoUpdate?.project.scenarios.some(scenario => scenario.id === 'empty_update'), 'CSV import should not create scenarios for no-op rows');
 
+const numericFallback = {
+    scenarios: [{ id: 'base', name: 'Base', description: 'Existing scenario' }],
+    objects: [{
+        id: 0,
+        type: 'parcel',
+        name: 'Zero Parcel',
+        scenarioValues: {},
+    }],
+} as unknown as typeof fallback;
+const parsedNumericId = parseParcelIndicatorCsv([
+    'parcel_id,scenario_id,far',
+    '0,zero_update,2.4',
+].join('\n'), numericFallback);
+assert(parsedNumericId?.importSummary.updatedRows === 1, 'CSV import should match numeric zero parcel ids');
+assert(parsedNumericId?.project.objects[0].scenarioValues?.zero_update?.far === 2.4, 'CSV import should update numeric zero parcel ids');
+
 const exampleCsv = readFileSync(join(ROOT, 'examples', 'parcel-indicators.csv'), 'utf8');
 const exampleFallback = {
     scenarios: [{ id: 'scenario_public', name: 'Public', description: 'Existing scenario' }],

@@ -114,7 +114,12 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
         ...object,
         scenarioValues: object.type === 'parcel' ? { ...(object.scenarioValues ?? {}) } : object.scenarioValues,
     }));
-    const parcels = new Map(objects.filter(object => object.type === 'parcel' && object.id).map(object => [String(object.id), object]));
+    const parcels = new Map<string, CsvObjectLike>();
+    for (const object of objects) {
+        if (object.type !== 'parcel') continue;
+        const id = csvIdentifierText(object.id);
+        if (id) parcels.set(id, object);
+    }
     let activeScenarioId = fallbackProject.scenarios?.[0]?.id ?? 'scenario_csv';
     let updatedRows = 0;
     let skippedRows = 0;
@@ -301,6 +306,12 @@ function cell(row: Record<string, string>, ...names: string[]): string {
         if (value) return value.trim();
     }
     return '';
+}
+
+function csvIdentifierText(value: unknown): string | undefined {
+    if (typeof value !== 'string' && typeof value !== 'number') return undefined;
+    const text = String(value).trim();
+    return text || undefined;
 }
 
 function numberField(
