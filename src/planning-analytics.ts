@@ -338,9 +338,10 @@ export function calculateDataQuality(
         }, {});
     const prototypeRuleCount = checks.filter(check => String(check.source ?? '').includes('原型')).length;
     const ruleCatalog = buildRuleCatalog(checks);
-    const entranceReferenceIssues = buildEntranceReferenceIssues(objects);
+    const entranceReferenceDiagnostics = buildEntranceReferenceDiagnostics(objects);
+    const entranceReferenceIssues = entranceReferenceDiagnostics.issues;
     const unboundEntrances = objects.filter(object => object.type === 'entrance'
-        && entranceReferenceIssues.some(issue => issue.startsWith(String(object.name ?? object.id ?? '未命名出入口'))));
+        && entranceReferenceDiagnostics.objectKeys.has(referenceObjectKey(object)));
     const scenarioIds = new Set((project.scenarios ?? []).map(scenario => scenario.id));
     const parcelScenarioGaps = objects
         .filter(object => object.type === 'parcel')
@@ -375,10 +376,11 @@ export function calculateDataQuality(
     };
 }
 
-function buildEntranceReferenceIssues(objects: PlanningObjectLike[]): string[] {
+function buildEntranceReferenceDiagnostics(objects: PlanningObjectLike[]): { issues: string[]; objectKeys: Set<string> } {
     const parcelIds = new Set(objects.filter(object => object.type === 'parcel').map(object => identifierText((object as AnyRecord).id)).filter((id): id is string => Boolean(id)));
     const roadIds = new Set(objects.filter(object => object.type === 'road').map(object => identifierText((object as AnyRecord).id)).filter((id): id is string => Boolean(id)));
-    return objects
+    const objectKeys = new Set<string>();
+    const issues = objects
         .filter(object => object.type === 'entrance')
         .flatMap((object) => {
             const name = String(object.name ?? object.id ?? '未命名出入口');
@@ -389,14 +391,20 @@ function buildEntranceReferenceIssues(objects: PlanningObjectLike[]): string[] {
             else if (!parcelIds.has(parcelId)) issues.push(`${name} 引用不存在的地块 ${parcelId}`);
             if (!roadId) issues.push(`${name} 缺少道路引用`);
             else if (!roadIds.has(roadId)) issues.push(`${name} 引用不存在的道路 ${roadId}`);
+            if (issues.length) objectKeys.add(referenceObjectKey(object));
             return issues;
         });
+    return { issues, objectKeys };
 }
 
 function identifierText(value: unknown): string | undefined {
     if (typeof value !== 'string' && typeof value !== 'number') return undefined;
     const text = String(value).trim();
     return text || undefined;
+}
+
+function referenceObjectKey(object: PlanningObjectLike): string {
+    return identifierText((object as AnyRecord).id) ?? String(object.name ?? '未命名出入口');
 }
 
 function deduction(label: string, count: number, weight: number) {

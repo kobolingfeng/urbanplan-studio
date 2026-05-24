@@ -166,6 +166,18 @@ const numericReferenceQuality = calculateDataQuality({
 } as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
 assert(numericReferenceQuality.entranceReferenceIssues.length === 0, 'data quality should accept numeric zero ids and references');
 
+const duplicateEntranceNameQuality = calculateDataQuality({
+    project: { name: 'Duplicate Entrance Names' },
+    ruleset: { basis: ['fixture basis'] },
+    objects: [
+        { id: 'parcel_ok', type: 'parcel', name: 'Parcel OK', evidence: ['fixture'] },
+        { id: 'road_ok', type: 'road', name: 'Road OK', evidence: ['fixture'] },
+        { id: 'entrance_good', type: 'entrance', name: 'Shared Entrance', evidence: ['fixture'], parcelId: 'parcel_ok', roadId: 'road_ok' },
+        { id: 'entrance_bad', type: 'entrance', name: 'Shared Entrance', evidence: ['fixture'], parcelId: 'missing_parcel', roadId: 'missing_road' },
+    ],
+}, [], []);
+assert(duplicateEntranceNameQuality.unboundEntrances.length === 1 && duplicateEntranceNameQuality.unboundEntrances[0].id === 'entrance_bad', 'data quality should not mark same-name valid entrances as unbound');
+
 const schema = JSON.parse(readFileSync(join(schemas, 'upf-0.1.schema.json'), 'utf8'));
 assert(schema.title === 'Urban Planning Format 0.1', 'json schema title mismatch');
 assert(schema.properties?.manifest?.properties?.unitSystem?.properties?.metersPerCanvasUnit, 'json schema should describe UPF manifest unit system');
