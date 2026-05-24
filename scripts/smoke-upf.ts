@@ -40,6 +40,17 @@ assert(buildUpfValidationReport(minimalIssues).includes('UPF 结构校验报告'
 const minimal = parseUpfText(minimalText, fallback);
 assert(minimal.project.project?.id === 'minimal_demo', 'minimal project id mismatch');
 assert(minimal.activeScenarioId === 'scenario_base', 'minimal active scenario mismatch');
+const trimmedActiveScenario = parseUpfText(JSON.stringify({
+    ...minimalRaw,
+    activeScenarioId: ' scenario_base ',
+}), fallback);
+assert(trimmedActiveScenario.activeScenarioId === 'scenario_base', 'UPF parser should trim active scenario ids');
+const manifestActiveScenario = parseUpfText(JSON.stringify({
+    ...minimalRaw,
+    activeScenarioId: ' ',
+    manifest: { ...minimalRaw.manifest, activeScenarioId: ' scenario_base ' },
+}), fallback);
+assert(manifestActiveScenario.activeScenarioId === 'scenario_base', 'UPF parser should fall back to manifest active scenario ids');
 const minimalWithBom = parseUpfText(`\uFEFF${minimalText}`, fallback);
 assert(minimalWithBom.project.project?.id === 'minimal_demo', 'UPF parser should accept JSON files with UTF-8 BOM');
 const minimalObjects = minimal.project.objects as Array<{ evidence?: unknown[] }> | undefined;

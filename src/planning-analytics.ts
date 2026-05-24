@@ -127,10 +127,11 @@ export function parseUpfText<TProject extends ProjectLike>(
         if (csv) return csv;
         throw new Error('不是可识别的 UPF 文件');
     }
-    const activeScenarioId = String(data.activeScenarioId
-        ?? (data.manifest as AnyRecord | undefined)?.activeScenarioId
-        ?? fallbackProject.scenarios?.[0]?.id
-        ?? '');
+    const activeScenarioId = firstIdentifier(
+        data.activeScenarioId,
+        (data.manifest as AnyRecord | undefined)?.activeScenarioId,
+        fallbackProject.scenarios?.[0]?.id,
+    ) ?? '';
 
     if (data.format === 'UPF' && Array.isArray(data.objects) && Array.isArray(data.scenarios)) {
         return {
@@ -402,6 +403,14 @@ function identifierText(value: unknown): string | undefined {
     if (typeof value !== 'string' && typeof value !== 'number') return undefined;
     const text = String(value).trim();
     return text || undefined;
+}
+
+function firstIdentifier(...values: unknown[]): string | undefined {
+    for (const value of values) {
+        const id = identifierText(value);
+        if (id) return id;
+    }
+    return undefined;
 }
 
 function referenceObjectKey(object: PlanningObjectLike): string {
