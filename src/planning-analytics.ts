@@ -117,11 +117,12 @@ export function parseUpfText<TProject extends ProjectLike>(
     text: string,
     fallbackProject: TProject,
 ): UpfParseResult<TProject> {
+    const source = text.replace(/^\uFEFF/, '');
     let data: AnyRecord;
     try {
-        data = JSON.parse(text) as AnyRecord;
+        data = JSON.parse(source) as AnyRecord;
     } catch {
-        const csv = parseParcelIndicatorCsv(text, fallbackProject);
+        const csv = parseParcelIndicatorCsv(source, fallbackProject);
         if (csv) return csv;
         throw new Error('不是可识别的 UPF 文件');
     }

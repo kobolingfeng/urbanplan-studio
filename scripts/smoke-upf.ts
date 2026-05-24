@@ -40,6 +40,8 @@ assert(buildUpfValidationReport(minimalIssues).includes('UPF 结构校验报告'
 const minimal = parseUpfText(minimalText, fallback);
 assert(minimal.project.project?.id === 'minimal_demo', 'minimal project id mismatch');
 assert(minimal.activeScenarioId === 'scenario_base', 'minimal active scenario mismatch');
+const minimalWithBom = parseUpfText(`\uFEFF${minimalText}`, fallback);
+assert(minimalWithBom.project.project?.id === 'minimal_demo', 'UPF parser should accept JSON files with UTF-8 BOM');
 const minimalObjects = minimal.project.objects as Array<{ evidence?: unknown[] }> | undefined;
 assert(typeof minimalObjects?.[0]?.evidence?.[0] === 'object', 'minimal evidence should demonstrate structured EvidenceSource');
 const stringConfidenceRaw = JSON.parse(minimalText);

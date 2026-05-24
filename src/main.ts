@@ -2542,10 +2542,11 @@ function loadUpfText(text: string, options: { sourceName?: string; showImportRep
 }
 
 function parseRawImportPayload(text: string): unknown {
+    const source = text.replace(/^\uFEFF/, '');
     try {
-        return JSON.parse(text);
+        return JSON.parse(source);
     } catch {
-        return text;
+        return source;
     }
 }
 
