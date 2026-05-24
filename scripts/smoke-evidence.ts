@@ -44,4 +44,22 @@ assert(evidenceCompletenessScore(decimalConfidence) > evidenceCompletenessScore(
 const parsedArray = parseEvidenceText('[{"title":"数组证据","type":"survey","confidence":"75"},{"title":"数组证据二","type":"poi"}]');
 assert(parsedArray.length === 2 && typeof parsedArray[0] === 'object' && (parsedArray[0] as EvidenceSource).confidence === 75, 'evidence text parser should accept JSON arrays');
 
+const formattedJson = parseEvidenceText([
+    '[',
+    '  {',
+    '    "title": "格式化数组证据",',
+    '    "type": "traffic",',
+    '    "confidence": "0.64"',
+    '  },',
+    '  {',
+    '    "title": "格式化数组证据二",',
+    '    "type": "basemap"',
+    '  }',
+    ']',
+].join('\n'));
+assert(formattedJson.length === 2 && typeof formattedJson[0] === 'object' && (formattedJson[0] as EvidenceSource).confidence === 0.64, 'evidence text parser should accept formatted JSON arrays');
+
+const emptyJson = parseEvidenceText('[]');
+assert(emptyJson.length === 0, 'empty JSON evidence arrays should stay empty');
+
 console.log('evidence smoke passed');

@@ -70,30 +70,19 @@ export function normalizeEvidenceItem(value: unknown): EvidenceItem | undefined 
 }
 
 export function parseEvidenceText(text: string): EvidenceItem[] {
+    const jsonBlock = parseEvidenceJson(text.trim());
+    if (jsonBlock) return jsonBlock;
+
     const items: EvidenceItem[] = [];
     for (const rawLine of text.split(/\r?\n/)) {
         const line = rawLine.trim();
         if (!line) continue;
         if (line.startsWith('{') || line.startsWith('[')) {
-            try {
-                const parsed = JSON.parse(line);
-                if (Array.isArray(parsed)) {
-                    const normalizedItems = parsed.flatMap(item => {
-                        const normalized = normalizeEvidenceItem(item);
-                        return normalized ? [normalized] : [];
-                    });
-                    if (normalizedItems.length) {
-                        items.push(...normalizedItems);
-                        continue;
-                    }
-                } else {
-                    const normalized = normalizeEvidenceItem(parsed);
-                    if (normalized) {
-                        items.push(normalized);
-                        continue;
-                    }
-                }
-            } catch {}
+            const parsedItems = parseEvidenceJson(line);
+            if (parsedItems) {
+                items.push(...parsedItems);
+                continue;
+            }
         }
         for (const part of line.split(/[；;]/).map(value => value.trim()).filter(Boolean)) {
             const parsed = normalizeEvidenceItem(part);
@@ -101,6 +90,23 @@ export function parseEvidenceText(text: string): EvidenceItem[] {
         }
     }
     return items;
+}
+
+function parseEvidenceJson(text: string): EvidenceItem[] | undefined {
+    if (!text || (!text.startsWith('{') && !text.startsWith('['))) return undefined;
+    try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+            return parsed.flatMap(item => {
+                const normalized = normalizeEvidenceItem(item);
+                return normalized ? [normalized] : [];
+            });
+        }
+        const normalized = normalizeEvidenceItem(parsed);
+        return normalized ? [normalized] : [];
+    } catch {
+        return undefined;
+    }
 }
 
 export function formatEvidenceForEditing(items: EvidenceItem[] = []): string {
