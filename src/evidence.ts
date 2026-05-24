@@ -74,12 +74,24 @@ export function parseEvidenceText(text: string): EvidenceItem[] {
     for (const rawLine of text.split(/\r?\n/)) {
         const line = rawLine.trim();
         if (!line) continue;
-        if (line.startsWith('{')) {
+        if (line.startsWith('{') || line.startsWith('[')) {
             try {
-                const parsed = normalizeEvidenceItem(JSON.parse(line));
-                if (parsed) {
-                    items.push(parsed);
-                    continue;
+                const parsed = JSON.parse(line);
+                if (Array.isArray(parsed)) {
+                    const normalizedItems = parsed.flatMap(item => {
+                        const normalized = normalizeEvidenceItem(item);
+                        return normalized ? [normalized] : [];
+                    });
+                    if (normalizedItems.length) {
+                        items.push(...normalizedItems);
+                        continue;
+                    }
+                } else {
+                    const normalized = normalizeEvidenceItem(parsed);
+                    if (normalized) {
+                        items.push(normalized);
+                        continue;
+                    }
                 }
             } catch {}
         }

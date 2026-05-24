@@ -41,4 +41,7 @@ const parsed = parseEvidenceText([
 assert(parsed.length === 2 && typeof parsed[0] === 'object' && (parsed[0] as EvidenceSource).confidence === 0.5, 'evidence text parser should keep numeric-string confidence');
 assert(evidenceCompletenessScore(decimalConfidence) > evidenceCompletenessScore('旧版字符串证据'), 'structured evidence should score above legacy strings');
 
+const parsedArray = parseEvidenceText('[{"title":"数组证据","type":"survey","confidence":"75"},{"title":"数组证据二","type":"poi"}]');
+assert(parsedArray.length === 2 && typeof parsedArray[0] === 'object' && (parsedArray[0] as EvidenceSource).confidence === 75, 'evidence text parser should accept JSON arrays');
+
 console.log('evidence smoke passed');
