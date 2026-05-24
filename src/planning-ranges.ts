@@ -36,7 +36,8 @@ export const UNBOUNDED_RANGE: NumericRange = {
 export function finiteNumberOr(value: unknown, fallback: number): number {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     if (typeof value === 'string' && value.trim()) {
-        const parsed = Number(value);
+        const text = value.trim();
+        const parsed = Number(thousandsNumberPattern.test(text) ? text.replace(/,/g, '') : text);
         if (Number.isFinite(parsed)) return parsed;
     }
     return fallback;
@@ -54,3 +55,5 @@ export function integerInRangeOr(value: unknown, fallback: number, range: Numeri
 export function formatRange(range: NumericRange): string {
     return `${range.min}-${range.max}`;
 }
+
+const thousandsNumberPattern = /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/;
