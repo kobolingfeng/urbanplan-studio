@@ -216,6 +216,7 @@ invalidNumberGeoJson.features[2].properties = {
     ...invalidNumberGeoJson.features[2].properties,
     capacity: -10,
     serviceRadiusM: 50_000,
+    planned: ' true ',
 };
 const parsedInvalidNumbers = parseGeoJsonProject(invalidNumberGeoJson, fallback);
 const safeParcel = parsedInvalidNumbers?.project.objects.find(object => object.id === 'parcel_a');
@@ -229,5 +230,6 @@ const safeRoad = parsedInvalidNumbers?.project.objects.find(object => object.id 
 const safeFacility = parsedInvalidNumbers?.project.objects.find(object => object.id === 'facility_a');
 assert(safeRoad?.redLineWidthM === 18 && safeRoad.lanes === 2, 'GeoJSON import should ignore out-of-range road dimensions');
 assert(safeFacility?.capacity === 80 && safeFacility.serviceRadiusM === 500, 'GeoJSON import should ignore out-of-range facility service values');
+assert((safeFacility as { planned?: boolean } | undefined)?.planned === true, 'GeoJSON import should trim boolean strings');
 
 console.log('geojson smoke passed');

@@ -431,8 +431,9 @@ function textOr(value: unknown, fallback: string): string {
 function booleanOr(value: unknown, fallback: boolean): boolean {
     if (typeof value === 'boolean') return value;
     if (typeof value === 'string') {
-        if (value.toLowerCase() === 'true') return true;
-        if (value.toLowerCase() === 'false') return false;
+        const text = value.trim().toLowerCase();
+        if (text === 'true') return true;
+        if (text === 'false') return false;
     }
     return fallback;
 }
