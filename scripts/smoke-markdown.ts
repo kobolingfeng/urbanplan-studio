@@ -14,6 +14,7 @@ const markdown = [
     '# 安全报告 <script>alert(1)</script>',
     '',
     '- **强制项**：`<img src=x onerror=alert(1)>`',
+    '- `**literal**` and **bold**',
     '',
     '| 字段 | 值 |',
     '|---|---|',
@@ -28,6 +29,7 @@ const html = markdownToHtml(markdown);
 assert(html.includes('<h1>安全报告 &lt;script&gt;alert(1)&lt;/script&gt;</h1>'), 'heading text should be escaped');
 assert(html.includes('<strong>强制项</strong>'), 'strong inline markdown should render');
 assert(html.includes('<code>&lt;img src=x onerror=alert(1)&gt;</code>'), 'inline code should be escaped');
+assert(html.includes('<code>**literal**</code> and <strong>bold</strong>'), 'inline code should not render nested bold');
 assert(html.includes('<table>') && html.includes('<td>&lt;b onclick=alert(1)&gt;地块&lt;/b&gt;</td>'), 'table cells should be escaped');
 assert(html.includes('&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;'), 'code blocks should be escaped');
 assert(!html.includes('<script>') && !html.includes('<img'), 'markdown renderer should not emit raw unsafe tags');

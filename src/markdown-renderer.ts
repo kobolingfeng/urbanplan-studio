@@ -95,9 +95,12 @@ function markdownTableToHtml(lines: string[]): string {
 }
 
 function inlineMarkdown(text: string): string {
-    return escapeHtml(text)
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    return text.split(/(`[^`]+`)/g).map((part) => {
+        if (part.startsWith('`') && part.endsWith('`') && part.length > 1) {
+            return `<code>${escapeHtml(part.slice(1, -1))}</code>`;
+        }
+        return escapeHtml(part).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }).join('');
 }
 
 function escapeHtml(text: string): string {
