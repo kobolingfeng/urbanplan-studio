@@ -12,6 +12,7 @@ import {
     distanceToPolyline,
     type Point,
 } from './planning-geometry';
+import { finiteNumberOr } from './planning-ranges';
 
 type Severity = 'error' | 'warning' | 'info' | 'ok';
 type FacilityKind = '幼儿园' | '社区养老' | '社区卫生' | '文化活动' | '便民商业';
@@ -661,7 +662,7 @@ function scoreBand(score: number): EvaluationBand {
 }
 
 function number(value: unknown, fallback = 0): number {
-    return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+    return finiteNumberOr(value, fallback);
 }
 
 function asPercent(value: number): string {

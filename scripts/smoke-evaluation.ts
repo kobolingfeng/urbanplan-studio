@@ -163,4 +163,40 @@ const degenerateEvaluation = evaluateScenario(degenerateGeometryProject, 'scenar
 assert(degenerateEvaluation.parcels.length === 0, 'evaluation should exclude degenerate parcel geometry from parcel priority');
 assert(!buildScenarioEvaluationReport(degenerateGeometryProject, 'scenario_update').includes('Line Parcel'), 'evaluation report should not allocate service demand to degenerate parcels');
 
+const stringNumericProject = {
+    project: { name: 'String Numeric Evaluation' },
+    ruleset: { version: 'String Numeric Rules', basis: ['fixture'] },
+    scenarios: [{ id: 'scenario_update', name: 'Update' }],
+    objects: [{
+        id: 'parcel_string_numeric',
+        type: 'parcel',
+        name: 'String Numeric Parcel',
+        evidence: ['smoke fixture'],
+        points: [
+            { x: 0, y: 0 },
+            { x: 120, y: 0 },
+            { x: 120, y: 100 },
+            { x: 0, y: 100 },
+        ],
+        controls: {
+            farMax: '4',
+            buildingCoverageMax: '0.35',
+            greenRatioMin: '0.30',
+        },
+        scenarioValues: {
+            scenario_update: {
+                far: '3.8',
+                buildingCoverage: '0.33',
+                greenRatio: '0.32',
+                residentialGfaSqm: '48,000',
+                publicServiceGfaSqm: '1,600',
+                updateMode: '综合整治',
+            },
+        },
+    }],
+} as unknown as typeof project;
+const stringNumericReport = buildScenarioEvaluationReport(stringNumericProject, 'scenario_update');
+assert(stringNumericReport.includes('| String Numeric Parcel | 1455 |'), 'evaluation should parse strict numeric strings for service allocation');
+assert(!stringNumericReport.includes('NaN'), 'evaluation report should not emit NaN for numeric strings');
+
 console.log('evaluation smoke passed');
