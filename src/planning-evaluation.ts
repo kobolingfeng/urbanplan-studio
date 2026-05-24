@@ -669,11 +669,11 @@ function asPercent(value: number): string {
 }
 
 function isParcel(object: PlanningObjectLike): boolean {
-    return object.type === 'parcel' && Boolean(object.points?.length);
+    return object.type === 'parcel' && (object.points?.length ?? 0) >= 3;
 }
 
 function isRoad(object: PlanningObjectLike): boolean {
-    return object.type === 'road' && Boolean(object.points?.length);
+    return object.type === 'road' && (object.points?.length ?? 0) >= 2;
 }
 
 function isFacility(object: PlanningObjectLike): boolean {
@@ -685,5 +685,5 @@ function isEntrance(object: PlanningObjectLike): boolean {
 }
 
 function isOpenSpace(object: PlanningObjectLike): boolean {
-    return object.type === 'openSpace' && Boolean(object.points?.length);
+    return object.type === 'openSpace' && (object.points?.length ?? 0) >= 3;
 }

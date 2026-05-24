@@ -124,4 +124,43 @@ for (const profile of EVALUATION_WEIGHT_PROFILES) {
     assert(profiled.dimensions.reduce((sum, item) => sum + item.weight, 0) > 0.99, `${profile.name} weights should sum close to 1`);
 }
 
+const degenerateGeometryProject = {
+    project: { name: 'Degenerate Evaluation' },
+    ruleset: { version: 'Geometry Evaluation Rules', basis: ['fixture'] },
+    scenarios: [{ id: 'scenario_update', name: 'Update' }],
+    objects: [
+        {
+            id: 'parcel_line',
+            type: 'parcel',
+            name: 'Line Parcel',
+            evidence: ['smoke fixture'],
+            points: [{ x: 0, y: 0 }, { x: 100, y: 0 }],
+            scenarioValues: {
+                scenario_update: {
+                    far: 2,
+                    buildingCoverage: 0.3,
+                    greenRatio: 0.3,
+                    residentialGfaSqm: 12000,
+                    publicServiceGfaSqm: 300,
+                },
+            },
+        },
+        {
+            id: 'road_point',
+            type: 'road',
+            name: 'Point Road',
+            points: [{ x: 0, y: 0 }],
+        },
+        {
+            id: 'open_line',
+            type: 'openSpace',
+            name: 'Line Open Space',
+            points: [{ x: 0, y: 0 }, { x: 20, y: 0 }],
+        },
+    ],
+};
+const degenerateEvaluation = evaluateScenario(degenerateGeometryProject, 'scenario_update', [], []);
+assert(degenerateEvaluation.parcels.length === 0, 'evaluation should exclude degenerate parcel geometry from parcel priority');
+assert(!buildScenarioEvaluationReport(degenerateGeometryProject, 'scenario_update').includes('Line Parcel'), 'evaluation report should not allocate service demand to degenerate parcels');
+
 console.log('evaluation smoke passed');
