@@ -44,4 +44,11 @@ assert(split.length === 3 && split[0] === 'A|B' && split[1] === 'line 1 / line 2
 const tableHtml = markdownToHtml(['| 字段 | 值 |', '|---|---|', escapedRow].join('\n'));
 assert(tableHtml.includes('<td>A|B</td>') && tableHtml.includes('<td>&lt;unsafe&gt;</td>'), 'escaped table rows should render as safe table cells');
 
+const alignedTable = markdownToHtml(['| 左 | 右 |', '|:---|---:|', '| a | b |'].join('\n'));
+assert(alignedTable.includes('<table>') && alignedTable.includes('<td>a</td>'), 'aligned markdown separators should still render tables');
+
+const loosePipes = markdownToHtml(['| just a paragraph |', '| maybe --- text |'].join('\n'));
+assert(!loosePipes.includes('<table>'), 'pipe paragraphs with loose dashes should not render as a table');
+assert(loosePipes.includes('<p>| just a paragraph |</p>'), 'loose pipe lines should remain paragraphs');
+
 console.log('markdown smoke passed');

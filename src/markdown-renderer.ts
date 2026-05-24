@@ -75,7 +75,16 @@ export function markdownToHtml(markdown: string): string {
 function isMarkdownTableStart(lines: string[], index: number): boolean {
     const header = lines[index]?.trim() ?? '';
     const separator = lines[index + 1]?.trim() ?? '';
-    return header.startsWith('|') && separator.startsWith('|') && /---/.test(separator);
+    if (!header.startsWith('|') || !separator.startsWith('|')) return false;
+    const headerCells = splitMarkdownTableRow(header);
+    const separatorCells = splitMarkdownTableRow(separator);
+    return headerCells.length > 0
+        && separatorCells.length === headerCells.length
+        && separatorCells.every(isMarkdownTableSeparatorCell);
+}
+
+function isMarkdownTableSeparatorCell(cell: string): boolean {
+    return /^:?-{3,}:?$/.test(cell.trim());
 }
 
 function markdownTableToHtml(lines: string[]): string {
