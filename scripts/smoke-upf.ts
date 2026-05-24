@@ -135,6 +135,24 @@ assert(qualityReport.includes('扣分项') && qualityReport.includes('出入口�
 const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
 assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
 assert(comparison.includes(String(Math.round(14000 / SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident))), 'scenario comparison should use shared resident assumptions');
+const degenerateComparison = buildScenarioComparisonReport({
+    project: { name: 'Degenerate Comparison' },
+    scenarios: [{ id: 'base', name: 'Base' }],
+    objects: [{
+        id: 'parcel_valid',
+        type: 'parcel',
+        name: 'Valid Parcel',
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        scenarioValues: { base: { far: 2, greenRatio: 0.3, residentialGfaSqm: 12000, publicServiceGfaSqm: 400 } },
+    }, {
+        id: 'parcel_line',
+        type: 'parcel',
+        name: 'Line Parcel',
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }],
+        scenarioValues: { base: { far: 8, greenRatio: 0.1, residentialGfaSqm: 50000, publicServiceGfaSqm: 0 } },
+    }],
+}, 'base');
+assert(degenerateComparison.includes('| Base | 1/1 | 0 |'), 'scenario comparison should exclude degenerate parcel geometry');
 
 const numericReferenceQuality = calculateDataQuality({
     project: { name: 'Numeric Reference Fixture' },

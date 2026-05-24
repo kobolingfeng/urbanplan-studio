@@ -181,7 +181,7 @@ export function buildScenarioComparisonReport(
     options: { headingLevel?: number } = {},
 ): string {
     const scenarios = project.scenarios ?? [];
-    const parcels = (project.objects ?? []).filter(object => object.type === 'parcel');
+    const parcels = (project.objects ?? []).filter(isComparableParcel);
     const titleLevel = Math.max(1, Math.min(6, options.headingLevel ?? 1));
     const rows = scenarios.map((scenario) => {
         let residentialGfa = 0;
@@ -440,14 +440,25 @@ function number(value: number): string {
 }
 
 function polygonArea(points: Array<{ x: number; y: number }>): number {
-    if (points.length < 3) return 1;
+    return Math.max(1, rawPolygonArea(points));
+}
+
+function isComparableParcel(object: PlanningObjectLike): boolean {
+    return object.type === 'parcel'
+        && Array.isArray(object.points)
+        && object.points.length >= 3
+        && rawPolygonArea(object.points) > 0.0001;
+}
+
+function rawPolygonArea(points: Array<{ x: number; y: number }>): number {
+    if (points.length < 3) return 0;
     let sum = 0;
     for (let i = 0; i < points.length; i++) {
         const a = points[i];
         const b = points[(i + 1) % points.length];
         sum += a.x * b.y - b.x * a.y;
     }
-    return Math.max(1, Math.abs(sum / 2));
+    return Math.abs(sum / 2);
 }
 
 function average(values: number[]): number {
