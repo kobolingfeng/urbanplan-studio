@@ -154,6 +154,22 @@ const degenerateComparison = buildScenarioComparisonReport({
 }, 'base');
 assert(degenerateComparison.includes('| Base | 1/1 | 0 |'), 'scenario comparison should exclude degenerate parcel geometry');
 
+const malformedNumericComparison = buildScenarioComparisonReport({
+    project: { name: 'Malformed Numeric Comparison' },
+    scenarios: [{ id: 'base', name: 'Base' }],
+    objects: [{
+        id: 'parcel_malformed',
+        type: 'parcel',
+        name: 'Malformed Numeric Parcel',
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        scenarioValues: {
+            base: { far: 'not_a_number', greenRatio: '3,2', residentialGfaSqm: 'bad', publicServiceGfaSqm: '1,200' },
+        },
+    }],
+} as unknown as Parameters<typeof buildScenarioComparisonReport>[0], 'base');
+assert(!malformedNumericComparison.includes('NaN'), 'scenario comparison should not emit NaN for malformed numeric values');
+assert(malformedNumericComparison.includes('1,200'), 'scenario comparison should still accept strict thousands-formatted numeric strings');
+
 const numericReferenceQuality = calculateDataQuality({
     project: { name: 'Numeric Reference Fixture' },
     ruleset: { basis: ['fixture basis'] },

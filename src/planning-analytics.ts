@@ -8,6 +8,7 @@ import { markdownTableRow } from './markdown-table';
 import { SERVICE_DEMAND_ASSUMPTIONS } from './planning-assumptions';
 import { parseParcelIndicatorCsv } from './planning-csv';
 import { parseGeoJsonProject } from './planning-geojson';
+import { finiteNumberOr } from './planning-ranges';
 
 type AnyRecord = Record<string, unknown>;
 
@@ -198,10 +199,10 @@ export function buildScenarioComparisonReport(
                 continue;
             }
             const parcelArea = polygonArea(parcel.points ?? []);
-            residentialGfa += Number(value.residentialGfaSqm ?? 0);
-            publicServiceGfa += Number(value.publicServiceGfaSqm ?? 0);
-            weightedFarSum += Number(value.far ?? 0) * parcelArea;
-            weightedGreenSum += Number(value.greenRatio ?? 0) * parcelArea;
+            residentialGfa += finiteNumberOr(value.residentialGfaSqm, 0);
+            publicServiceGfa += finiteNumberOr(value.publicServiceGfaSqm, 0);
+            weightedFarSum += finiteNumberOr(value.far, 0) * parcelArea;
+            weightedGreenSum += finiteNumberOr(value.greenRatio, 0) * parcelArea;
             areaSum += parcelArea;
             valuesCount++;
         }
