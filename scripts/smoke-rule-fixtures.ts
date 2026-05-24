@@ -211,6 +211,39 @@ const entranceWithSinglePointRoad = [
 assertTriggers('entrance single-point road geometry gap', entranceWithSinglePointRoad, ['entrance_road_geometry_missing']);
 assertDoesNotTrigger('entrance single-point road geometry gap', entranceWithSinglePointRoad, ['entrance_road_distance', 'entrance_dangling_road']);
 
+const normalizedReferenceChecks = run([{
+    ...badParcel,
+    id: 0,
+    name: 'Numeric Parcel',
+    scenarioValues: {
+        s1: {
+            far: 2,
+            buildingCoverage: 0.3,
+            greenRatio: 0.32,
+            residentialGfaSqm: 10000,
+            publicServiceGfaSqm: 500,
+            updateMode: '综合整治',
+        },
+    },
+} as unknown as FixtureObject, {
+    id: ' road_trim ',
+    type: 'road',
+    name: 'Trimmed Road',
+    level: '支路',
+    points: [{ x: 0, y: 80 }, { x: 260, y: 80 }],
+}, {
+    id: 'entrance_normalized',
+    type: 'entrance',
+    name: 'Normalized Entrance',
+    entranceType: '人行',
+    parcelId: 0,
+    roadId: 'road_trim',
+    point: { x: 20, y: 80 },
+} as unknown as FixtureObject]);
+const normalizedReferenceRuleIds = new Set(normalizedReferenceChecks.map(check => check.ruleId));
+assert(!normalizedReferenceRuleIds.has('entrance_dangling_parcel'), 'rules should accept numeric zero parcel references');
+assert(!normalizedReferenceRuleIds.has('entrance_dangling_road'), 'rules should trim road references before matching');
+
 assertDoesNotTrigger('degenerate parcel geometry', [{
     ...badParcel,
     id: 'parcel_line',

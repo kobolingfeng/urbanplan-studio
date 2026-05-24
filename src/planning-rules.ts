@@ -14,6 +14,7 @@ import {
 type Severity = 'error' | 'warning' | 'info' | 'ok';
 type FacilityKind = '幼儿园' | '社区养老' | '社区卫生' | '文化活动' | '便民商业';
 type RuleSourceLevel = 'statutory' | 'technical' | 'format' | 'prototype';
+type AnyRecord = Record<string, unknown>;
 
 type RuleObject = {
     id: string;
@@ -469,8 +470,14 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
     }
 
-    const allParcelIds = new Set(project.objects.filter(object => object.type === 'parcel').map(parcel => parcel.id));
-    const allRoadIds = new Set(project.objects.filter(object => object.type === 'road').map(road => road.id));
+    const allParcelIds = new Set(project.objects
+        .filter(object => object.type === 'parcel')
+        .map(normalizedObjectId)
+        .filter((id): id is string => Boolean(id)));
+    const allRoadIds = new Set(project.objects
+        .filter(object => object.type === 'road')
+        .map(normalizedObjectId)
+        .filter((id): id is string => Boolean(id)));
     for (const road of roads) {
         const width = number(road.redLineWidthM);
         const minimum = roadRedLineMinimum(road);
@@ -488,7 +495,9 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
     }
 
     for (const entrance of project.objects.filter(object => object.type === 'entrance' && object.point)) {
-        if (!entrance.parcelId || !allParcelIds.has(entrance.parcelId)) {
+        const parcelId = identifierText((entrance as unknown as AnyRecord).parcelId);
+        const roadId = identifierText((entrance as unknown as AnyRecord).roadId);
+        if (!parcelId || !allParcelIds.has(parcelId)) {
             add({
                 ruleId: 'entrance_dangling_parcel',
                 objectId: entrance.id,
@@ -499,8 +508,8 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 source: ruleSource('entrance_dangling_parcel', project.ruleset.version),
             });
         }
-        const road = roads.find(item => item.id === entrance.roadId);
-        if (!entrance.roadId || !allRoadIds.has(entrance.roadId)) {
+        const road = roads.find(item => normalizedObjectId(item) === roadId);
+        if (!roadId || !allRoadIds.has(roadId)) {
             add({
                 ruleId: 'entrance_dangling_road',
                 objectId: entrance.id,
@@ -745,6 +754,16 @@ function nearestRoadIntersection(roads: RuleObject[], point: Point): Point | nul
 
 function number(value: unknown, fallback = 0): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function normalizedObjectId(object: RuleObject): string | undefined {
+    return identifierText((object as unknown as AnyRecord).id);
+}
+
+function identifierText(value: unknown): string | undefined {
+    if (typeof value !== 'string' && typeof value !== 'number') return undefined;
+    const text = String(value).trim();
+    return text || undefined;
 }
 
 function buildStructuredRuleSource(rule: RuleCatalogDraft): RuleSource {
