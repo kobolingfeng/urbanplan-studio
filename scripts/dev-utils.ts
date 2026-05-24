@@ -1,3 +1,5 @@
+import { isAbsolute, relative, resolve } from 'path';
+
 export function splitCommandLine(command: string): string[] {
     const parts: string[] = [];
     const pattern = /"([^"]*)"|'([^']*)'|(\S+)/g;
@@ -6,6 +8,19 @@ export function splitCommandLine(command: string): string[] {
         parts.push(match[1] ?? match[2] ?? match[3]);
     }
     return parts;
+}
+
+export function resolveDevServerPath(root: string, urlPath: string): string | undefined {
+    let decodedPath: string;
+    try {
+        decodedPath = decodeURIComponent(urlPath === '/' ? '/index.html' : urlPath);
+    } catch {
+        return undefined;
+    }
+    const target = resolve(root, decodedPath.replace(/^[/\\]+/, ''));
+    const inside = relative(root, target);
+    if (inside && (inside.startsWith('..') || isAbsolute(inside))) return undefined;
+    return target;
 }
 
 export function withResolvedDevServerPort(cmd: string, args: string[], port: number): string[] {

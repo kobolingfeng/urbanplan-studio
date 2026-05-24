@@ -1,4 +1,5 @@
-import { splitCommandLine, withResolvedDevServerPort } from './dev-utils';
+import { join } from 'path';
+import { resolveDevServerPath, splitCommandLine, withResolvedDevServerPort } from './dev-utils';
 
 function fail(message: string): never {
     console.error(`dev utils smoke failed: ${message}`);
@@ -22,5 +23,12 @@ assert(!existing.includes('4173'), 'existing port should not be overwritten');
 
 const nonVite = withResolvedDevServerPort('webpack-dev-server', ['--hot'], 4173);
 assert(JSON.stringify(nonVite) === JSON.stringify(['--hot']), 'non-vite commands should not be modified');
+
+const distRoot = join(import.meta.dir, '..', 'dist');
+assert(resolveDevServerPath(distRoot, '/') === join(distRoot, 'index.html'), 'dev server root should resolve to index.html');
+assert(resolveDevServerPath(distRoot, '/main.js') === join(distRoot, 'main.js'), 'dev server should resolve files inside dist');
+assert(resolveDevServerPath(distRoot, '/../package.json') === undefined, 'dev server should reject path traversal');
+assert(resolveDevServerPath(distRoot, '/%2e%2e/package.json') === undefined, 'dev server should reject encoded path traversal');
+assert(resolveDevServerPath(distRoot, '/%E0%A4%A') === undefined, 'dev server should reject malformed URI paths');
 
 console.log('dev utils smoke passed');

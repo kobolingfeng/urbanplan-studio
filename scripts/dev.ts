@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, watch } from 'fs';
 import { join, resolve } from 'path';
 import { createServer } from 'net';
-import { splitCommandLine, withResolvedDevServerPort } from './dev-utils';
+import { resolveDevServerPath, splitCommandLine, withResolvedDevServerPort } from './dev-utils';
 
 const ROOT = resolve(import.meta.dir, '..');
 const DIST = join(ROOT, 'dist');
@@ -179,10 +179,10 @@ const server = Bun.serve({
             return new Response(String(buildCount));
         }
 
-        let path = url.pathname;
-        if (path === '/') path = '/index.html';
+        const target = resolveDevServerPath(DIST, url.pathname);
+        if (!target) return new Response('Forbidden', { status: 403 });
 
-        const file = Bun.file(join(DIST, path));
+        const file = Bun.file(target);
         if (await file.exists()) {
             return new Response(file);
         }
