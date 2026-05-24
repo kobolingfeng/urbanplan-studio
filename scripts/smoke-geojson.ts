@@ -160,6 +160,40 @@ assert(parsedWhitespace?.activeScenarioId === 'trimmed_scenario', 'GeoJSON impor
 assert(trimmedParcel?.name === 'Trimmed Parcel', 'GeoJSON import should trim object ids and names');
 assert(trimmedParcel?.scenarioValues?.trimmed_scenario?.far === 2, 'GeoJSON import should use trimmed scenario ids for parcel values');
 
+const multiGeometryGeoJson = {
+    type: 'FeatureCollection',
+    name: 'Multi Geometry',
+    upf: { activeScenarioId: 'base', formatVersion: '0.1.0', crs: 'DemoCanvasMetric' },
+    features: [{
+        type: 'Feature',
+        id: 'multi_parcel',
+        geometry: {
+            type: 'MultiPolygon',
+            coordinates: [
+                [[[0, 0], [1, 1]]],
+                [[[0, 0], [30, 0], [30, 30], [0, 30], [0, 0]]],
+            ],
+        },
+        properties: { upfType: 'parcel', upfId: 'multi_parcel', name: 'Multi Parcel' },
+    }, {
+        type: 'Feature',
+        id: 'multi_road',
+        geometry: {
+            type: 'MultiLineString',
+            coordinates: [
+                [[0, 0]],
+                [[0, 10], [20, 10]],
+            ],
+        },
+        properties: { upfType: 'road', upfId: 'multi_road', name: 'Multi Road' },
+    }],
+};
+const parsedMultiGeometry = parseGeoJsonProject(multiGeometryGeoJson, fallback);
+const multiParcel = parsedMultiGeometry?.project.objects.find(object => object.id === 'multi_parcel');
+const multiRoad = parsedMultiGeometry?.project.objects.find(object => object.id === 'multi_road');
+assert(multiParcel?.points?.length === 4, 'GeoJSON import should use the first valid MultiPolygon ring');
+assert(multiRoad?.points?.length === 2, 'GeoJSON import should use the first valid MultiLineString part');
+
 const invalidNumberGeoJson = JSON.parse(text);
 invalidNumberGeoJson.features[0].properties = {
     ...invalidNumberGeoJson.features[0].properties,

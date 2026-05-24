@@ -356,11 +356,13 @@ function geoJsonObjectType(properties: AnyRecord, geometryType: string): string 
 
 function polygonPoints(geometry: GeoJsonGeometryLike): Point[] {
     if (geometry.type === 'Polygon' && Array.isArray(geometry.coordinates)) {
-        return dropClosingPoint(pointsFromCoordinates(geometry.coordinates[0]));
+        return firstUsableRing(geometry.coordinates);
     }
     if (geometry.type === 'MultiPolygon' && Array.isArray(geometry.coordinates)) {
-        const firstPolygon = geometry.coordinates[0];
-        if (Array.isArray(firstPolygon)) return dropClosingPoint(pointsFromCoordinates(firstPolygon[0]));
+        for (const polygon of geometry.coordinates) {
+            const points = firstUsableRing(polygon);
+            if (points.length >= 3) return points;
+        }
     }
     return [];
 }
@@ -368,7 +370,19 @@ function polygonPoints(geometry: GeoJsonGeometryLike): Point[] {
 function linePoints(geometry: GeoJsonGeometryLike): Point[] {
     if (geometry.type === 'LineString') return pointsFromCoordinates(geometry.coordinates);
     if (geometry.type === 'MultiLineString' && Array.isArray(geometry.coordinates)) {
-        return pointsFromCoordinates(geometry.coordinates[0]);
+        for (const line of geometry.coordinates) {
+            const points = pointsFromCoordinates(line);
+            if (points.length >= 2) return points;
+        }
+    }
+    return [];
+}
+
+function firstUsableRing(rings: unknown): Point[] {
+    if (!Array.isArray(rings)) return [];
+    for (const ring of rings) {
+        const points = dropClosingPoint(pointsFromCoordinates(ring));
+        if (points.length >= 3) return points;
     }
     return [];
 }
