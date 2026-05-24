@@ -406,7 +406,10 @@ function isRecord(value: unknown): value is AnyRecord {
 }
 
 function textOr(value: unknown, fallback: string): string {
-    if (typeof value === 'string' && value.trim()) return value;
+    if (typeof value === 'string') {
+        const text = value.trim();
+        if (text) return text;
+    }
     if (typeof value === 'number' && Number.isFinite(value)) return String(value);
     return fallback;
 }

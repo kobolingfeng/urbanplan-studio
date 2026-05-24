@@ -5,6 +5,7 @@ import { UNIT_SYSTEM } from '../src/planning-geometry';
 type ImportedObject = {
     id?: string;
     type?: string;
+    name?: string;
     points?: Array<{ x: number; y: number }>;
     point?: { x: number; y: number };
     controls?: {
@@ -143,6 +144,21 @@ const parsedWithMissingScenario = parseGeoJsonProject(JSON.parse(text), fallback
 assert(parsedWithMissingScenario?.project.scenarios.some(scenario => scenario.id === 'base'), 'GeoJSON import should add the active scenario when fallback scenarios do not include it');
 const preservedParcel = parsedWithMissingScenario?.project.objects.find(object => object.id === 'parcel_a');
 assert(preservedParcel?.scenarioValues?.base?.far === 2, 'GeoJSON import should keep active-scenario parcel values discoverable');
+
+const whitespaceGeoJson = JSON.parse(text);
+whitespaceGeoJson.upf.activeScenarioId = '  trimmed_scenario  ';
+whitespaceGeoJson.features[0].id = '  ignored_feature_id  ';
+whitespaceGeoJson.features[0].properties = {
+    ...whitespaceGeoJson.features[0].properties,
+    upfId: '  parcel_trim  ',
+    name: '  Trimmed Parcel  ',
+    upfType: '  parcel  ',
+};
+const parsedWhitespace = parseGeoJsonProject(whitespaceGeoJson, fallback);
+const trimmedParcel = parsedWhitespace?.project.objects.find(object => object.id === 'parcel_trim');
+assert(parsedWhitespace?.activeScenarioId === 'trimmed_scenario', 'GeoJSON import should trim active scenario ids');
+assert(trimmedParcel?.name === 'Trimmed Parcel', 'GeoJSON import should trim object ids and names');
+assert(trimmedParcel?.scenarioValues?.trimmed_scenario?.far === 2, 'GeoJSON import should use trimmed scenario ids for parcel values');
 
 const invalidNumberGeoJson = JSON.parse(text);
 invalidNumberGeoJson.features[0].properties = {
