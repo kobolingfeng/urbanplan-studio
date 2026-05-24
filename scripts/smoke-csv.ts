@@ -122,6 +122,16 @@ assert(parsedInvalidValues?.importSummary.invalidFields.length === 4, 'CSV impor
 const stressParcel = parsedInvalidValues?.project.objects.find(object => object.id === 'parcel_a');
 assert(!stressParcel?.scenarioValues?.stress, 'CSV import should not create scenario values when every field is invalid');
 
+const malformedThousandsCsv = [
+    'parcel_id,scenario_id,far,residential_gfa_sqm',
+    'parcel_a,malformed,"3,2","42,00"',
+].join('\n');
+const parsedMalformedThousands = parseParcelIndicatorCsv(malformedThousandsCsv, fallback);
+assert(parsedMalformedThousands?.importSummary.updatedRows === 0 && parsedMalformedThousands.importSummary.skippedRows === 1, 'CSV import should reject malformed thousands-separated numbers');
+assert(parsedMalformedThousands?.importSummary.invalidFields.length === 2, 'CSV import should summarize malformed thousands-separated fields');
+const malformedParcel = parsedMalformedThousands?.project.objects.find(object => object.id === 'parcel_a');
+assert(!malformedParcel?.scenarioValues?.malformed, 'CSV import should not create scenario values for malformed thousands-only rows');
+
 const noUpdateCsv = [
     'parcel_id,scenario_id',
     'parcel_a,empty_update',

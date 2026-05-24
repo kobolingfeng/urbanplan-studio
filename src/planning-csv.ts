@@ -338,12 +338,20 @@ function textField(row: Record<string, string>, key: keyof CsvScenarioValueLike,
 }
 
 function parseCsvNumber(key: keyof CsvScenarioValueLike, value: string): number {
-    const text = value.trim().replace(/,/g, '');
+    const text = value.trim();
     if (text.endsWith('%')) {
-        const percent = Number(text.slice(0, -1));
+        const numericText = normalizeCsvNumberText(text.slice(0, -1).trim());
+        const percent = numericText === undefined ? Number.NaN : Number(numericText);
         return isRatioField(key) && Number.isFinite(percent) ? percent / 100 : Number.NaN;
     }
-    return Number(text);
+    const numericText = normalizeCsvNumberText(text);
+    return numericText === undefined ? Number.NaN : Number(numericText);
+}
+
+function normalizeCsvNumberText(text: string): string | undefined {
+    if (!text) return undefined;
+    if (!text.includes(',')) return text;
+    return /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/.test(text) ? text.replace(/,/g, '') : undefined;
 }
 
 function isRatioField(key: keyof CsvScenarioValueLike): boolean {
