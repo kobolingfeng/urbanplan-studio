@@ -211,6 +211,18 @@ const entranceWithSinglePointRoad = [
 assertTriggers('entrance single-point road geometry gap', entranceWithSinglePointRoad, ['entrance_road_geometry_missing']);
 assertDoesNotTrigger('entrance single-point road geometry gap', entranceWithSinglePointRoad, ['entrance_road_distance', 'entrance_dangling_road']);
 
+assertDoesNotTrigger('degenerate parcel geometry', [{
+    ...badParcel,
+    id: 'parcel_line',
+    name: 'Line Parcel',
+    points: [{ x: 0, y: 0 }, { x: 120, y: 0 }],
+}], [
+    'parcel_far_max',
+    'parcel_green_min',
+    'parcel_coverage_max',
+    'parcel_public_service_ratio',
+]);
+
 assertTriggers('road redline width', [
     {
         id: 'road_too_narrow',

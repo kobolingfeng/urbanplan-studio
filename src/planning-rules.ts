@@ -365,7 +365,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         checks.push({ ...result, id: `check_${checks.length + 1}` });
     };
 
-    const parcels = project.objects.filter(object => object.type === 'parcel' && object.points?.length);
+    const parcels = project.objects.filter(object => object.type === 'parcel' && (object.points?.length ?? 0) >= 3);
     const roads = project.objects.filter(object => object.type === 'road' && (object.points?.length ?? 0) >= 2);
     const facilities = project.objects.filter(object => object.type === 'facility' && object.point);
 
@@ -431,8 +431,8 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
         const overlapsHistoric = project.objects.some(item => item.type === 'constraint'
             && item.kind === '历史风貌控制'
-            && item.points?.length
-            && polygonsOverlap(parcel.points!, item.points));
+            && (item.points?.length ?? 0) >= 3
+            && polygonsOverlap(parcel.points!, item.points!));
         if (overlapsHistoric && value.updateMode === '拆除重建') {
             add({
                 ruleId: 'historic_area_rebuild_risk',
