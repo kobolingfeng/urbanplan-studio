@@ -366,7 +366,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
     };
 
     const parcels = project.objects.filter(object => object.type === 'parcel' && object.points?.length);
-    const roads = project.objects.filter(object => object.type === 'road' && object.points?.length);
+    const roads = project.objects.filter(object => object.type === 'road' && (object.points?.length ?? 0) >= 2);
     const facilities = project.objects.filter(object => object.type === 'facility' && object.point);
 
     for (const parcel of parcels) {

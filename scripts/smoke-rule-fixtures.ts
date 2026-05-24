@@ -189,6 +189,28 @@ const entranceWithRoadMissingGeometry = [
 assertTriggers('entrance road geometry gap', entranceWithRoadMissingGeometry, ['entrance_road_geometry_missing']);
 assertDoesNotTrigger('entrance road geometry gap', entranceWithRoadMissingGeometry, ['entrance_dangling_road']);
 
+const entranceWithSinglePointRoad = [
+    badParcel,
+    {
+        id: 'road_one_point',
+        type: 'road',
+        name: 'One Point Road',
+        level: '支路',
+        points: [{ x: 10, y: 10 }],
+    },
+    {
+        id: 'entrance_to_one_point_road',
+        type: 'entrance',
+        name: 'Entrance To One Point Road',
+        entranceType: '机动车',
+        parcelId: 'parcel_bad_controls',
+        roadId: 'road_one_point',
+        point: { x: 20, y: 20 },
+    },
+];
+assertTriggers('entrance single-point road geometry gap', entranceWithSinglePointRoad, ['entrance_road_geometry_missing']);
+assertDoesNotTrigger('entrance single-point road geometry gap', entranceWithSinglePointRoad, ['entrance_road_distance', 'entrance_dangling_road']);
+
 assertTriggers('road redline width', [
     {
         id: 'road_too_narrow',
