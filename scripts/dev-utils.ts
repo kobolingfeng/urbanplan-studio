@@ -2,10 +2,36 @@ import { isAbsolute, relative, resolve } from 'path';
 
 export function splitCommandLine(command: string): string[] {
     const parts: string[] = [];
-    const pattern = /"([^"]*)"|'([^']*)'|(\S+)/g;
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(command)) !== null) {
-        parts.push(match[1] ?? match[2] ?? match[3]);
+    let current = '';
+    let quote: '"' | "'" | undefined;
+    let hasToken = false;
+    for (let index = 0; index < command.length; index++) {
+        const char = command[index];
+        const next = command[index + 1];
+        if (char === '\\' && next && (next === '"' || next === "'" || next === '\\' || /\s/.test(next))) {
+            current += next;
+            hasToken = true;
+            index++;
+            continue;
+        }
+        if ((char === '"' || char === "'") && (!quote || quote === char)) {
+            quote = quote ? undefined : char;
+            hasToken = true;
+            continue;
+        }
+        if (!quote && /\s/.test(char)) {
+            if (hasToken) {
+                parts.push(current);
+                current = '';
+                hasToken = false;
+            }
+            continue;
+        }
+        current += char;
+        hasToken = true;
+    }
+    if (hasToken) {
+        parts.push(current);
     }
     return parts;
 }
