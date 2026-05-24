@@ -160,6 +160,26 @@ assert(parsedWhitespace?.activeScenarioId === 'trimmed_scenario', 'GeoJSON impor
 assert(trimmedParcel?.name === 'Trimmed Parcel', 'GeoJSON import should trim object ids and names');
 assert(trimmedParcel?.scenarioValues?.trimmed_scenario?.far === 2, 'GeoJSON import should use trimmed scenario ids for parcel values');
 
+const typeAliasGeoJson = {
+    type: 'FeatureCollection',
+    name: 'Type Alias',
+    upf: { activeScenarioId: 'base', formatVersion: '0.1.0', crs: 'DemoCanvasMetric' },
+    features: [{
+        type: 'Feature',
+        id: 'alias_open_space',
+        geometry: { type: 'Polygon', coordinates: [[[0, 0], [20, 0], [20, 20], [0, 20], [0, 0]]] },
+        properties: { upfType: ' Open Space ', upfId: 'alias_open_space', name: 'Alias Open Space', kind: '口袋公园' },
+    }, {
+        type: 'Feature',
+        id: 'alias_entrance',
+        geometry: { type: 'Point', coordinates: [10, 10] },
+        properties: { upfType: ' Entrance ', upfId: 'alias_entrance', name: 'Alias Entrance', parcelId: 'parcel_a', roadId: 'road_a' },
+    }],
+};
+const parsedTypeAliases = parseGeoJsonProject(typeAliasGeoJson, fallback);
+assert(parsedTypeAliases?.project.objects.find(object => object.id === 'alias_open_space')?.type === 'openSpace', 'GeoJSON import should normalize open space type aliases');
+assert(parsedTypeAliases?.project.objects.find(object => object.id === 'alias_entrance')?.type === 'entrance', 'GeoJSON import should normalize entrance type aliases');
+
 const multiGeometryGeoJson = {
     type: 'FeatureCollection',
     name: 'Multi Geometry',

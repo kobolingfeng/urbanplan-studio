@@ -347,11 +347,26 @@ function parseGeoJsonFeature(feature: unknown, activeScenarioId: string, index: 
 
 function geoJsonObjectType(properties: AnyRecord, geometryType: string): string | undefined {
     const declared = textOr(properties.upfType ?? properties.objectType ?? properties.type, '');
-    if (['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint'].includes(declared)) return declared;
+    const canonical = canonicalObjectType(declared);
+    if (canonical) return canonical;
     if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') return 'parcel';
     if (geometryType === 'LineString' || geometryType === 'MultiLineString') return 'road';
     if (geometryType === 'Point') return 'facility';
     return undefined;
+}
+
+function canonicalObjectType(value: string): string | undefined {
+    const key = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+    const aliases: Record<string, string> = {
+        parcel: 'parcel',
+        road: 'road',
+        facility: 'facility',
+        entrance: 'entrance',
+        openspace: 'openSpace',
+        open_space: 'openSpace',
+        constraint: 'constraint',
+    };
+    return aliases[key];
 }
 
 function polygonPoints(geometry: GeoJsonGeometryLike): Point[] {
