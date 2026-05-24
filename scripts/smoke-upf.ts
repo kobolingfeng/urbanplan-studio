@@ -166,6 +166,49 @@ const numericReferenceQuality = calculateDataQuality({
 } as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
 assert(numericReferenceQuality.entranceReferenceIssues.length === 0, 'data quality should accept numeric zero ids and references');
 
+const numericReferenceValidationIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'numeric_refs', name: 'Numeric Refs', city: '深圳市', district: '罗湖区', planningType: 'Reference smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 0, name: 'Zero Scenario', description: 'Numeric reference fixture' }],
+    activeScenarioId: 0,
+    objects: [{
+        id: 0,
+        type: 'parcel',
+        name: 'Zero Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: 3, buildingCoverageMax: 0.35, greenRatioMin: 0.3, heightMaxM: 80 },
+        scenarioValues: {
+            0: { far: 2, buildingCoverage: 0.3, greenRatio: 0.31, residentialGfaSqm: 10000, publicServiceGfaSqm: 300, updateMode: '综合整治' },
+        },
+    }, {
+        id: 1,
+        type: 'road',
+        name: 'One Road',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 90 }, { x: 80, y: 90 }],
+        level: '支路',
+        redLineWidthM: 18,
+        lanes: 2,
+    }, {
+        id: 'entrance_numeric',
+        type: 'entrance',
+        name: 'Numeric Entrance',
+        evidence: ['fixture'],
+        point: { x: 10, y: 10 },
+        entranceType: '机动车',
+        parcelId: 0,
+        roadId: 1,
+    }],
+});
+assert(!numericReferenceValidationIssues.some(issue => issue.path.endsWith('.id') && issue.message.includes('缺少')), 'UPF validation should accept numeric ids');
+assert(!numericReferenceValidationIssues.some(issue => issue.message.includes('不存在')), 'UPF validation should accept numeric references');
+assert(!numericReferenceValidationIssues.some(issue => issue.path === 'activeScenarioId'), 'UPF validation should accept numeric active scenario ids');
+
 const duplicateEntranceNameQuality = calculateDataQuality({
     project: { name: 'Duplicate Entrance Names' },
     ruleset: { basis: ['fixture basis'] },

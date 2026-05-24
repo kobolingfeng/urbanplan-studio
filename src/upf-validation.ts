@@ -340,8 +340,8 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function identifierText(value: unknown): string | undefined {
-    if (typeof value !== 'string') return undefined;
-    const text = value.trim();
+    if (typeof value !== 'string' && !(typeof value === 'number' && Number.isFinite(value))) return undefined;
+    const text = String(value).trim();
     return text || undefined;
 }
 
