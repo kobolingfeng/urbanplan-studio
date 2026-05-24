@@ -375,19 +375,27 @@ export function calculateDataQuality(
 }
 
 function buildEntranceReferenceIssues(objects: PlanningObjectLike[]): string[] {
-    const parcelIds = new Set(objects.filter(object => object.type === 'parcel').map(object => object.id).filter(Boolean));
-    const roadIds = new Set(objects.filter(object => object.type === 'road').map(object => object.id).filter(Boolean));
+    const parcelIds = new Set(objects.filter(object => object.type === 'parcel').map(object => identifierText((object as AnyRecord).id)).filter((id): id is string => Boolean(id)));
+    const roadIds = new Set(objects.filter(object => object.type === 'road').map(object => identifierText((object as AnyRecord).id)).filter((id): id is string => Boolean(id)));
     return objects
         .filter(object => object.type === 'entrance')
         .flatMap((object) => {
             const name = String(object.name ?? object.id ?? '未命名出入口');
+            const parcelId = identifierText((object as AnyRecord).parcelId);
+            const roadId = identifierText((object as AnyRecord).roadId);
             const issues: string[] = [];
-            if (!object.parcelId) issues.push(`${name} 缺少地块引用`);
-            else if (!parcelIds.has(object.parcelId)) issues.push(`${name} 引用不存在的地块 ${object.parcelId}`);
-            if (!object.roadId) issues.push(`${name} 缺少道路引用`);
-            else if (!roadIds.has(object.roadId)) issues.push(`${name} 引用不存在的道路 ${object.roadId}`);
+            if (!parcelId) issues.push(`${name} 缺少地块引用`);
+            else if (!parcelIds.has(parcelId)) issues.push(`${name} 引用不存在的地块 ${parcelId}`);
+            if (!roadId) issues.push(`${name} 缺少道路引用`);
+            else if (!roadIds.has(roadId)) issues.push(`${name} 引用不存在的道路 ${roadId}`);
             return issues;
         });
+}
+
+function identifierText(value: unknown): string | undefined {
+    if (typeof value !== 'string' && typeof value !== 'number') return undefined;
+    const text = String(value).trim();
+    return text || undefined;
 }
 
 function deduction(label: string, count: number, weight: number) {

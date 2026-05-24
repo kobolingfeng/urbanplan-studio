@@ -134,6 +134,18 @@ const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
 assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
 assert(comparison.includes(String(Math.round(14000 / SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident))), 'scenario comparison should use shared resident assumptions');
 
+const numericReferenceQuality = calculateDataQuality({
+    project: { name: 'Numeric Reference Fixture' },
+    ruleset: { basis: ['fixture basis'] },
+    scenarios: [{ id: 'base', name: 'Base' }],
+    objects: [
+        { id: 0, type: 'parcel', name: 'Zero Parcel', evidence: ['fixture'], scenarioValues: { base: {} } },
+        { id: 0, type: 'road', name: 'Zero Road', evidence: ['fixture'] },
+        { id: 'entrance_zero', type: 'entrance', name: 'Zero Entrance', evidence: ['fixture'], parcelId: 0, roadId: 0 },
+    ],
+} as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
+assert(numericReferenceQuality.entranceReferenceIssues.length === 0, 'data quality should accept numeric zero ids and references');
+
 const schema = JSON.parse(readFileSync(join(schemas, 'upf-0.1.schema.json'), 'utf8'));
 assert(schema.title === 'Urban Planning Format 0.1', 'json schema title mismatch');
 assert(schema.properties?.manifest?.properties?.unitSystem?.properties?.metersPerCanvasUnit, 'json schema should describe UPF manifest unit system');
