@@ -72,6 +72,32 @@ assertTriggers('parcel controls', [badParcel], [
     'parcel_public_service_ratio',
 ]);
 
+assertTriggers('string numeric parcel controls', [{
+    ...badParcel,
+    id: 'parcel_string_numbers',
+    name: 'String Number Controls',
+    controls: {
+        farMax: '3',
+        buildingCoverageMax: '0.35',
+        greenRatioMin: '0.3',
+    },
+    scenarioValues: {
+        s1: {
+            far: '4',
+            buildingCoverage: '0.42',
+            greenRatio: '0.18',
+            residentialGfaSqm: '48,000',
+            publicServiceGfaSqm: '50',
+            updateMode: '综合整治',
+        },
+    },
+}], [
+    'parcel_far_max',
+    'parcel_green_min',
+    'parcel_coverage_max',
+    'parcel_public_service_ratio',
+]);
+
 assertTriggers('heritage overlap', [
     {
         ...badParcel,
