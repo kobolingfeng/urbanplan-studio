@@ -186,6 +186,7 @@ export function buildScenarioComparisonReport(
     const parcels = (project.objects ?? []).filter(isComparableParcel);
     const titleLevel = Math.max(1, Math.min(6, options.headingLevel ?? 1));
     const rows = scenarios.map((scenario) => {
+        const scenarioId = identifierText(scenario.id) ?? scenario.id;
         let residentialGfa = 0;
         let publicServiceGfa = 0;
         let weightedFarSum = 0;
@@ -194,7 +195,7 @@ export function buildScenarioComparisonReport(
         let valuesCount = 0;
         const missingParcels: string[] = [];
         for (const parcel of parcels) {
-            const value = parcel.scenarioValues?.[scenario.id];
+            const value = parcel.scenarioValues?.[scenarioId];
             if (!value) {
                 missingParcels.push(String(parcel.name ?? parcel.id ?? '未命名地块'));
                 continue;
@@ -212,6 +213,7 @@ export function buildScenarioComparisonReport(
         const avgGreen = areaSum ? weightedGreenSum / areaSum : 0;
         return {
             scenario,
+            scenarioId,
             residentialGfa,
             publicServiceGfa,
             residents,
@@ -222,7 +224,8 @@ export function buildScenarioComparisonReport(
         };
     });
 
-    const active = rows.find(row => row.scenario.id === activeScenarioId);
+    const activeId = identifierText(activeScenarioId) ?? activeScenarioId;
+    const active = rows.find(row => row.scenarioId === activeId);
     const dataGapRows = rows.filter(row => row.missingParcels.length);
     const lines = [
         `${heading(titleLevel)} ${project.project?.name ?? 'UrbanPlan'} 方案对比`,
@@ -344,7 +347,7 @@ export function calculateDataQuality(
     const entranceReferenceIssues = entranceReferenceDiagnostics.issues;
     const unboundEntrances = objects.filter(object => object.type === 'entrance'
         && entranceReferenceDiagnostics.objectKeys.has(referenceObjectKey(object)));
-    const scenarioIds = new Set((project.scenarios ?? []).map(scenario => scenario.id));
+    const scenarioIds = new Set((project.scenarios ?? []).map(scenario => identifierText(scenario.id)).filter((id): id is string => Boolean(id)));
     const parcelScenarioGaps = objects
         .filter(object => object.type === 'parcel')
         .flatMap(object => [...scenarioIds].filter(id => !object.scenarioValues?.[id]).map(id => `${object.name ?? object.id} 缺少 ${id}`));

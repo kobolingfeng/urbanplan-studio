@@ -181,6 +181,24 @@ const malformedNumericComparison = buildScenarioComparisonReport({
 assert(!malformedNumericComparison.includes('NaN'), 'scenario comparison should not emit NaN for malformed numeric values');
 assert(malformedNumericComparison.includes('1,200'), 'scenario comparison should still accept strict thousands-formatted numeric strings');
 
+const trimmedScenarioProject = {
+    project: { name: 'Trimmed Scenario Analytics' },
+    ruleset: { basis: ['fixture basis'] },
+    scenarios: [{ id: ' base ', name: 'Base' }],
+    objects: [{
+        id: 'parcel_trimmed_scenario',
+        type: 'parcel',
+        name: 'Trimmed Scenario Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        scenarioValues: { base: { far: 2, greenRatio: 0.3, residentialGfaSqm: 12000, publicServiceGfaSqm: 400 } },
+    }],
+};
+const trimmedScenarioComparison = buildScenarioComparisonReport(trimmedScenarioProject, 'base');
+assert(trimmedScenarioComparison.includes('| Base | 1/1 | 0 |'), 'scenario comparison should trim scenario ids before value lookup');
+const trimmedScenarioQuality = calculateDataQuality(trimmedScenarioProject, [], []);
+assert(trimmedScenarioQuality.parcelScenarioGaps.length === 0, 'data quality should trim scenario ids before gap checks');
+
 const numericReferenceQuality = calculateDataQuality({
     project: { name: 'Numeric Reference Fixture' },
     ruleset: { basis: ['fixture basis'] },
