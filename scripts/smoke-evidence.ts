@@ -2,6 +2,7 @@ import {
     confidencePercent,
     evidenceCompletenessScore,
     evidenceDisplayText,
+    evidenceSearchText,
     normalizeEvidenceItem,
     parseEvidenceText,
     type EvidenceSource,
@@ -26,6 +27,8 @@ const decimalConfidence = normalizeEvidenceItem({
 }) as EvidenceSource;
 assert(decimalConfidence.confidence === 0.82, 'evidence normalizer should preserve decimal confidence strings');
 assert(evidenceDisplayText(decimalConfidence).includes('可信度 82%'), 'evidence display should format decimal confidence strings');
+const decimalSearch = evidenceSearchText([decimalConfidence]);
+assert(decimalSearch.includes('调研/空间数据') && decimalSearch.includes('82%'), 'evidence search should include derived kind labels and confidence');
 
 const percentConfidence = normalizeEvidenceItem({ title: '控规核查', confidence: '86' }) as EvidenceSource;
 assert(percentConfidence.confidence === 86, 'evidence normalizer should preserve percent confidence strings');

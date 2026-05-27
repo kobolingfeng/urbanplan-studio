@@ -130,8 +130,10 @@ export function evidenceSearchText(items: EvidenceItem[] = []): string {
         return [
             item.title,
             item.type,
+            evidenceKind(item),
             item.collectedAt,
             item.precision,
+            typeof item.confidence === 'number' ? formatConfidence(item.confidence) : '',
             item.license,
             item.url,
             item.note,
