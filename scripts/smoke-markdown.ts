@@ -44,6 +44,7 @@ assert(escapedRow === '| A\\|B | line 1 / line 2 | <unsafe> |', 'table row helpe
 assert(markdownTableRow('bad' as unknown as unknown[]) === '|  |', 'table row helper should tolerate malformed cell collections');
 const split = splitMarkdownTableRow(escapedRow);
 assert(split.length === 3 && split[0] === 'A|B' && split[1] === 'line 1 / line 2', 'table row splitter should preserve escaped pipes');
+assert(splitMarkdownTableRow(null as unknown as string).join('') === '', 'table row splitter should tolerate malformed row text');
 const tableHtml = markdownToHtml(['| 字段 | 值 | 备注 |', '|---|---|---|', escapedRow].join('\n'));
 assert(tableHtml.includes('<td>A|B</td>') && tableHtml.includes('<td>&lt;unsafe&gt;</td>'), 'escaped table rows should render as safe table cells');
 

@@ -11,7 +11,7 @@ export function markdownTableCell(value: unknown): string {
 }
 
 export function splitMarkdownTableRow(line: string): string[] {
-    const trimmed = line.trim();
+    const trimmed = (typeof line === 'string' ? line : String(line ?? '')).trim();
     const content = trimmed.startsWith('|') ? trimmed.slice(1) : trimmed;
     const bounded = content.endsWith('|') ? content.slice(0, -1) : content;
     const cells: string[] = [];
