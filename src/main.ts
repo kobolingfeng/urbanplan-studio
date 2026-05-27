@@ -556,10 +556,11 @@ function activeScenario(): Scenario {
 }
 
 function getParcelScenario(parcel: Parcel): ParcelScenarioValue {
-    const value = scenarioValueFor(parcel.scenarioValues, activeScenarioId);
+    const values = scenarioValueMap(parcel.scenarioValues);
+    const value = scenarioValueFor(values, activeScenarioId);
     if (value) return value;
-    const first = Object.values(parcel.scenarioValues ?? {})[0] ?? DEFAULT_SCENARIO_VALUE;
-    parcel.scenarioValues = parcel.scenarioValues ?? {};
+    const first = Object.values(values)[0] ?? DEFAULT_SCENARIO_VALUE;
+    parcel.scenarioValues = values;
     parcel.scenarioValues[activeScenarioId] = { ...DEFAULT_SCENARIO_VALUE, ...first };
     return parcel.scenarioValues[activeScenarioId];
 }
@@ -603,7 +604,7 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
                 greenRatioMin: numberInRangeOr(base.controls?.greenRatioMin, 0.30, PARCEL_CONTROL_IMPORT_RANGES.greenRatioMin),
                 heightMaxM: numberInRangeOr(base.controls?.heightMaxM, 80, PARCEL_CONTROL_IMPORT_RANGES.heightMaxM),
             };
-            base.scenarioValues = base.scenarioValues ?? {};
+            base.scenarioValues = scenarioValueMap(base.scenarioValues);
             for (const scenarioId of scenarioIds) {
                 base.scenarioValues[scenarioId] = normalizeParcelScenarioValue({
                     ...DEFAULT_SCENARIO_VALUE,
@@ -843,9 +844,13 @@ function normalizeImportedScenario(value: unknown): Scenario[] {
 
 function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
     const target = importIdentifierText(scenarioId);
-    if (!values || !target) return undefined;
-    if (values[target]) return values[target];
+    if (!values || typeof values !== 'object' || Array.isArray(values) || !target) return undefined;
+    if (Object.prototype.hasOwnProperty.call(values, target)) return values[target];
     return Object.entries(values).find(([key]) => importIdentifierText(key) === target)?.[1];
+}
+
+function scenarioValueMap<T>(values: Record<string, T> | undefined): Record<string, T> {
+    return values && typeof values === 'object' && !Array.isArray(values) ? values : {};
 }
 
 function normalizeImportedReferenceId(value: unknown, fallback: string): string {
@@ -2461,7 +2466,8 @@ function scenarioResidents(scenarioId: string): number {
 }
 
 function parcelScenario(parcel: Parcel, scenarioId: string): ParcelScenarioValue {
-    return scenarioValueFor(parcel.scenarioValues, scenarioId) ?? Object.values(parcel.scenarioValues)[0] ?? DEFAULT_SCENARIO_VALUE;
+    const values = scenarioValueMap(parcel.scenarioValues);
+    return scenarioValueFor(values, scenarioId) ?? Object.values(values)[0] ?? DEFAULT_SCENARIO_VALUE;
 }
 
 function showModal(title: string, text: string, meta = 'UrbanPlan Studio', defaultName = 'urbanplan-output.txt') {

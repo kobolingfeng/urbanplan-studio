@@ -41,6 +41,7 @@ assert(!sourceMain.includes("object.type === 'road' || object.type === 'constrai
 assert(sourceMain.includes('const auditObjects = Array.isArray(input.objects) ? input.objects : [];'), 'import audit should guard malformed object collections');
 assert(sourceMain.includes('function importEvidenceItems'), 'import audit should normalize scalar evidence before evidence checks');
 assert(sourceMain.includes('function importScenarioValueKeys'), 'import snapshot should ignore malformed scenario value maps');
+assert(sourceMain.includes('function scenarioValueMap'), 'main scenario helpers should ignore malformed scenario value maps');
 assert(sourceMain.includes('scenarioValueFor(parcel.scenarioValues, scenarioId)'), 'import audit should normalize scenario value keys before reporting gaps');
 assert(sourceMain.includes('itemScenarioIds.has(scenarioId)'), 'normalization audit should compare normalized scenario ids');
 
