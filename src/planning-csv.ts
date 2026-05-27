@@ -123,7 +123,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
         const id = csvIdentifierText(object.id);
         if (id) parcels.set(id, object);
     }
-    let activeScenarioId = fallbackScenarios[0]?.id ?? 'scenario_csv';
+    let activeScenarioId = csvIdentifierText(fallbackScenarios[0]?.id) ?? 'scenario_csv';
     let updatedRows = 0;
     let skippedRows = 0;
     const unmatchedParcelIds = new Set<string>();
