@@ -400,6 +400,25 @@ const zeroLengthRoadIssues = validateUpfDocument({
 });
 assert(zeroLengthRoadIssues.some(issue => issue.severity === 'error' && issue.path === 'objects[0].points' && issue.message.includes('不同坐标点')), 'zero-length road geometry should be rejected');
 
+const malformedPointIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'malformed_point', name: 'Malformed Point', city: '深圳市', district: '罗湖区', planningType: 'Geometry smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Geometry fixture' }],
+    objects: [{
+        id: 'road_bad_point',
+        type: 'road',
+        name: 'Bad Point Road',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: '0x10', y: 0 }, { x: 10, y: 0 }],
+        level: '支路',
+        redLineWidthM: 18,
+        lanes: 2,
+    }],
+});
+assert(malformedPointIssues.some(issue => issue.severity === 'error' && issue.path === 'objects[0].points[1]' && issue.message.includes('有限数字')), 'UPF validation should point to malformed coordinate entries');
+
 const outOfRangeIssues = validateUpfDocument({
     format: 'UPF',
     formatVersion: '0.1.0',

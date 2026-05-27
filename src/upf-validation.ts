@@ -19,6 +19,8 @@ export type UpfValidationIssue = {
     message: string;
 };
 
+type AddValidationIssue = (severity: UpfValidationSeverity, path: string, message: string) => void;
+
 const OBJECT_TYPES = new Set(['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint']);
 const PARCEL_NUMERIC_VALUES = Object.keys(PARCEL_NUMERIC_RANGES) as Array<keyof typeof PARCEL_NUMERIC_RANGES>;
 const PARCEL_CONTROL_VALUES = Object.keys(PARCEL_CONTROL_RANGES) as Array<keyof typeof PARCEL_CONTROL_RANGES>;
@@ -110,8 +112,9 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         const path = `objects[${index}]`;
         if (item.type === 'parcel') validateParcel(item, path, scenarioIds, add);
         if (item.type === 'road') {
-            if (!hasPoints(item.points, 2)) add('error', `${path}.points`, '道路至少需要 2 个点。');
-            else validateLineGeometry(item.points, `${path}.points`, '道路', add);
+            if (validatePointArray(item.points, 2, `${path}.points`, '道路', add)) {
+                validateLineGeometry(item.points, `${path}.points`, '道路', add);
+            }
             if (!isNonEmptyString(item.level)) add('warning', `${path}.level`, '道路缺少等级。');
             for (const field of ROAD_NUMERIC_VALUES) {
                 validateNumberInRange(item, field, path, `道路 ${field}`, ROAD_NUMERIC_RANGES[field], add);
@@ -135,8 +138,9 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
             else if (!roadIds.has(roadId)) add('error', `${path}.roadId`, `出入口引用不存在的道路：${roadId}`);
         }
         if (item.type === 'openSpace' || item.type === 'constraint') {
-            if (!hasPoints(item.points, 3)) add('error', `${path}.points`, '面状对象至少需要 3 个点。');
-            else validatePolygonGeometry(item.points, `${path}.points`, '面状对象', add);
+            if (validatePointArray(item.points, 3, `${path}.points`, '面状对象', add)) {
+                validatePolygonGeometry(item.points, `${path}.points`, '面状对象', add);
+            }
             if (!isNonEmptyString(item.kind)) add('warning', `${path}.kind`, '面状对象缺少类型。');
         }
     });
@@ -254,10 +258,11 @@ function validateParcel(
     item: AnyRecord,
     path: string,
     scenarioIds: Set<string>,
-    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+    add: AddValidationIssue,
 ) {
-    if (!hasPoints(item.points, 3)) add('error', `${path}.points`, '地块至少需要 3 个点。');
-    else validatePolygonGeometry(item.points, `${path}.points`, '地块', add);
+    if (validatePointArray(item.points, 3, `${path}.points`, '地块', add)) {
+        validatePolygonGeometry(item.points, `${path}.points`, '地块', add);
+    }
     if (!isNonEmptyString(item.landUseCode)) add('warning', `${path}.landUseCode`, '地块缺少用地代码。');
     if (!isNonEmptyString(item.landUseName)) add('warning', `${path}.landUseName`, '地块缺少用地名称。');
     const controls = asRecord(item.controls);
@@ -291,7 +296,7 @@ function validateNumberInRange(
     path: string,
     label: string,
     range: NumericRange | undefined,
-    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+    add: AddValidationIssue,
 ) {
     const value = record[field];
     const numeric = numberLike(value);
@@ -308,11 +313,38 @@ function validateNumberInRange(
     }
 }
 
+function validatePointArray(
+    value: unknown,
+    minLength: number,
+    path: string,
+    label: string,
+    add: AddValidationIssue,
+): value is Array<{ x: number; y: number }> {
+    if (!Array.isArray(value) || value.length < minLength) {
+        add('error', path, `${label}至少需要 ${minLength} 个点。`);
+        return false;
+    }
+    let validCount = 0;
+    value.forEach((item, index) => {
+        const point = asRecord(item);
+        if (point && isFiniteNumber(point.x) && isFiniteNumber(point.y)) {
+            validCount++;
+            return;
+        }
+        add('error', `${path}[${index}]`, `${label}坐标点必须包含有限数字 x/y。`);
+    });
+    if (validCount < minLength) {
+        add('error', path, `${label}至少需要 ${minLength} 个有效坐标点。`);
+        return false;
+    }
+    return validCount === value.length;
+}
+
 function validatePolygonGeometry(
     value: unknown,
     path: string,
     label: string,
-    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+    add: AddValidationIssue,
 ) {
     if (!Array.isArray(value)) return;
     const points = value.flatMap((item) => {
@@ -331,7 +363,7 @@ function validateLineGeometry(
     value: unknown,
     path: string,
     label: string,
-    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+    add: AddValidationIssue,
 ) {
     if (!Array.isArray(value)) return;
     const points = value.flatMap((item) => {
@@ -404,10 +436,6 @@ const decimalNumberPattern = /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/;
 function isPoint(value: unknown): boolean {
     const point = asRecord(value);
     return !!point && isFiniteNumber(point.x) && isFiniteNumber(point.y);
-}
-
-function hasPoints(value: unknown, minLength: number): boolean {
-    return Array.isArray(value) && value.length >= minLength && value.every(isPoint);
 }
 
 function severityLabel(severity: UpfValidationSeverity): string {
