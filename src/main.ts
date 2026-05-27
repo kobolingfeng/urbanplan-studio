@@ -669,9 +669,10 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
     if (!Array.isArray(input.objects) || !input.objects.length) {
         findings.push({ severity: 'warning', objectId: 'project', message: '未找到有效规划对象，导入后可能退回演示对象或空项目。' });
     }
-    const parcelIds = new Set((input.objects ?? []).filter(object => object?.type === 'parcel').map(object => importIdentifierText(object.id)).filter((id): id is string => Boolean(id)));
-    const roadIds = new Set((input.objects ?? []).filter(object => object?.type === 'road').map(object => importIdentifierText(object.id)).filter((id): id is string => Boolean(id)));
-    for (const [index, raw] of (input.objects ?? []).entries()) {
+    const auditObjects = Array.isArray(input.objects) ? input.objects : [];
+    const parcelIds = new Set(auditObjects.filter(object => object?.type === 'parcel').map(object => importIdentifierText(object.id)).filter((id): id is string => Boolean(id)));
+    const roadIds = new Set(auditObjects.filter(object => object?.type === 'road').map(object => importIdentifierText(object.id)).filter((id): id is string => Boolean(id)));
+    for (const [index, raw] of auditObjects.entries()) {
         const object = raw as Partial<PlanObject>;
         const objectId = importObjectIdLabel(object.id, index);
         if (!hasImportIdentifier(object.id)) findings.push({ severity: 'warning', objectId, message: '对象缺少 id，兼容层会生成临时 id。' });
