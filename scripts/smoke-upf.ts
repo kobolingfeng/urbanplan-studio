@@ -58,6 +58,12 @@ const importedDefaultScenarioRaw = {
 };
 const importedDefaultScenario = parseUpfText(JSON.stringify(importedDefaultScenarioRaw), fallback);
 assert(importedDefaultScenario.activeScenarioId === 'scenario_imported', 'UPF parser should use imported scenarios before fallback scenarios');
+const sparseImportedDefaultScenario = parseUpfText(JSON.stringify({
+    ...minimalRaw,
+    activeScenarioId: undefined,
+    scenarios: [null, { id: 'scenario_sparse', name: 'Sparse' }],
+}), fallback);
+assert(sparseImportedDefaultScenario.activeScenarioId === 'scenario_sparse', 'UPF parser should use first valid imported scenario');
 const minimalWithBom = parseUpfText(`\uFEFF${minimalText}`, fallback);
 assert(minimalWithBom.project.project?.id === 'minimal_demo', 'UPF parser should accept JSON files with UTF-8 BOM');
 for (const invalidJsonRoot of ['null', '[]', '42']) {

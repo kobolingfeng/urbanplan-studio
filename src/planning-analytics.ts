@@ -136,8 +136,8 @@ export function parseUpfText<TProject extends ProjectLike>(
         throw new Error('不是可识别的 UPF 文件');
     }
     const data = parsed;
-    const importedScenarios = Array.isArray(data.scenarios) ? data.scenarios : [];
-    const fallbackScenarios = Array.isArray(fallbackProject.scenarios) ? fallbackProject.scenarios : [];
+    const importedScenarios = recordItems<ScenarioLike>(data.scenarios);
+    const fallbackScenarios = recordItems<ScenarioLike>(fallbackProject.scenarios);
     const activeScenarioId = firstIdentifier(
         data.activeScenarioId,
         (data.manifest as AnyRecord | undefined)?.activeScenarioId,
