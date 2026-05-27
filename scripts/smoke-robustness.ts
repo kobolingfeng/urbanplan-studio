@@ -84,8 +84,9 @@ assertNoThrow('evidence malformed inputs', () => {
     evidenceCompletenessScore({} as unknown as EvidenceItem);
 });
 assertNoThrow('IPC listener without WebView', () => on(null as unknown as string, () => {})());
+assertNoThrow('IPC listener malformed handler', () => on('bad', null as never)());
 try {
-    await invoke('test');
+    await invoke(null as never, null as never, null as never);
     fail('invoke should reject outside WebView2');
 } catch (error) {
     assert(error instanceof Error && error.message.includes('Not running in WebView2'), 'invoke should fail cleanly outside WebView2');

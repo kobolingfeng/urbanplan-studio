@@ -66,21 +66,24 @@ if (hasWebView) {
 /** Call a native command and await its result. */
 export function invoke<T = unknown>(cmd: string, args: object = {}, options: InvokeOptions = {}): Promise<T> {
     return new Promise((resolve, reject) => {
+        const safeCmd = String(cmd ?? '');
+        const safeArgs = args && typeof args === 'object' && !Array.isArray(args) ? args : {};
+        const safeOptions = options && typeof options === 'object' ? options : {};
         if (!hasWebView) {
             reject(new Error('Not running in WebView2'));
             return;
         }
         const id = nextId++;
-        const timeout = options.timeoutMs && options.timeoutMs > 0
+        const timeout = safeOptions.timeoutMs && safeOptions.timeoutMs > 0
             ? setTimeout(() => {
                 pending.delete(id);
-                reject(new Error(`IPC command timed out: ${cmd}`));
-            }, options.timeoutMs)
+                reject(new Error(`IPC command timed out: ${safeCmd}`));
+            }, safeOptions.timeoutMs)
             : undefined;
 
         pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timeout });
         try {
-            webview.postMessage({ id, cmd, args });
+            webview.postMessage({ id, cmd: safeCmd, args: safeArgs });
         } catch (error) {
             pending.delete(id);
             if (timeout) clearTimeout(timeout);
@@ -92,6 +95,7 @@ export function invoke<T = unknown>(cmd: string, args: object = {}, options: Inv
 /** Listen for a native-pushed event. Returns an unsubscribe function. */
 export function on<T = unknown>(event: string, handler: (data: T) => void): () => void {
     if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return () => {};
+    if (typeof handler !== 'function') return () => {};
     const safeEvent = String(event ?? '');
     const listener = ((e: CustomEvent<T>) => handler(e.detail)) as EventListener;
     window.addEventListener(`ipc:${safeEvent}`, listener);
