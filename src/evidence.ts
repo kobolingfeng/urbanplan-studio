@@ -193,10 +193,11 @@ function numberOrUndefined(value: unknown): number | undefined {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     if (typeof value === 'string' && value.trim()) {
         const text = value.trim();
-        const numericText = text.endsWith('%') ? text.slice(0, -1).trim() : text;
+        const percentSuffixed = text.endsWith('%');
+        const numericText = percentSuffixed ? text.slice(0, -1).trim() : text;
         if (!decimalNumberPattern.test(numericText)) return undefined;
         const parsed = Number(numericText);
-        if (Number.isFinite(parsed)) return parsed;
+        if (Number.isFinite(parsed)) return percentSuffixed && parsed <= 1 ? parsed / 100 : parsed;
     }
     return undefined;
 }
