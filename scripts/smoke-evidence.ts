@@ -34,6 +34,7 @@ assert(decimalSearch.includes('调研/空间数据') && decimalSearch.includes('
 const percentConfidence = normalizeEvidenceItem({ title: '控规核查', confidence: '86' }) as EvidenceSource;
 assert(percentConfidence.confidence === 86, 'evidence normalizer should preserve percent confidence strings');
 assert(confidencePercent(percentConfidence.confidence ?? 0) === 86, 'confidence percent should handle percent-scale values');
+assert(confidencePercent(-0.5) === 0 && confidencePercent(Number.NaN) === 0, 'confidence percent should clamp invalid low values');
 assert(evidenceKind({ title: '遥感影像', type: 'Remote-Sensing' }) === '调研/空间数据', 'evidence kind should normalize type aliases');
 
 const percentSignConfidence = normalizeEvidenceItem({ title: '公众参与记录', confidence: '86%' }) as EvidenceSource;

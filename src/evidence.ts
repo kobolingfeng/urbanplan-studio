@@ -171,7 +171,9 @@ export function isStructuredEvidence(item: unknown): item is EvidenceSource {
 }
 
 export function confidencePercent(value: number): number {
-    return value <= 1 ? Math.round(value * 100) : Math.round(clamp(value, 0, 100));
+    const finite = Number.isFinite(value) ? value : 0;
+    const percent = finite <= 1 ? finite * 100 : finite;
+    return Math.round(clamp(percent, 0, 100));
 }
 
 function formatConfidence(value: number): string {
