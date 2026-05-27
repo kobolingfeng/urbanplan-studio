@@ -5,6 +5,7 @@ import { join, resolve } from 'path';
 
 const ROOT = resolve(import.meta.dir, '..');
 const RELEASE = join(ROOT, 'release');
+const reservedWindowsNamePattern = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 
 function configText(value: unknown, fallback: string): string {
     if (typeof value === 'string') return value.trim() || fallback;
@@ -13,11 +14,12 @@ function configText(value: unknown, fallback: string): string {
 }
 
 function sanitizeFileName(value: unknown): string {
-    return configText(value, 'app')
+    const cleaned = configText(value, 'app')
         .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')
         .replace(/\s+/g, ' ')
         .trim()
         .replace(/[. ]+$/g, '') || 'app';
+    return reservedWindowsNamePattern.test(cleaned) ? `${cleaned}-file` : cleaned;
 }
 
 function fail(message: string): never {

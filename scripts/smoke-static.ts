@@ -59,7 +59,9 @@ assert(buildScript.includes('Math.min(65535, Math.floor(value))'), 'build script
 assert(buildScript.includes('currentOwner !== buildLockOwner'), 'build lock cleanup should only release the current process lock');
 assert(buildScript.includes('releaseBuildLock(true)'), 'build lock cleanup should force-release stale locks only after timeout');
 assert(packageScript.includes('function sanitizeFileName(value: unknown): string'), 'package script should tolerate non-string file name parts');
+assert(packageScript.includes('reservedWindowsNamePattern'), 'package script should avoid Windows reserved device names');
 assert(smokeReleaseScript.includes('function sanitizeFileName(value: unknown): string'), 'release smoke should mirror package filename sanitization');
+assert(smokeReleaseScript.includes('reservedWindowsNamePattern'), 'release smoke should mirror Windows reserved name handling');
 assert(setupScript.includes('function quotePowerShell(value: string): string'), 'setup script should quote PowerShell paths safely');
 assert(setupScript.includes('Expand-Archive -LiteralPath'), 'setup script should extract archives with literal paths');
 
