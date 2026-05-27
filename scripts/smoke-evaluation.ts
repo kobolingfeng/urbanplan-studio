@@ -224,6 +224,21 @@ const malformedObjectsEvaluation = evaluateScenario({
     objects: 'not an array',
 } as unknown as typeof project, 'scenario_update', [], []);
 assert(malformedObjectsEvaluation.dimensions.length === 6 && malformedObjectsEvaluation.parcels.length === 0, 'evaluation should ignore non-array object collections');
+const malformedSignalEvaluation = evaluateScenario(
+    project,
+    'scenario_update',
+    'not an array' as unknown as Parameters<typeof evaluateScenario>[2],
+    'not an array' as unknown as Parameters<typeof evaluateScenario>[3],
+);
+assert(malformedSignalEvaluation.riskRegister.length === 0, 'evaluation should ignore non-array checks');
+assert(!malformedSignalEvaluation.highlights.some(item => item.includes('系统生成')), 'evaluation should ignore non-array recommendations');
+const malformedSignalEvaluationReport = buildScenarioEvaluationReport(
+    project,
+    'scenario_update',
+    'not an array' as unknown as Parameters<typeof buildScenarioEvaluationReport>[2],
+    'not an array' as unknown as Parameters<typeof buildScenarioEvaluationReport>[3],
+);
+assert(malformedSignalEvaluationReport.includes('方案综合评估'), 'evaluation report should tolerate malformed signals');
 const scalarEvidenceEvaluation = evaluateScenario({
     project: { name: 'Scalar Evidence Evaluation' },
     ruleset: { version: 'Scalar Evidence Rules', basis: ['fixture'] },

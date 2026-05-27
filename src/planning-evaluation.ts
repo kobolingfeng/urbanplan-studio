@@ -219,6 +219,8 @@ export function evaluateScenario(
     recommendations: RecommendationLike[] = [],
     weightProfile: EvaluationWeightProfile = EVALUATION_WEIGHT_PROFILES[0],
 ): ScenarioEvaluation {
+    const safeChecks = Array.isArray(checks) ? checks : [];
+    const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
     const objects = projectObjects(project);
     const parcels = objects.filter(isParcel);
     const roads = objects.filter(isRoad);
@@ -230,20 +232,20 @@ export function evaluateScenario(
     const totals = summarizeParcels(parcels, scenarioId);
 
     const dimensions: DimensionScore[] = [
-        complianceDimension(checks, weightProfile.weights.compliance),
+        complianceDimension(safeChecks, weightProfile.weights.compliance),
         publicServiceDimension(parcels, facilities, scenarioId, totals.residents, totals.residentialGfa, weightProfile.weights.publicService),
-        mobilityDimension(parcels, roads, entrances, checks, weightProfile.weights.mobility),
+        mobilityDimension(parcels, roads, entrances, safeChecks, weightProfile.weights.mobility),
         ecologyDimension(parcels, openSpaces, scenarioId, totals.residents, weightProfile.weights.ecology),
         renewalValueDimension(project, parcels, scenarioId, weightProfile.weights.renewalValue),
-        evidenceDimension(project, checks, recommendations, weightProfile.weights.evidence),
+        evidenceDimension(project, safeChecks, safeRecommendations, weightProfile.weights.evidence),
     ];
 
     const totalWeight = dimensions.reduce((sum, item) => sum + item.weight, 0);
     const score = roundScore(dimensions.reduce((sum, item) => sum + item.score * item.weight, 0) / totalWeight);
     const parcelScores = parcels
-        .map(parcel => evaluateParcel(parcel, scenarioId, checks))
+        .map(parcel => evaluateParcel(parcel, scenarioId, safeChecks))
         .sort((a, b) => a.score - b.score);
-    const confidence = evidenceConfidence(project, checks);
+    const confidence = evidenceConfidence(project, safeChecks);
 
     return {
         scenarioId,
@@ -257,8 +259,8 @@ export function evaluateScenario(
         confidence,
         dimensions,
         parcels: parcelScores,
-        highlights: buildHighlights(dimensions, parcelScores, recommendations),
-        riskRegister: buildRiskRegister(checks, parcelScores),
+        highlights: buildHighlights(dimensions, parcelScores, safeRecommendations),
+        riskRegister: buildRiskRegister(safeChecks, parcelScores),
     };
 }
 
