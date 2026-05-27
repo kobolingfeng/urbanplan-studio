@@ -227,6 +227,23 @@ const parsedMalformedScenarioValues = parseParcelIndicatorCsv([
 const malformedScenarioValue = parsedMalformedScenarioValues?.project.objects[0].scenarioValues?.['0'] as { far?: number; 0?: unknown } | undefined;
 assert(malformedScenarioValue?.far === 2.4 && malformedScenarioValue[0] === undefined, 'CSV import should ignore malformed fallback scenario value maps');
 
+const sparseFallback = {
+    scenarios: [null, { id: 'base', name: 'Base', description: 'Existing scenario' }],
+    objects: [null, {
+        id: 'parcel_a',
+        type: 'parcel',
+        name: 'Parcel A',
+        scenarioValues: { base: { far: 1.1 } },
+    }],
+} as unknown as typeof fallback;
+const parsedSparseFallback = parseParcelIndicatorCsv([
+    'parcel_id,scenario_id,far',
+    'parcel_a,base,2.4',
+].join('\n'), sparseFallback);
+assert(parsedSparseFallback?.project.scenarios.length === 1, 'CSV import should ignore malformed fallback scenario entries');
+assert(parsedSparseFallback?.project.objects.length === 1, 'CSV import should ignore malformed fallback object entries');
+assert(parsedSparseFallback?.project.objects[0].scenarioValues?.base?.far === 2.4, 'CSV import should update sparse fallback projects');
+
 const trimmedScenarioFallback = {
     scenarios: [{ id: ' update ', name: 'Update', description: 'Existing scenario with whitespace' }],
     objects: [{

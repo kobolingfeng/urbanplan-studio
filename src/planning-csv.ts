@@ -109,8 +109,8 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
     const headers = new Set(Object.keys(rows[0] ?? {}));
     if (!hasAny(headers, ['parcel_id', 'object_id', 'id']) || !hasAny(headers, ['scenario_id', 'scenario'])) return undefined;
 
-    const fallbackScenarios = Array.isArray(fallbackProject.scenarios) ? fallbackProject.scenarios : [];
-    const fallbackObjects = Array.isArray(fallbackProject.objects) ? fallbackProject.objects : [];
+    const fallbackScenarios = csvRecordItems<CsvScenarioLike>(fallbackProject.scenarios);
+    const fallbackObjects = csvRecordItems<CsvObjectLike>(fallbackProject.objects);
     const scenarios = [...fallbackScenarios];
     const scenarioIds = new Set(scenarios.map(scenario => csvIdentifierText(scenario.id)).filter((id): id is string => Boolean(id)));
     const objects = fallbackObjects.map(object => ({
@@ -284,6 +284,14 @@ function csvCell(value: string | number): string {
 
 function csvRecord(value: unknown): Record<string, unknown> {
     return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function csvRecordItems<T>(values: unknown): T[] {
+    return Array.isArray(values) ? values.filter(isCsvRecord) as T[] : [];
+}
+
+function isCsvRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
 function parseCsvTable(text: string): Array<Record<string, string>> {
