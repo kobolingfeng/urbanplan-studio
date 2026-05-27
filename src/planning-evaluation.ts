@@ -616,7 +616,7 @@ function evidenceConfidence(project: ProjectLike, checks: CheckLike[], recommend
 }
 
 function parcelValue(parcel: PlanningObjectLike, scenarioId: string) {
-    return parcel.scenarioValues?.[scenarioId] ?? Object.values(parcel.scenarioValues ?? {})[0] ?? {};
+    return scenarioValueFor(parcel.scenarioValues, scenarioId) ?? Object.values(parcel.scenarioValues ?? {})[0] ?? {};
 }
 
 function parcelResidents(parcel: PlanningObjectLike, scenarioId: string): number {
@@ -663,6 +663,20 @@ function scoreBand(score: number): EvaluationBand {
 
 function number(value: unknown, fallback = 0): number {
     return finiteNumberOr(value, fallback);
+}
+
+function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
+    if (!values) return undefined;
+    const target = identifierText(scenarioId);
+    if (!target) return undefined;
+    if (values[target]) return values[target];
+    return Object.entries(values).find(([key]) => identifierText(key) === target)?.[1];
+}
+
+function identifierText(value: unknown): string | undefined {
+    if (typeof value !== 'string' && typeof value !== 'number') return undefined;
+    const text = String(value).trim();
+    return text || undefined;
 }
 
 function asPercent(value: number): string {

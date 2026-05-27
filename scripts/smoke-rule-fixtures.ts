@@ -98,6 +98,27 @@ assertTriggers('string numeric parcel controls', [{
     'parcel_public_service_ratio',
 ]);
 
+assertTriggers('trimmed scenario value keys', [{
+    ...badParcel,
+    id: 'parcel_trimmed_scenario_key',
+    name: 'Trimmed Scenario Key',
+    scenarioValues: {
+        ' s1 ': {
+            far: 4,
+            buildingCoverage: 0.42,
+            greenRatio: 0.18,
+            residentialGfaSqm: 48000,
+            publicServiceGfaSqm: 50,
+            updateMode: '综合整治',
+        },
+    },
+}], [
+    'parcel_far_max',
+    'parcel_green_min',
+    'parcel_coverage_max',
+    'parcel_public_service_ratio',
+]);
+
 assertTriggers('heritage overlap', [
     {
         ...badParcel,

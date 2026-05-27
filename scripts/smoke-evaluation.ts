@@ -199,4 +199,35 @@ const stringNumericReport = buildScenarioEvaluationReport(stringNumericProject, 
 assert(stringNumericReport.includes('| String Numeric Parcel | 1455 |'), 'evaluation should parse strict numeric strings for service allocation');
 assert(!stringNumericReport.includes('NaN'), 'evaluation report should not emit NaN for numeric strings');
 
+const trimmedScenarioValueProject = {
+    project: { name: 'Trimmed Scenario Value Evaluation' },
+    ruleset: { version: 'Trimmed Scenario Rules', basis: ['fixture'] },
+    scenarios: [{ id: ' scenario_update ', name: 'Update' }],
+    objects: [{
+        id: 'parcel_trimmed_scenario_key',
+        type: 'parcel',
+        name: 'Trimmed Scenario Key Parcel',
+        evidence: ['smoke fixture'],
+        points: [
+            { x: 0, y: 0 },
+            { x: 120, y: 0 },
+            { x: 120, y: 100 },
+            { x: 0, y: 100 },
+        ],
+        controls: { farMax: 4, buildingCoverageMax: 0.35, greenRatioMin: 0.30 },
+        scenarioValues: {
+            ' scenario_update ': {
+                far: 3.8,
+                buildingCoverage: 0.33,
+                greenRatio: 0.32,
+                residentialGfaSqm: 48000,
+                publicServiceGfaSqm: 1600,
+                updateMode: '综合整治',
+            },
+        },
+    }],
+} as unknown as typeof project;
+const trimmedScenarioValueReport = buildScenarioEvaluationReport(trimmedScenarioValueProject, 'scenario_update');
+assert(trimmedScenarioValueReport.includes('| Trimmed Scenario Key Parcel | 1455 |'), 'evaluation should trim scenario value keys before lookup');
+
 console.log('evaluation smoke passed');
