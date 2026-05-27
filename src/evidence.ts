@@ -142,7 +142,10 @@ export function evidenceSearchText(items: EvidenceItem[] = []): string {
 }
 
 export function evidenceKind(item: EvidenceItem): string {
-    if (typeof item !== 'string' && item.type) return TYPE_LABELS[String(item.type)] ?? String(item.type);
+    if (typeof item !== 'string' && item.type) {
+        const key = String(item.type).trim().toLowerCase().replace(/[\s-]+/g, '_');
+        return TYPE_LABELS[key] ?? String(item.type);
+    }
     const text = typeof item === 'string' ? item : item.title;
     if (/GB|CJJ|规范|标准|导则|指南|控规|法定|修订|条例/.test(text)) return '规范/规划依据';
     if (/调研|实测|现场|访谈|问卷|遥感|手机信令|POI|路网|底图|测绘/.test(text)) return '调研/空间数据';
