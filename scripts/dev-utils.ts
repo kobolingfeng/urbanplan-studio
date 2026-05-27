@@ -3,12 +3,14 @@ import { isAbsolute, relative, resolve } from 'path';
 export function resolveDevPort(value: unknown, fallback = 3000): number {
     const parsed = typeof value === 'number'
         ? value
-        : typeof value === 'string' && value.trim()
+        : typeof value === 'string' && decimalIntegerPattern.test(value.trim())
             ? Number(value.trim())
             : fallback;
     if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) return fallback;
     return parsed;
 }
+
+const decimalIntegerPattern = /^\d+$/;
 
 export function splitCommandLine(command: string): string[] {
     const parts: string[] = [];

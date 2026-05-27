@@ -31,6 +31,8 @@ assert(resolveDevPort(5173) === 5173, 'dev port parser should accept numeric val
 assert(resolveDevPort('abc') === 3000, 'dev port parser should reject non-numeric strings');
 assert(resolveDevPort('70000', 3001) === 3001, 'dev port parser should reject out-of-range ports');
 assert(resolveDevPort('3000.5', 3001) === 3001, 'dev port parser should reject fractional ports');
+assert(resolveDevPort('0x10', 3001) === 3001, 'dev port parser should reject hexadecimal strings');
+assert(resolveDevPort('1e3', 3001) === 3001, 'dev port parser should reject exponent strings');
 
 const distRoot = join(import.meta.dir, '..', 'dist');
 assert(resolveDevServerPath(distRoot, '/') === join(distRoot, 'index.html'), 'dev server root should resolve to index.html');
