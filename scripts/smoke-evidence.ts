@@ -35,6 +35,9 @@ const percentSignConfidence = normalizeEvidenceItem({ title: '公众参与记录
 assert(percentSignConfidence.confidence === 86, 'evidence normalizer should parse percent-suffixed confidence strings');
 assert(evidenceDisplayText(percentSignConfidence).includes('可信度 86%'), 'evidence display should format percent-suffixed confidence strings');
 
+const hexConfidence = normalizeEvidenceItem({ title: '异常可信度', confidence: '0x10' }) as EvidenceSource;
+assert(hexConfidence.confidence === undefined, 'evidence normalizer should reject hexadecimal confidence strings');
+
 const clampedConfidence = normalizeEvidenceItem({ title: '异常来源', confidence: '180' }) as EvidenceSource;
 assert(clampedConfidence.confidence === 100, 'evidence normalizer should clamp excessive confidence strings');
 

@@ -134,6 +134,15 @@ assert(parsedMalformedThousands?.importSummary.invalidFields.length === 2, 'CSV 
 const malformedParcel = parsedMalformedThousands?.project.objects.find(object => object.id === 'parcel_a');
 assert(!malformedParcel?.scenarioValues?.malformed, 'CSV import should not create scenario values for malformed thousands-only rows');
 
+const hexNumberCsv = [
+    'parcel_id,scenario_id,far',
+    'parcel_a,hex,"0x10"',
+].join('\n');
+const parsedHexNumber = parseParcelIndicatorCsv(hexNumberCsv, fallback);
+assert(parsedHexNumber?.importSummary.updatedRows === 0 && parsedHexNumber.importSummary.invalidFields.length === 1, 'CSV import should reject hexadecimal numeric strings');
+const hexParcel = parsedHexNumber?.project.objects.find(object => object.id === 'parcel_a');
+assert(!hexParcel?.scenarioValues?.hex, 'CSV import should not create scenario values for hexadecimal numeric strings');
+
 const noUpdateCsv = [
     'parcel_id,scenario_id',
     'parcel_a,empty_update',

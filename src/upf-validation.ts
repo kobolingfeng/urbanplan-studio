@@ -359,13 +359,20 @@ function numberLike(value: unknown): number | undefined {
     if (typeof value === 'string' && value.trim()) {
         const text = value.trim();
         const numericText = text.endsWith('%') ? text.slice(0, -1).trim() : text;
-        const parsed = Number(thousandsNumberPattern.test(numericText) ? numericText.replace(/,/g, '') : numericText);
+        const normalized = thousandsNumberPattern.test(numericText)
+            ? numericText.replace(/,/g, '')
+            : decimalNumberPattern.test(numericText)
+                ? numericText
+                : '';
+        if (!normalized) return undefined;
+        const parsed = Number(normalized);
         if (Number.isFinite(parsed)) return parsed;
     }
     return undefined;
 }
 
 const thousandsNumberPattern = /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/;
+const decimalNumberPattern = /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/;
 
 function isPoint(value: unknown): boolean {
     const point = asRecord(value);

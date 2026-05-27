@@ -37,7 +37,13 @@ export function finiteNumberOr(value: unknown, fallback: number): number {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     if (typeof value === 'string' && value.trim()) {
         const text = value.trim();
-        const parsed = Number(thousandsNumberPattern.test(text) ? text.replace(/,/g, '') : text);
+        const numericText = thousandsNumberPattern.test(text)
+            ? text.replace(/,/g, '')
+            : decimalNumberPattern.test(text)
+                ? text
+                : '';
+        if (!numericText) return fallback;
+        const parsed = Number(numericText);
         if (Number.isFinite(parsed)) return parsed;
     }
     return fallback;
@@ -57,3 +63,4 @@ export function formatRange(range: NumericRange): string {
 }
 
 const thousandsNumberPattern = /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/;
+const decimalNumberPattern = /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/;

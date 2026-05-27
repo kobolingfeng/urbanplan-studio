@@ -431,6 +431,28 @@ const numericStringIssues = validateUpfDocument({
 assert(!numericStringIssues.some(issue => issue.severity === 'error' && issue.message.includes('必须是数字')), 'UPF validation should not error on compatible numeric strings');
 assert(numericStringIssues.some(issue => issue.severity === 'info' && issue.path === 'objects[0].scenarioValues.base.residentialGfaSqm'), 'UPF validation should report compatible numeric strings as info');
 
+const hexNumericStringIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'hex_numeric_string', name: 'Hex Numeric String', city: '深圳市', district: '罗湖区', planningType: 'Numeric smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Hex numeric string fixture' }],
+    objects: [{
+        id: 'parcel_hex_numeric_string',
+        type: 'parcel',
+        name: 'Hex Numeric String Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: 3, buildingCoverageMax: 0.35, greenRatioMin: 0.3, heightMaxM: 80 },
+        scenarioValues: {
+            base: { far: '0x10', buildingCoverage: 0.3, greenRatio: 0.31, residentialGfaSqm: 10000, publicServiceGfaSqm: 300, updateMode: '综合整治' },
+        },
+    }],
+});
+assert(hexNumericStringIssues.some(issue => issue.severity === 'error' && issue.path === 'objects[0].scenarioValues.base.far' && issue.message.includes('必须是数字')), 'UPF validation should reject hexadecimal numeric strings');
+
 const undefinedReferenceIssues = validateUpfDocument({
     format: 'UPF',
     formatVersion: '0.1.0',

@@ -357,8 +357,8 @@ function parseCsvNumber(key: keyof CsvScenarioValueLike, value: string): number 
 
 function normalizeCsvNumberText(text: string): string | undefined {
     if (!text) return undefined;
-    if (!text.includes(',')) return text;
-    return /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/.test(text) ? text.replace(/,/g, '') : undefined;
+    if (!text.includes(',')) return decimalNumberPattern.test(text) ? text : undefined;
+    return thousandsNumberPattern.test(text) ? text.replace(/,/g, '') : undefined;
 }
 
 function isRatioField(key: keyof CsvScenarioValueLike): boolean {
@@ -369,3 +369,6 @@ function numberRange(key: keyof CsvScenarioValueLike): NumericRange {
     const ranges: Record<string, NumericRange> = PARCEL_SCENARIO_VALUE_RANGES;
     return ranges[String(key)] ?? UNBOUNDED_RANGE;
 }
+
+const thousandsNumberPattern = /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/;
+const decimalNumberPattern = /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/;

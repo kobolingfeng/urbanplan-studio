@@ -186,11 +186,15 @@ function numberOrUndefined(value: unknown): number | undefined {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     if (typeof value === 'string' && value.trim()) {
         const text = value.trim();
-        const parsed = Number(text.endsWith('%') ? text.slice(0, -1).trim() : text);
+        const numericText = text.endsWith('%') ? text.slice(0, -1).trim() : text;
+        if (!decimalNumberPattern.test(numericText)) return undefined;
+        const parsed = Number(numericText);
         if (Number.isFinite(parsed)) return parsed;
     }
     return undefined;
 }
+
+const decimalNumberPattern = /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/;
 
 function asRecord(value: unknown): AnyRecord | undefined {
     return value && typeof value === 'object' && !Array.isArray(value) ? value as AnyRecord : undefined;

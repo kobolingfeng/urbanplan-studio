@@ -29,6 +29,7 @@ assert(FACILITY_RANGES.serviceRadiusM.max === 10_000, 'facility radius range sho
 assert(numberInRangeOr('3.2', 1, PARCEL_SCENARIO_VALUE_RANGES.far) === 3.2, 'range helper should accept numeric strings from tabular imports');
 assert(numberInRangeOr('42,000', 0, PARCEL_SCENARIO_VALUE_RANGES.residentialGfaSqm) === 42000, 'range helper should accept strict thousands-separated numeric strings');
 assert(numberInRangeOr('3,2', 1, PARCEL_SCENARIO_VALUE_RANGES.far) === 1, 'range helper should reject ambiguous comma decimals');
+assert(numberInRangeOr('0x10', 1, PARCEL_SCENARIO_VALUE_RANGES.far) === 1, 'range helper should reject hexadecimal numeric strings');
 assert(numberInRangeOr(99, 1, PARCEL_SCENARIO_VALUE_RANGES.far) === 1, 'range helper should reject excessive FAR');
 assert(integerInRangeOr(2.6, 1, ROAD_RANGES.lanes) === 3, 'integer range helper should round accepted values');
 assert(integerInRangeOr(20, 2, ROAD_RANGES.lanes) === 2, 'integer range helper should fallback after range rejection');
