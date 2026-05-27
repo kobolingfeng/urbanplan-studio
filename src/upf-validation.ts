@@ -231,15 +231,17 @@ function collectObjectPoints(objects: unknown[]): Array<{ path: string; point: {
 }
 
 export function summarizeUpfValidation(issues: UpfValidationIssue[]) {
+    const safeIssues = validationIssues(issues);
     return {
-        errors: issues.filter(issue => issue.severity === 'error').length,
-        warnings: issues.filter(issue => issue.severity === 'warning').length,
-        infos: issues.filter(issue => issue.severity === 'info').length,
+        errors: safeIssues.filter(issue => issue.severity === 'error').length,
+        warnings: safeIssues.filter(issue => issue.severity === 'warning').length,
+        infos: safeIssues.filter(issue => issue.severity === 'info').length,
     };
 }
 
 export function buildUpfValidationReport(issues: UpfValidationIssue[]): string {
-    const summary = summarizeUpfValidation(issues);
+    const safeIssues = validationIssues(issues);
+    const summary = summarizeUpfValidation(safeIssues);
     const lines = [
         '# UPF 结构校验报告',
         '',
@@ -247,11 +249,27 @@ export function buildUpfValidationReport(issues: UpfValidationIssue[]): string {
         '',
         '| 等级 | 路径 | 问题 |',
         '|---|---|---|',
-        ...(issues.length
-            ? issues.map(issue => markdownTableRow([severityLabel(issue.severity), issue.path, issue.message]))
+        ...(safeIssues.length
+            ? safeIssues.map(issue => markdownTableRow([severityLabel(issue.severity), issue.path, issue.message]))
             : ['| 通过 | $ | 当前未发现结构问题 |']),
     ];
     return lines.join('\n');
+}
+
+function validationIssues(value: unknown): UpfValidationIssue[] {
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((item) => {
+        const issue = asRecord(item);
+        if (!issue) return [];
+        const severity = issue.severity === 'error' || issue.severity === 'warning' || issue.severity === 'info'
+            ? issue.severity
+            : 'info';
+        return [{
+            severity,
+            path: String(issue.path ?? '$'),
+            message: String(issue.message ?? '未声明的问题。'),
+        }];
+    });
 }
 
 function validateParcel(

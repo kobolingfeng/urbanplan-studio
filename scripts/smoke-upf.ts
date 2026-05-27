@@ -8,7 +8,7 @@ import {
     parseUpfText,
 } from '../src/planning-analytics';
 import { SERVICE_DEMAND_ASSUMPTIONS } from '../src/planning-assumptions';
-import { buildUpfValidationReport, validateUpfDocument } from '../src/upf-validation';
+import { buildUpfValidationReport, summarizeUpfValidation, validateUpfDocument, type UpfValidationIssue } from '../src/upf-validation';
 
 const ROOT = resolve(import.meta.dir, '..');
 const examples = join(ROOT, 'examples');
@@ -37,6 +37,10 @@ const minimalRaw = JSON.parse(minimalText);
 const minimalIssues = validateUpfDocument(minimalRaw);
 assert(!minimalIssues.some(issue => issue.severity === 'error'), 'minimal should have no schema errors');
 assert(buildUpfValidationReport(minimalIssues).includes('UPF 结构校验报告'), 'validation report title mismatch');
+const sparseValidationSummary = summarizeUpfValidation([null, { severity: 'error', path: 'objects[0]', message: 'bad' }] as unknown as UpfValidationIssue[]);
+assert(sparseValidationSummary.errors === 1, 'validation summary should ignore malformed issue entries');
+assert(buildUpfValidationReport('bad' as unknown as UpfValidationIssue[]).includes('当前未发现结构问题'), 'validation report should tolerate malformed issue collections');
+assert(buildUpfValidationReport([null, { severity: 'warning', path: 'objects[0]', message: 'bad' }] as unknown as UpfValidationIssue[]).includes('objects[0]'), 'validation report should keep valid sparse issue entries');
 const minimal = parseUpfText(minimalText, fallback);
 assert(minimal.project.project?.id === 'minimal_demo', 'minimal project id mismatch');
 assert(minimal.activeScenarioId === 'scenario_base', 'minimal active scenario mismatch');
