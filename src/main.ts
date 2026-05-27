@@ -2509,7 +2509,7 @@ async function saveText(defaultName: string, content: string) {
             return;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            showModal('导入失败', message, 'UPF 导入校验');
+            showModal('保存失败', message, '文件保存');
             setStatus(message);
         }
     }
