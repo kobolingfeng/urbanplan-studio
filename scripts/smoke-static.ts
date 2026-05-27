@@ -46,6 +46,8 @@ assert(sourceMain.includes('function importEvidenceItems'), 'import audit should
 assert(sourceMain.includes('function importRecord'), 'import normalization should ignore malformed metadata objects');
 assert(sourceMain.includes('function importScenarioValueKeys'), 'import snapshot should ignore malformed scenario value maps');
 assert(sourceMain.includes('function scenarioValueMap'), 'main scenario helpers should ignore malformed scenario value maps');
+assert(sourceMain.includes('const object = importRecord(raw) as Partial<PlanObject>;'), 'import audit should ignore malformed object entries');
+assert(sourceMain.includes('const raw = importRecord(object) as Partial<PlanObject>;'), 'import snapshot should ignore malformed object entries');
 assert(sourceMain.includes('scenarioValueFor(parcel.scenarioValues, scenarioId)'), 'import audit should normalize scenario value keys before reporting gaps');
 assert(sourceMain.includes('itemScenarioIds.has(scenarioId)'), 'normalization audit should compare normalized scenario ids');
 assert(buildScript.includes('function configText(value: unknown, fallback: string): string'), 'build script should normalize malformed config text');
