@@ -2527,8 +2527,8 @@ async function saveText(defaultName: string, content: string) {
     }
 }
 
-function sanitizeDefaultName(value: string): string {
-    return value
+function sanitizeDefaultName(value: unknown): string {
+    return String(value ?? '')
         .split(/[\\/]+/)
         .pop()!
         .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')
