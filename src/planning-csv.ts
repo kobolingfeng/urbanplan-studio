@@ -72,6 +72,7 @@ export type CsvImportSummary = {
 };
 
 export function buildScenarioDecisionCsv(rows: ScenarioDecisionCsvRow[]): string {
+    const safeRows = Array.isArray(rows) ? rows : [];
     const header = [
         'scenario_id',
         'scenario_name',
@@ -84,7 +85,7 @@ export function buildScenarioDecisionCsv(rows: ScenarioDecisionCsvRow[]): string
         'rule_errors',
         'rule_warnings',
     ];
-    const body = rows.map(row => [
+    const body = safeRows.map(row => [
         row.scenario.id,
         row.scenario.name,
         row.evaluation.score,
@@ -188,6 +189,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
 }
 
 export function buildScenarioDecisionLongCsv(rows: ScenarioDecisionCsvRow[]): string {
+    const safeRows = Array.isArray(rows) ? rows : [];
     const header = [
         'scenario_id',
         'scenario_name',
@@ -197,7 +199,7 @@ export function buildScenarioDecisionLongCsv(rows: ScenarioDecisionCsvRow[]): st
         'value',
         'unit',
     ];
-    const body = rows.flatMap(row => [
+    const body = safeRows.flatMap(row => [
         metricRow(row, 'summary', 'score', '综合评分', row.evaluation.score, 'score'),
         metricRow(row, 'summary', 'confidence', '可信度', row.evaluation.confidence, 'score'),
         metricRow(row, 'capacity', 'residents', '估算人口', row.residents, 'people'),
@@ -205,7 +207,7 @@ export function buildScenarioDecisionLongCsv(rows: ScenarioDecisionCsvRow[]): st
         metricRow(row, 'capacity', 'public_service_gfa_sqm', '公服建面', Math.round(row.publicServiceGfa), 'sqm'),
         metricRow(row, 'rules', 'rule_errors', '规则错误', row.errors, 'count'),
         metricRow(row, 'rules', 'rule_warnings', '规则警告', row.warnings, 'count'),
-        ...row.evaluation.dimensions.flatMap(dimension => [
+        ...rowDimensions(row).flatMap(dimension => [
             metricRow(row, 'dimension_score', `${dimension.id}_score`, `${dimension.name}得分`, dimension.score, 'score'),
             metricRow(row, 'dimension_weight', `${dimension.id}_weight`, `${dimension.name}权重`, Number((dimension.weight * 100).toFixed(2)), 'percent'),
         ]),
@@ -219,6 +221,10 @@ export function buildScenarioDecisionLongCsv(rows: ScenarioDecisionCsvRow[]): st
         row.unit,
     ].map(csvCell).join(','));
     return [header.join(','), ...body].join('\n');
+}
+
+function rowDimensions(row: ScenarioDecisionCsvRow) {
+    return Array.isArray(row.evaluation.dimensions) ? row.evaluation.dimensions : [];
 }
 
 function metricRow(

@@ -49,6 +49,13 @@ assert(long.startsWith('scenario_id,scenario_name,metric_group,metric_id,metric_
 assert(long.includes('summary,score,综合评分,86,score'), 'long CSV should include score metric');
 assert(long.includes('dimension_score,compliance_score,控规符合性得分,88,score'), 'long CSV should include dimension score');
 assert(long.includes('dimension_weight,publicService_weight,公共服务权重,22,percent'), 'long CSV should include dimension weight percent');
+assert(buildScenarioDecisionCsv('bad' as unknown as ScenarioDecisionCsvRow[]).trim() === 'scenario_id,scenario_name,score,band,confidence,residents,residential_gfa_sqm,public_service_gfa_sqm,rule_errors,rule_warnings', 'wide CSV should tolerate malformed row collections');
+const longWithMalformedDimensions = buildScenarioDecisionLongCsv([{
+    ...rows[0],
+    evaluation: { ...rows[0].evaluation, dimensions: 'bad' },
+} as unknown as ScenarioDecisionCsvRow]);
+assert(longWithMalformedDimensions.includes('summary,score,综合评分,86,score'), 'long CSV should keep summary metrics when dimensions are malformed');
+assert(!longWithMalformedDimensions.includes('dimension_score'), 'long CSV should skip malformed dimension collections');
 
 const fallback = {
     format: 'UPF',
