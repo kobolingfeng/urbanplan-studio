@@ -111,6 +111,7 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
         if (item.type === 'parcel') validateParcel(item, path, scenarioIds, add);
         if (item.type === 'road') {
             if (!hasPoints(item.points, 2)) add('error', `${path}.points`, '道路至少需要 2 个点。');
+            else validateLineGeometry(item.points, `${path}.points`, '道路', add);
             if (!isNonEmptyString(item.level)) add('warning', `${path}.level`, '道路缺少等级。');
             for (const field of ROAD_NUMERIC_VALUES) {
                 validateNumberInRange(item, field, path, `道路 ${field}`, ROAD_NUMERIC_RANGES[field], add);
@@ -324,6 +325,25 @@ function validatePolygonGeometry(
         return;
     }
     if (Math.abs(rawPolygonArea(points)) < 0.0001) add('error', path, `${label} 面积接近 0，可能存在共线或重复点。`);
+}
+
+function validateLineGeometry(
+    value: unknown,
+    path: string,
+    label: string,
+    add: (severity: UpfValidationSeverity, path: string, message: string) => void,
+) {
+    if (!Array.isArray(value)) return;
+    const points = value.flatMap((item) => {
+        const point = asRecord(item);
+        return point && isFiniteNumber(point.x) && isFiniteNumber(point.y) ? [{ x: point.x, y: point.y }] : [];
+    });
+    if (points.length < 2) return;
+    const hasLength = points.slice(1).some((point, index) => {
+        const previous = points[index];
+        return point.x !== previous.x || point.y !== previous.y;
+    });
+    if (!hasLength) add('error', path, `${label} 至少需要 2 个不同坐标点。`);
 }
 
 function rawPolygonArea(points: Array<{ x: number; y: number }>): number {

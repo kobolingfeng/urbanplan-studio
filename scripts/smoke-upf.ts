@@ -357,6 +357,25 @@ const degeneratePolygonIssues = validateUpfDocument({
 });
 assert(degeneratePolygonIssues.some(issue => issue.severity === 'error' && issue.message.includes('面积接近 0')), 'degenerate parcel polygons should be rejected');
 
+const zeroLengthRoadIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'zero_length_road', name: 'Zero Length Road', city: '深圳市', district: '罗湖区', planningType: 'Geometry smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Geometry fixture' }],
+    objects: [{
+        id: 'road_zero_length',
+        type: 'road',
+        name: 'Zero Length Road',
+        evidence: ['fixture'],
+        points: [{ x: 10, y: 10 }, { x: 10, y: 10 }],
+        level: '支路',
+        redLineWidthM: 18,
+        lanes: 2,
+    }],
+});
+assert(zeroLengthRoadIssues.some(issue => issue.severity === 'error' && issue.path === 'objects[0].points' && issue.message.includes('不同坐标点')), 'zero-length road geometry should be rejected');
+
 const outOfRangeIssues = validateUpfDocument({
     format: 'UPF',
     formatVersion: '0.1.0',
