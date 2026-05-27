@@ -102,6 +102,35 @@ assert(road?.geometry?.type === 'LineString', 'road should become line string');
 const facility = collection.features.find(feature => feature.id === 'facility_a');
 assert(facility?.geometry?.type === 'Point', 'facility should become point');
 
+const degenerateExport = buildGeoJsonFeatureCollection({
+    project: { name: 'Degenerate Export', crs: 'DemoCanvasMetric' },
+    objects: [{
+        id: 'parcel_line_export',
+        type: 'parcel',
+        name: 'Line Parcel Export',
+        points: [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 20, y: 0 }],
+    }, {
+        id: 'road_point_export',
+        type: 'road',
+        name: 'Point Road Export',
+        points: [{ x: 0, y: 0 }],
+    }, {
+        id: 'facility_nan_export',
+        type: 'facility',
+        name: 'NaN Facility Export',
+        point: { x: Number.NaN, y: 0 },
+    }, {
+        id: 'road_valid_after_filter',
+        type: 'road',
+        name: 'Road Valid After Filter',
+        points: [{ x: Number.NaN, y: 0 }, { x: 0, y: 5 }, { x: 10, y: 5 }],
+    }],
+}, 'base', UNIT_SYSTEM);
+assert(!degenerateExport.features.some(feature => feature.id === 'parcel_line_export'), 'GeoJSON export should skip zero-area polygons');
+assert(!degenerateExport.features.some(feature => feature.id === 'road_point_export'), 'GeoJSON export should skip single-point lines');
+assert(!degenerateExport.features.some(feature => feature.id === 'facility_nan_export'), 'GeoJSON export should skip non-finite points');
+assert(degenerateExport.features.some(feature => feature.id === 'road_valid_after_filter'), 'GeoJSON export should keep lines after dropping invalid coordinates');
+
 const text = buildGeoJsonText(project, 'base', UNIT_SYSTEM);
 assert(text.includes('"FeatureCollection"') && text.includes('"parcel_a"'), 'GeoJSON text export mismatch');
 

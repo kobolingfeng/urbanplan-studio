@@ -185,19 +185,23 @@ function ensureScenario(
 }
 
 function geoJsonGeometry(object: PlanningObjectLike) {
-    if ((object.type === 'parcel' || object.type === 'openSpace' || object.type === 'constraint') && object.points?.length) {
+    if (object.type === 'parcel' || object.type === 'openSpace' || object.type === 'constraint') {
+        const points = usablePolygonPoints(object.points);
+        if (!points) return null;
         return {
             type: 'Polygon',
-            coordinates: [closedCoordinates(object.points)],
+            coordinates: [closedCoordinates(points)],
         };
     }
-    if (object.type === 'road' && object.points?.length) {
+    if (object.type === 'road') {
+        const points = usableLinePoints(object.points);
+        if (!points) return null;
         return {
             type: 'LineString',
-            coordinates: object.points.map(point => [point.x, point.y]),
+            coordinates: points.map(point => [point.x, point.y]),
         };
     }
-    if ((object.type === 'facility' || object.type === 'entrance') && object.point) {
+    if ((object.type === 'facility' || object.type === 'entrance') && isUsablePoint(object.point)) {
         return {
             type: 'Point',
             coordinates: [object.point.x, object.point.y],
@@ -251,6 +255,38 @@ function closedCoordinates(points: Point[]): number[][] {
     const last = coordinates[coordinates.length - 1];
     if (first && last && (first[0] !== last[0] || first[1] !== last[1])) coordinates.push([...first]);
     return coordinates;
+}
+
+function usablePolygonPoints(points: Point[] | undefined): Point[] | undefined {
+    const clean = dropClosingPoint((points ?? []).filter(isUsablePoint));
+    if (clean.length < 3 || rawPolygonArea(clean) < 0.0001) return undefined;
+    return clean;
+}
+
+function usableLinePoints(points: Point[] | undefined): Point[] | undefined {
+    const clean = (points ?? []).filter(isUsablePoint);
+    if (clean.length < 2) return undefined;
+    const first = clean[0];
+    if (clean.every(point => point.x === first.x && point.y === first.y)) return undefined;
+    return clean;
+}
+
+function isUsablePoint(point: unknown): point is Point {
+    return isRecord(point)
+        && typeof point.x === 'number'
+        && typeof point.y === 'number'
+        && Number.isFinite(point.x)
+        && Number.isFinite(point.y);
+}
+
+function rawPolygonArea(points: Point[]): number {
+    let sum = 0;
+    for (let index = 0; index < points.length; index++) {
+        const current = points[index];
+        const next = points[(index + 1) % points.length];
+        sum += current.x * next.y - next.x * current.y;
+    }
+    return Math.abs(sum / 2);
 }
 
 function parseGeoJsonFeature(feature: unknown, activeScenarioId: string, index: number): PlanningObjectLike | undefined {
