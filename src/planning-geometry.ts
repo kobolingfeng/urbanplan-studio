@@ -91,6 +91,7 @@ export function pointInPolygon(point: Point, points: Point[]): boolean {
 }
 
 export function polygonsOverlap(a: Point[], b: Point[]): boolean {
+    if (!isUsablePolygon(a) || !isUsablePolygon(b)) return false;
     if (a.some(point => pointInPolygon(point, b)) || b.some(point => pointInPolygon(point, a))) return true;
     for (let i = 0; i < a.length; i++) {
         for (let j = 0; j < b.length; j++) {
@@ -98,6 +99,21 @@ export function polygonsOverlap(a: Point[], b: Point[]): boolean {
         }
     }
     return false;
+}
+
+function isUsablePolygon(points: Point[]): boolean {
+    return points.length >= 3 && rawPolygonArea(points) > 0.0001;
+}
+
+function rawPolygonArea(points: Point[]): number {
+    if (points.length < 3) return 0;
+    let sum = 0;
+    for (let index = 0; index < points.length; index++) {
+        const current = points[index];
+        const next = points[(index + 1) % points.length];
+        sum += current.x * next.y - next.x * current.y;
+    }
+    return Math.abs(sum / 2);
 }
 
 export function segmentsIntersect(a: Point, b: Point, c: Point, d: Point): boolean {

@@ -32,6 +32,8 @@ const emptyCentroid = centroid([]);
 assert(emptyCentroid.x === 0 && emptyCentroid.y === 0, 'empty centroid should be stable');
 assert(polygonsOverlap(square, rect(8, 8, 10, 10)), 'polygons should overlap');
 assert(!polygonsOverlap(square, rect(20, 20, 5, 5)), 'polygons should not overlap');
+assert(!polygonsOverlap([{ x: 0, y: 0 }, { x: 10, y: 0 }], square), 'degenerate line polygons should not overlap');
+assert(!polygonsOverlap([{ x: 0, y: 0 }, { x: 5, y: 0 }, { x: 10, y: 0 }], square), 'zero-area polygons should not overlap');
 
 const intersection = segmentIntersection({ x: 0, y: 5 }, { x: 10, y: 5 }, { x: 5, y: 0 }, { x: 5, y: 10 });
 assert(intersection?.x === 5 && intersection.y === 5, 'segment intersection mismatch');
