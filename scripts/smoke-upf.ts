@@ -65,9 +65,15 @@ assert(importedDefaultScenario.activeScenarioId === 'scenario_imported', 'UPF pa
 const sparseImportedDefaultScenario = parseUpfText(JSON.stringify({
     ...minimalRaw,
     activeScenarioId: undefined,
-    scenarios: [null, { id: 'scenario_sparse', name: 'Sparse' }],
+    scenarios: [null, {}, { id: 'scenario_sparse', name: 'Sparse' }],
 }), fallback);
 assert(sparseImportedDefaultScenario.activeScenarioId === 'scenario_sparse', 'UPF parser should use first valid imported scenario');
+assert(sparseImportedDefaultScenario.project.scenarios?.length === 1, 'UPF parser should drop malformed imported scenario entries');
+const sparseImportedObjects = parseUpfText(JSON.stringify({
+    ...minimalRaw,
+    objects: [null, ...minimalRaw.objects],
+}), fallback);
+assert(sparseImportedObjects.project.objects?.length === minimalRaw.objects.length, 'UPF parser should drop malformed imported object entries');
 const minimalWithBom = parseUpfText(`\uFEFF${minimalText}`, fallback);
 assert(minimalWithBom.project.project?.id === 'minimal_demo', 'UPF parser should accept JSON files with UTF-8 BOM');
 for (const invalidJsonRoot of ['null', '[]', '42']) {

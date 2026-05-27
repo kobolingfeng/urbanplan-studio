@@ -136,12 +136,13 @@ export function parseUpfText<TProject extends ProjectLike>(
         throw new Error('不是可识别的 UPF 文件');
     }
     const data = parsed;
-    const importedScenarios = recordItems<ScenarioLike>(data.scenarios);
-    const fallbackScenarios = recordItems<ScenarioLike>(fallbackProject.scenarios);
+    const importedScenarios = scenarioItems(data.scenarios);
+    const importedObjects = recordItems<PlanningObjectLike>(data.objects);
+    const fallbackScenarios = scenarioItems(fallbackProject.scenarios);
     const activeScenarioId = firstIdentifier(
         data.activeScenarioId,
         (data.manifest as AnyRecord | undefined)?.activeScenarioId,
-        (importedScenarios[0] as AnyRecord | undefined)?.id,
+        firstScenarioId(importedScenarios),
         fallbackScenarios[0]?.id,
     ) ?? '';
 
@@ -152,8 +153,8 @@ export function parseUpfText<TProject extends ProjectLike>(
                 formatVersion: data.formatVersion ?? (data.manifest as AnyRecord | undefined)?.formatVersion ?? '0.1.0',
                 project: data.project,
                 ruleset: data.ruleset,
-                scenarios: data.scenarios,
-                objects: data.objects,
+                scenarios: importedScenarios,
+                objects: importedObjects,
             } as TProject,
             activeScenarioId,
         };
@@ -166,8 +167,8 @@ export function parseUpfText<TProject extends ProjectLike>(
                 formatVersion: String((data.manifest as AnyRecord).formatVersion ?? '0.1.0'),
                 project: data.project,
                 ruleset: data.ruleset,
-                scenarios: data.scenarios,
-                objects: data.objects,
+                scenarios: importedScenarios,
+                objects: importedObjects,
             } as TProject,
             activeScenarioId,
         };
@@ -177,7 +178,7 @@ export function parseUpfText<TProject extends ProjectLike>(
         return {
             project: {
                 ...fallbackProject,
-                objects: data.objects,
+                objects: importedObjects,
             },
             activeScenarioId,
         };
@@ -424,7 +425,15 @@ function projectObjects(project: ProjectLike): PlanningObjectLike[] {
 }
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
-    return recordItems<ScenarioLike>(project.scenarios).filter(scenario => identifierText(scenario.id));
+    return scenarioItems(project.scenarios);
+}
+
+function scenarioItems(values: unknown): ScenarioLike[] {
+    return recordItems<ScenarioLike>(values).filter(scenario => identifierText(scenario.id));
+}
+
+function firstScenarioId(scenarios: ScenarioLike[]): string | undefined {
+    return firstIdentifier(...scenarios.map(scenario => scenario.id));
 }
 
 function recordItems<T extends AnyRecord>(values: unknown): T[] {
