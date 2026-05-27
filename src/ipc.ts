@@ -74,11 +74,14 @@ export function invoke<T = unknown>(cmd: string, args: object = {}, options: Inv
             return;
         }
         const id = nextId++;
-        const timeout = safeOptions.timeoutMs && safeOptions.timeoutMs > 0
+        const timeoutMs = typeof safeOptions.timeoutMs === 'number' && Number.isFinite(safeOptions.timeoutMs) && safeOptions.timeoutMs > 0
+            ? safeOptions.timeoutMs
+            : undefined;
+        const timeout = timeoutMs
             ? setTimeout(() => {
                 pending.delete(id);
                 reject(new Error(`IPC command timed out: ${safeCmd}`));
-            }, safeOptions.timeoutMs)
+            }, timeoutMs)
             : undefined;
 
         pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timeout });
