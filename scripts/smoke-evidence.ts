@@ -7,6 +7,7 @@ import {
     formatEvidenceForEditing,
     normalizeEvidenceItem,
     parseEvidenceText,
+    type EvidenceItem,
     type EvidenceSource,
 } from '../src/evidence';
 
@@ -85,5 +86,9 @@ assert(legacyCarriageReturns.length === 2, 'evidence parser should split legacy 
 assert(parseEvidenceText(null as unknown as string).length === 0, 'evidence parser should tolerate non-string text');
 assert(formatEvidenceForEditing('bad' as unknown as []).length === 0, 'evidence formatter should tolerate malformed item collections');
 assert(evidenceSearchText('bad' as unknown as []).length === 0, 'evidence search should tolerate malformed item collections');
+assert(formatEvidenceForEditing([null, '有效证据'] as unknown as EvidenceItem[]) === '有效证据', 'evidence formatter should skip malformed entries');
+assert(evidenceSearchText([null, { title: '有效调研', type: 'survey' }] as unknown as EvidenceItem[]).includes('调研/空间数据'), 'evidence search should skip malformed entries');
+assert(evidenceKind(null as unknown as EvidenceItem) === '其他证据', 'evidence kind should tolerate malformed entries');
+assert(evidenceCompletenessScore(null as unknown as EvidenceItem) === 0, 'evidence score should tolerate malformed entries');
 
 console.log('evidence smoke passed');

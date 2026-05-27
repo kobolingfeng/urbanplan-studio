@@ -53,7 +53,7 @@ export function normalizeEvidenceItem(value: unknown): EvidenceItem | undefined 
     }
     const record = asRecord(value);
     if (!record) return undefined;
-    const title = text(record.title ?? record.name ?? record.source);
+    const title = textOrEmpty(record.title ?? record.name ?? record.source);
     if (!title) return undefined;
     const item: EvidenceSource = { title };
     copyText(record, item, 'type');
@@ -111,7 +111,7 @@ function parseEvidenceJson(text: string): EvidenceItem[] | undefined {
 }
 
 export function formatEvidenceForEditing(items: EvidenceItem[] = []): string {
-    const safeItems = Array.isArray(items) ? items : [];
+    const safeItems = evidenceItems(items);
     return safeItems.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join('\n');
 }
 
@@ -127,7 +127,7 @@ export function evidenceDisplayText(item: EvidenceItem): string {
 }
 
 export function evidenceSearchText(items: EvidenceItem[] = []): string {
-    const safeItems = Array.isArray(items) ? items : [];
+    const safeItems = evidenceItems(items);
     return safeItems.map(item => {
         if (typeof item === 'string') return item;
         return [
@@ -145,11 +145,12 @@ export function evidenceSearchText(items: EvidenceItem[] = []): string {
 }
 
 export function evidenceKind(item: EvidenceItem): string {
-    if (typeof item !== 'string' && item.type) {
-        const key = String(item.type).trim().toLowerCase().replace(/[\s-]+/g, '_');
-        return TYPE_LABELS[key] ?? String(item.type);
+    const record = asRecord(item);
+    if (record?.type) {
+        const key = String(record.type).trim().toLowerCase().replace(/[\s-]+/g, '_');
+        return TYPE_LABELS[key] ?? String(record.type);
     }
-    const text = typeof item === 'string' ? item : item.title;
+    const text = typeof item === 'string' ? item : textOrEmpty(record?.title);
     if (/GB|CJJ|规范|标准|导则|指南|控规|法定|修订|条例/.test(text)) return '规范/规划依据';
     if (/调研|实测|现场|访谈|问卷|遥感|手机信令|POI|路网|底图|测绘/.test(text)) return '调研/空间数据';
     if (/演示|样例|原型|兼容层|用户|课程/.test(text)) return '原型/用户输入';
@@ -158,6 +159,7 @@ export function evidenceKind(item: EvidenceItem): string {
 
 export function evidenceCompletenessScore(item: EvidenceItem): number {
     if (typeof item === 'string') return 55;
+    if (!asRecord(item)) return 0;
     const confidenceScore = typeof item.confidence === 'number' ? confidencePercent(item.confidence) : 65;
     const metadataScore = [
         item.title,
@@ -170,7 +172,7 @@ export function evidenceCompletenessScore(item: EvidenceItem): number {
 }
 
 export function isStructuredEvidence(item: unknown): item is EvidenceSource {
-    return text(asRecord(item)?.title).length > 0;
+    return textOrEmpty(asRecord(item)?.title).length > 0;
 }
 
 export function confidencePercent(value: number): number {
@@ -184,11 +186,20 @@ function formatConfidence(value: number): string {
 }
 
 function copyText(source: AnyRecord, target: EvidenceSource, key: keyof EvidenceSource) {
-    const value = text(source[key]);
+    const value = textOrEmpty(source[key]);
     if (value) (target as Record<string, unknown>)[key] = value;
 }
 
-function text(value: unknown): string {
+function evidenceItems(value: unknown): EvidenceItem[] {
+    return Array.isArray(value)
+        ? value.flatMap(item => {
+            const normalized = normalizeEvidenceItem(item);
+            return normalized ? [normalized] : [];
+        })
+        : [];
+}
+
+function textOrEmpty(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
 }
 
