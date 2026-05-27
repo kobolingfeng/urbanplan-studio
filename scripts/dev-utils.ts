@@ -13,13 +13,14 @@ export function resolveDevPort(value: unknown, fallback = 3000): number {
 const decimalIntegerPattern = /^\d+$/;
 
 export function splitCommandLine(command: string): string[] {
+    const source = String(command ?? '');
     const parts: string[] = [];
     let current = '';
     let quote: '"' | "'" | undefined;
     let hasToken = false;
-    for (let index = 0; index < command.length; index++) {
-        const char = command[index];
-        const next = command[index + 1];
+    for (let index = 0; index < source.length; index++) {
+        const char = source[index];
+        const next = source[index + 1];
         if (char === '\\' && next && (next === '"' || next === "'" || next === '\\' || /\s/.test(next))) {
             current += next;
             hasToken = true;
@@ -50,9 +51,11 @@ export function splitCommandLine(command: string): string[] {
 }
 
 export function resolveDevServerPath(root: string, urlPath: string): string | undefined {
+    if (typeof root !== 'string' || !root) return undefined;
+    const sourcePath = typeof urlPath === 'string' ? urlPath : '/';
     let decodedPath: string;
     try {
-        decodedPath = decodeURIComponent(urlPath === '/' ? '/index.html' : urlPath);
+        decodedPath = decodeURIComponent(sourcePath === '/' ? '/index.html' : sourcePath);
     } catch {
         return undefined;
     }
@@ -63,14 +66,16 @@ export function resolveDevServerPath(root: string, urlPath: string): string | un
 }
 
 export function withResolvedDevServerPort(cmd: string, args: string[], port: number): string[] {
-    const tokens = [cmd, ...args].map((part) => part.toLowerCase());
+    const safeCmd = String(cmd ?? '');
+    const safeArgs = Array.isArray(args) ? args.map(arg => String(arg)) : [];
+    const tokens = [safeCmd, ...safeArgs].map((part) => part.toLowerCase());
     const isVite = tokens.some((part) => /(^|[\\/])vite(\.cmd|\.exe)?$/.test(part) || part === 'vite');
-    if (!isVite) return args;
+    if (!isVite) return safeArgs;
 
-    const hasPort = args.some((part) => part === '--port' || part === '-p' || part.startsWith('--port=') || part.startsWith('-p='));
-    const hasHost = args.some((part) => part === '--host' || part === '-H' || part.startsWith('--host=') || part.startsWith('-H='));
+    const hasPort = safeArgs.some((part) => part === '--port' || part === '-p' || part.startsWith('--port=') || part.startsWith('-p='));
+    const hasHost = safeArgs.some((part) => part === '--host' || part === '-H' || part.startsWith('--host=') || part.startsWith('-H='));
     return [
-        ...args,
+        ...safeArgs,
         ...(hasHost ? [] : ['--host', '127.0.0.1']),
         ...(hasPort ? [] : ['--port', String(port)]),
     ];
