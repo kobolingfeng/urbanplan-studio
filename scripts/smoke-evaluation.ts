@@ -317,6 +317,26 @@ const stringNumericReport = buildScenarioEvaluationReport(stringNumericProject, 
 assert(stringNumericReport.includes('| String Numeric Parcel | 1455 |'), 'evaluation should parse strict numeric strings for service allocation');
 assert(!stringNumericReport.includes('NaN'), 'evaluation report should not emit NaN for numeric strings');
 
+const malformedScenarioValuesReport = buildScenarioEvaluationReport({
+    project: { name: 'Malformed Scenario Values Evaluation' },
+    ruleset: { version: 'Malformed Scenario Values Rules', basis: ['fixture'] },
+    scenarios: [{ id: 'scenario_update', name: 'Update' }],
+    objects: [{
+        id: 'parcel_malformed_values',
+        type: 'parcel',
+        name: 'Malformed Values Parcel',
+        evidence: ['smoke fixture'],
+        points: [
+            { x: 0, y: 0 },
+            { x: 120, y: 0 },
+            { x: 120, y: 100 },
+            { x: 0, y: 100 },
+        ],
+        scenarioValues: [{ residentialGfaSqm: 48000, publicServiceGfaSqm: 1600, greenRatio: 0.32 }],
+    }],
+} as unknown as typeof project, 'scenario_update');
+assert(malformedScenarioValuesReport.includes('| Malformed Values Parcel | 0 |'), 'evaluation should ignore malformed scenario value collections');
+
 const trimmedScenarioValueProject = {
     project: { name: 'Trimmed Scenario Value Evaluation' },
     ruleset: { version: 'Trimmed Scenario Rules', basis: ['fixture'] },
