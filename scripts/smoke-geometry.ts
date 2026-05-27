@@ -34,6 +34,11 @@ assert(polygonsOverlap(square, rect(8, 8, 10, 10)), 'polygons should overlap');
 assert(!polygonsOverlap(square, rect(20, 20, 5, 5)), 'polygons should not overlap');
 assert(!polygonsOverlap([{ x: 0, y: 0 }, { x: 10, y: 0 }], square), 'degenerate line polygons should not overlap');
 assert(!polygonsOverlap([{ x: 0, y: 0 }, { x: 5, y: 0 }, { x: 10, y: 0 }], square), 'zero-area polygons should not overlap');
+const coercedPolygon = [{ x: 0, y: 0 }, { x: '0x10', y: 0 }, { x: '0x10', y: 10 }, { x: 0, y: 10 }] as unknown as typeof square;
+assert(areaSqm(coercedPolygon) === 0, 'area should reject string-coerced polygon coordinates');
+assert(!pointInPolygon({ x: 5, y: 5 }, coercedPolygon), 'point-in-polygon should reject string-coerced polygon coordinates');
+assert(!polygonsOverlap(coercedPolygon, square), 'polygon overlap should reject string-coerced polygon coordinates');
+assert(!Number.isFinite(distance({ x: 0, y: 0 }, { x: '0x10', y: 0 } as unknown as typeof square[number])), 'distance should reject string-coerced coordinates');
 
 const intersection = segmentIntersection({ x: 0, y: 5 }, { x: 10, y: 5 }, { x: 5, y: 0 }, { x: 5, y: 10 });
 assert(intersection?.x === 5 && intersection.y === 5, 'segment intersection mismatch');
@@ -43,5 +48,6 @@ assert(endpointIntersection?.x === 10 && endpointIntersection.y === 0, 'endpoint
 
 const collinearEndpointIntersection = segmentIntersection({ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 0 }, { x: 20, y: 0 });
 assert(collinearEndpointIntersection?.x === 10 && collinearEndpointIntersection.y === 0, 'collinear endpoint intersection mismatch');
+assert(segmentIntersection({ x: 0, y: 0 }, { x: '0x10', y: 0 } as unknown as typeof square[number], { x: 5, y: -5 }, { x: 5, y: 5 }) === null, 'segment intersection should reject string-coerced coordinates');
 
 console.log('geometry smoke passed');

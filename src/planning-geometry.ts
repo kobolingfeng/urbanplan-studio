@@ -21,32 +21,27 @@ export function rect(x: number, y: number, width: number, height: number): Point
 }
 
 export function areaSqm(points: Point[]): number {
-    let sum = 0;
-    for (let i = 0; i < points.length; i++) {
-        const a = points[i];
-        const b = points[(i + 1) % points.length];
-        sum += a.x * b.y - b.x * a.y;
-    }
-    return Math.abs(sum / 2) * AREA_FACTOR;
+    return rawPolygonArea(points) * AREA_FACTOR;
 }
 
 export function centroid(points: Point[]): Point {
-    if (!points.length) return { x: 0, y: 0 };
-    const areaRaw = points.reduce((sum, point, index) => {
-        const next = points[(index + 1) % points.length];
+    const finitePoints = points.filter(isFinitePoint);
+    if (!finitePoints.length) return { x: 0, y: 0 };
+    const areaRaw = finitePoints.reduce((sum, point, index) => {
+        const next = finitePoints[(index + 1) % finitePoints.length];
         return sum + point.x * next.y - next.x * point.y;
     }, 0);
     if (Math.abs(areaRaw) < 0.001) {
         return {
-            x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
-            y: points.reduce((sum, point) => sum + point.y, 0) / points.length,
+            x: finitePoints.reduce((sum, point) => sum + point.x, 0) / finitePoints.length,
+            y: finitePoints.reduce((sum, point) => sum + point.y, 0) / finitePoints.length,
         };
     }
     let x = 0;
     let y = 0;
-    for (let i = 0; i < points.length; i++) {
-        const a = points[i];
-        const b = points[(i + 1) % points.length];
+    for (let i = 0; i < finitePoints.length; i++) {
+        const a = finitePoints[i];
+        const b = finitePoints[(i + 1) % finitePoints.length];
         const cross = a.x * b.y - b.x * a.y;
         x += (a.x + b.x) * cross;
         y += (a.y + b.y) * cross;
@@ -55,10 +50,12 @@ export function centroid(points: Point[]): Point {
 }
 
 export function distance(a: Point, b: Point): number {
+    if (!isFinitePoint(a) || !isFinitePoint(b)) return Number.POSITIVE_INFINITY;
     return Math.hypot(a.x - b.x, a.y - b.y) * LENGTH_FACTOR;
 }
 
 export function distanceToSegment(point: Point, a: Point, b: Point): number {
+    if (!isFinitePoint(point) || !isFinitePoint(a) || !isFinitePoint(b)) return Number.POSITIVE_INFINITY;
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     if (dx === 0 && dy === 0) return distance(point, a);
@@ -75,7 +72,7 @@ export function distanceToPolyline(point: Point, points: Point[]): number {
 }
 
 export function pointInPolygon(point: Point, points: Point[]): boolean {
-    if (points.length < 3) return false;
+    if (!isFinitePoint(point) || !isUsablePolygon(points)) return false;
     for (let index = 0; index < points.length; index++) {
         if (onSegment(points[index], points[(index + 1) % points.length], point)) return true;
     }
@@ -106,7 +103,7 @@ function isUsablePolygon(points: Point[]): boolean {
 }
 
 function rawPolygonArea(points: Point[]): number {
-    if (points.length < 3) return 0;
+    if (points.length < 3 || !points.every(isFinitePoint)) return 0;
     let sum = 0;
     for (let index = 0; index < points.length; index++) {
         const current = points[index];
@@ -117,6 +114,7 @@ function rawPolygonArea(points: Point[]): number {
 }
 
 export function segmentsIntersect(a: Point, b: Point, c: Point, d: Point): boolean {
+    if (![a, b, c, d].every(isFinitePoint)) return false;
     const det = (p1: Point, p2: Point, p3: Point) =>
         (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
     const d1 = det(a, b, c);
@@ -132,12 +130,17 @@ export function segmentsIntersect(a: Point, b: Point, c: Point, d: Point): boole
 }
 
 function onSegment(a: Point, b: Point, p: Point): boolean {
+    if (![a, b, p].every(isFinitePoint)) return false;
     const cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
     if (Math.abs(cross) > 0.0001) return false;
     return p.x >= Math.min(a.x, b.x) - 0.0001
         && p.x <= Math.max(a.x, b.x) + 0.0001
         && p.y >= Math.min(a.y, b.y) - 0.0001
         && p.y <= Math.max(a.y, b.y) + 0.0001;
+}
+
+function isFinitePoint(point: Point | undefined): point is Point {
+    return !!point && Number.isFinite(point.x) && Number.isFinite(point.y);
 }
 
 export function segmentIntersection(a: Point, b: Point, c: Point, d: Point): Point | null {
