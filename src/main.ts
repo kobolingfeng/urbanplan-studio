@@ -549,13 +549,14 @@ function getObject(id: string): PlanObject | undefined {
 }
 
 function activeScenario(): Scenario {
-    return project.scenarios.find(scenario => scenario.id === activeScenarioId)
+    const activeId = importIdentifierText(activeScenarioId);
+    return project.scenarios.find(scenario => importIdentifierText(scenario.id) === activeId)
         ?? project.scenarios[0]
         ?? { id: 'scenario_default', name: '默认方案', description: '兼容层生成的默认方案。' };
 }
 
 function getParcelScenario(parcel: Parcel): ParcelScenarioValue {
-    const value = parcel.scenarioValues?.[activeScenarioId];
+    const value = scenarioValueFor(parcel.scenarioValues, activeScenarioId);
     if (value) return value;
     const first = Object.values(parcel.scenarioValues ?? {})[0] ?? DEFAULT_SCENARIO_VALUE;
     parcel.scenarioValues = parcel.scenarioValues ?? {};
@@ -571,7 +572,7 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
         project: { ...fallback.project, ...(input.project ?? {}) },
         ruleset: { ...fallback.ruleset, ...(input.ruleset ?? {}) },
         scenarios: Array.isArray(input.scenarios) && input.scenarios.length
-            ? input.scenarios.filter(scenario => scenario?.id && scenario?.name)
+            ? input.scenarios.flatMap(normalizeImportedScenario)
             : fallback.scenarios,
         objects: Array.isArray(input.objects) ? input.objects : fallback.objects,
     };
@@ -607,7 +608,7 @@ function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
                 base.scenarioValues[scenarioId] = normalizeParcelScenarioValue({
                     ...DEFAULT_SCENARIO_VALUE,
                     ...(Object.values(base.scenarioValues)[0] ?? {}),
-                    ...(base.scenarioValues[scenarioId] ?? {}),
+                    ...(scenarioValueFor(base.scenarioValues, scenarioId) ?? {}),
                 });
             }
             base.landUseCode = base.landUseCode || '0701';
@@ -820,6 +821,25 @@ function hasImportIdentifier(value: unknown): boolean {
 
 function importIdentifierText(value: unknown): string | undefined {
     return hasImportIdentifier(value) ? String(value).trim() : undefined;
+}
+
+function normalizeImportedScenario(value: unknown): Scenario[] {
+    if (!value || typeof value !== 'object') return [];
+    const scenario = value as Partial<Scenario>;
+    const id = importIdentifierText(scenario.id);
+    if (!id) return [];
+    return [{
+        id,
+        name: normalizeImportedObjectName(scenario.name, id),
+        description: typeof scenario.description === 'string' ? scenario.description.trim() : '',
+    }];
+}
+
+function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
+    const target = importIdentifierText(scenarioId);
+    if (!values || !target) return undefined;
+    if (values[target]) return values[target];
+    return Object.entries(values).find(([key]) => importIdentifierText(key) === target)?.[1];
 }
 
 function normalizeImportedReferenceId(value: unknown, fallback: string): string {
@@ -2425,7 +2445,7 @@ function scenarioResidents(scenarioId: string): number {
 }
 
 function parcelScenario(parcel: Parcel, scenarioId: string): ParcelScenarioValue {
-    return parcel.scenarioValues[scenarioId] ?? Object.values(parcel.scenarioValues)[0] ?? DEFAULT_SCENARIO_VALUE;
+    return scenarioValueFor(parcel.scenarioValues, scenarioId) ?? Object.values(parcel.scenarioValues)[0] ?? DEFAULT_SCENARIO_VALUE;
 }
 
 function showModal(title: string, text: string, meta = 'UrbanPlan Studio', defaultName = 'urbanplan-output.txt') {
@@ -2528,8 +2548,9 @@ function loadUpfText(text: string, options: { sourceName?: string; showImportRep
         ...auditNormalizationChanges(importSnapshot, normalizedProject),
     ].slice(0, 120);
     project = normalizedProject;
-    activeScenarioId = project.scenarios.some(scenario => scenario.id === parsed.activeScenarioId)
-        ? parsed.activeScenarioId
+    const parsedActiveScenarioId = importIdentifierText(parsed.activeScenarioId);
+    activeScenarioId = project.scenarios.some(scenario => importIdentifierText(scenario.id) === parsedActiveScenarioId)
+        ? parsedActiveScenarioId ?? ''
         : project.scenarios[0]?.id ?? '';
     selectedId = project.objects[0]?.id ?? '';
     objectSearchText = '';
