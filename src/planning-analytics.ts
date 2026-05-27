@@ -87,7 +87,8 @@ export function createUpfDocument<TProject extends ProjectLike>(
     evaluation?: unknown,
 ) {
     const safeProject = projectRecord(project);
-    const safeActiveScenarioId = identifierText(activeScenarioId) ?? '';
+    const safeScenarios = projectScenarios(safeProject);
+    const safeActiveScenarioId = identifierText(activeScenarioId) ?? firstScenarioId(safeScenarios) ?? '';
     const safeFormatVersion = identifierText(safeProject.formatVersion) ?? '0.1.0';
     const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
     const safeRecommendations = recordItems<RecommendationLike>(recommendations).filter(hasRecommendationText);
@@ -111,7 +112,7 @@ export function createUpfDocument<TProject extends ProjectLike>(
         },
         project: safeProject.project,
         ruleset: safeProject.ruleset,
-        scenarios: projectScenarios(safeProject),
+        scenarios: safeScenarios,
         activeScenarioId: safeActiveScenarioId,
         objects: recordItems<PlanningObjectLike>(safeProject.objects),
         checks: safeChecks,

@@ -149,7 +149,7 @@ assert(sparseRoundTrip.checks.length === 1 && sparseRoundTrip.recommendations.le
 const normalizedActiveExport = createUpfDocument(minimal.project, ' scenario_base ' as unknown as string, [], []);
 assert(normalizedActiveExport.activeScenarioId === 'scenario_base' && normalizedActiveExport.manifest.activeScenarioId === 'scenario_base', 'UPF export should normalize active scenario ids');
 const malformedActiveExport = createUpfDocument(minimal.project, null as unknown as string, [], []);
-assert(malformedActiveExport.activeScenarioId === '' && malformedActiveExport.manifest.activeScenarioId === '', 'UPF export should tolerate malformed active scenario ids');
+assert(malformedActiveExport.activeScenarioId === 'scenario_base' && malformedActiveExport.manifest.activeScenarioId === 'scenario_base', 'UPF export should fall back to the first valid scenario for malformed active ids');
 const normalizedFormatExport = createUpfDocument({
     ...minimal.project,
     format: 'BAD',
