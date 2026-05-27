@@ -217,6 +217,14 @@ const malformedBasisEvaluation = evaluateScenario({
 const malformedBasisEvidence = malformedBasisEvaluation.dimensions.find(item => item.id === 'evidence');
 assert(malformedBasisEvidence?.reason.includes('规则依据 0 条'), 'evaluation should ignore non-array ruleset basis values');
 
+const malformedObjectsEvaluation = evaluateScenario({
+    project: { name: 'Malformed Objects Evaluation' },
+    ruleset: { version: 'Malformed Objects Rules', basis: ['fixture'] },
+    scenarios: [{ id: 'scenario_update', name: 'Update' }],
+    objects: 'not an array',
+} as unknown as typeof project, 'scenario_update', [], []);
+assert(malformedObjectsEvaluation.dimensions.length === 6 && malformedObjectsEvaluation.parcels.length === 0, 'evaluation should ignore non-array object collections');
+
 const stringNumericProject = {
     project: { name: 'String Numeric Evaluation' },
     ruleset: { version: 'String Numeric Rules', basis: ['fixture'] },

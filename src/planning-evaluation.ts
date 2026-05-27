@@ -217,7 +217,7 @@ export function evaluateScenario(
     recommendations: RecommendationLike[] = [],
     weightProfile: EvaluationWeightProfile = EVALUATION_WEIGHT_PROFILES[0],
 ): ScenarioEvaluation {
-    const objects = project.objects ?? [];
+    const objects = projectObjects(project);
     const parcels = objects.filter(isParcel);
     const roads = objects.filter(isRoad);
     const facilities = objects.filter(isFacility);
@@ -441,7 +441,7 @@ function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike
 
 function evidenceDimension(project: ProjectLike, checks: CheckLike[], recommendations: RecommendationLike[], weight: number): DimensionScore {
     const score = evidenceConfidence(project, checks, recommendations);
-    const objects = project.objects ?? [];
+    const objects = projectObjects(project);
     const evidenceObjects = objects.filter(object => object.evidence?.length).length;
     const structuredObjects = objects.filter(object => object.evidence?.some(isStructuredEvidence)).length;
     return {
@@ -533,8 +533,8 @@ function facilityScore(
 }
 
 function buildParcelServiceAllocation(project: ProjectLike, scenarioId: string): ParcelServiceAllocation[] {
-    const parcels = (project.objects ?? []).filter(isParcel);
-    const facilities = (project.objects ?? []).filter(isFacility);
+    const parcels = projectObjects(project).filter(isParcel);
+    const facilities = projectObjects(project).filter(isFacility);
     return parcels.map((parcel) => {
         const value = parcelValue(parcel, scenarioId);
         const residents = parcelResidents(parcel, scenarioId);
@@ -601,7 +601,7 @@ function parcelDrivers(
 }
 
 function evidenceConfidence(project: ProjectLike, checks: CheckLike[], recommendations: RecommendationLike[] = []): number {
-    const objects = project.objects ?? [];
+    const objects = projectObjects(project);
     const evidenceCoverage = objects.length
         ? objects.filter(object => object.evidence?.length).length / objects.length * 100
         : 100;
@@ -618,6 +618,10 @@ function evidenceConfidence(project: ProjectLike, checks: CheckLike[], recommend
 
 function parcelValue(parcel: PlanningObjectLike, scenarioId: string) {
     return scenarioValueFor(parcel.scenarioValues, scenarioId) ?? Object.values(parcel.scenarioValues ?? {})[0] ?? {};
+}
+
+function projectObjects(project: ProjectLike): PlanningObjectLike[] {
+    return Array.isArray(project.objects) ? project.objects : [];
 }
 
 function countBasis(project: ProjectLike): number {
