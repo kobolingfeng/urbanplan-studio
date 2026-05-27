@@ -166,6 +166,12 @@ const malformedObjectsQuality = calculateDataQuality({
     objects: 'not an array',
 } as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
 assert(malformedObjectsQuality.objectCount === 0, 'data quality should ignore non-array object collections');
+const analyticsObjects = analyticsFixture.objects ?? [];
+const sparseObjectsQuality = calculateDataQuality({
+    ...analyticsFixture,
+    objects: [null, ...analyticsObjects],
+} as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
+assert(sparseObjectsQuality.objectCount === analyticsObjects.length, 'data quality should ignore malformed object entries');
 const malformedSignalQuality = calculateDataQuality(
     analyticsFixture,
     'not an array' as unknown as Parameters<typeof calculateDataQuality>[1],

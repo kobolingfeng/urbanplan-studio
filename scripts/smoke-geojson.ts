@@ -136,6 +136,11 @@ const malformedObjectsExport = buildGeoJsonFeatureCollection({
     objects: 'bad',
 } as unknown as typeof project, 'base', UNIT_SYSTEM);
 assert(malformedObjectsExport.features.length === 0, 'GeoJSON export should ignore malformed object collections');
+const sparseObjectsExport = buildGeoJsonFeatureCollection({
+    ...project,
+    objects: [null, ...project.objects],
+} as unknown as typeof project, 'base', UNIT_SYSTEM);
+assert(sparseObjectsExport.features.length === collection.features.length, 'GeoJSON export should ignore malformed object entries');
 
 const text = buildGeoJsonText(project, 'base', UNIT_SYSTEM);
 assert(text.includes('"FeatureCollection"') && text.includes('"parcel_a"'), 'GeoJSON text export mismatch');

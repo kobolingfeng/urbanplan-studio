@@ -412,11 +412,11 @@ function buildEntranceReferenceDiagnostics(objects: PlanningObjectLike[]): { iss
 }
 
 function projectObjects(project: ProjectLike): PlanningObjectLike[] {
-    return Array.isArray(project.objects) ? project.objects : [];
+    return recordItems<PlanningObjectLike>(project.objects);
 }
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
-    return Array.isArray(project.scenarios) ? project.scenarios : [];
+    return recordItems<ScenarioLike>(project.scenarios);
 }
 
 function recordItems<T extends AnyRecord>(values: unknown): T[] {

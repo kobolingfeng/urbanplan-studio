@@ -312,7 +312,7 @@ export const RULE_CATALOG: PlanningRuleDefinition[] = RULE_CATALOG_DRAFT.map(rul
 const RULE_CATALOG_BY_ID = new Map(RULE_CATALOG.map(rule => [rule.id, rule]));
 
 export function buildRuleCatalogReport(triggered: PlanningRuleResult[] = []): string {
-    const safeTriggered = Array.isArray(triggered) ? triggered : [];
+    const safeTriggered = recordItems<PlanningRuleResult>(triggered);
     const counts = safeTriggered.reduce<Record<string, number>>((next, check) => {
         next[check.ruleId] = (next[check.ruleId] ?? 0) + 1;
         return next;
@@ -368,7 +368,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         checks.push({ ...result, id: `check_${checks.length + 1}` });
     };
     const rulesetVersion = project.ruleset?.version;
-    const objects = Array.isArray(project.objects) ? project.objects : [];
+    const objects = recordItems<RuleObject>(project.objects);
 
     const parcels = objects.filter(object => object.type === 'parcel' && isUsablePolygon(object.points));
     const roads = objects.filter(object => object.type === 'road' && isUsableLine(object.points));
@@ -797,6 +797,14 @@ function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: 
 
 function scenarioValueMap<T>(values: Record<string, T> | undefined): Record<string, T> {
     return values && typeof values === 'object' && !Array.isArray(values) ? values : {};
+}
+
+function recordItems<T extends AnyRecord>(values: unknown): T[] {
+    return Array.isArray(values) ? values.filter(isRecord) as T[] : [];
+}
+
+function isRecord(value: unknown): value is AnyRecord {
+    return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
 function buildStructuredRuleSource(rule: RuleCatalogDraft): RuleSource {

@@ -116,6 +116,11 @@ const project = {
 const result = runPlanningRules(project, 's1');
 const ids = new Set(result.checks.map(check => check.ruleId));
 const catalogIds = new Set(RULE_CATALOG.map(rule => rule.id));
+const sparseObjectResult = runPlanningRules({
+    ...project,
+    objects: [null, ...project.objects],
+} as unknown as typeof project, 's1');
+assert(sparseObjectResult.checks.some(check => check.ruleId === 'parcel_far_max'), 'rules should ignore malformed object entries');
 
 for (const id of [
     'parcel_far_max',
@@ -143,6 +148,8 @@ assert(catalogReport.includes('规则分布') && catalogReport.includes('交通�
 assert(catalogReport.includes('residents * 0.036') && catalogReport.includes('parcelArea * 0.015'), 'rule catalog formulas should expose shared service assumptions');
 const malformedCatalogReport = buildRuleCatalogReport('not an array' as unknown as Parameters<typeof buildRuleCatalogReport>[0]);
 assert(malformedCatalogReport.includes('有触发记录的规则：0'), 'rule catalog report should ignore malformed triggered checks');
+const sparseCatalogReport = buildRuleCatalogReport([null, result.checks[0]] as unknown as Parameters<typeof buildRuleCatalogReport>[0]);
+assert(sparseCatalogReport.includes(result.checks[0].ruleId), 'rule catalog report should ignore malformed triggered entries');
 assert(result.recommendations.length > 0, 'recommendations should be generated');
 assert(result.checks.some(check => check.source.includes('技术导则') || check.source.includes('原型启发')), 'rule check source should include source level');
 

@@ -102,7 +102,7 @@ export function buildGeoJsonFeatureCollection(
     activeScenarioId: string,
     unitSystem: UnitSystemLike,
 ) {
-    const objects = Array.isArray(project.objects) ? project.objects : [];
+    const objects = recordItems<PlanningObjectLike>(project.objects);
     const features = objects
         .map(object => ({
             type: 'Feature',
@@ -135,7 +135,7 @@ export function parseGeoJsonProject<TProject extends ProjectLike>(
     if (collection.type !== 'FeatureCollection' || !Array.isArray(collection.features)) return undefined;
 
     const upf = isRecord(collection.upf) ? collection.upf : {};
-    const fallbackScenarios = Array.isArray(fallbackProject.scenarios) ? fallbackProject.scenarios : [];
+    const fallbackScenarios = recordItems<{ id: string; name: string; description?: string }>(fallbackProject.scenarios);
     const activeScenarioId = textOr(
         upf.activeScenarioId,
         fallbackScenarios[0]?.id ?? 'scenario_geojson',
@@ -477,6 +477,10 @@ function dropClosingPoint(points: Point[]): Point[] {
 
 function isRecord(value: unknown): value is AnyRecord {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function recordItems<T extends AnyRecord>(values: unknown): T[] {
+    return Array.isArray(values) ? values.filter(isRecord) as T[] : [];
 }
 
 function textOr(value: unknown, fallback: string): string {
