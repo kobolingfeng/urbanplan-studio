@@ -229,7 +229,7 @@ const malformedScenarioValue = parsedMalformedScenarioValues?.project.objects[0]
 assert(malformedScenarioValue?.far === 2.4 && malformedScenarioValue[0] === undefined, 'CSV import should ignore malformed fallback scenario value maps');
 
 const sparseFallback = {
-    scenarios: [null, { id: 'base', name: 'Base', description: 'Existing scenario' }],
+    scenarios: [null, {}, { id: 'base', name: 'Base', description: 'Existing scenario' }],
     objects: [null, {
         id: 'parcel_a',
         type: 'parcel',
