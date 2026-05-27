@@ -122,6 +122,7 @@ const sparseRoundTrip = createUpfDocument({
     { ruleId: 'valid_check', severity: 'info', objectId: 'project', objectName: 'Project', title: 'Valid check', message: 'ok', source: 'smoke' },
 ] as unknown as Parameters<typeof createUpfDocument>[2], [
     null,
+    {},
     { title: 'Valid recommendation', message: 'ok', basis: 'smoke' },
 ] as unknown as Parameters<typeof createUpfDocument>[3]);
 assert(sparseRoundTrip.scenarios.length === (minimal.project.scenarios?.length ?? 0), 'UPF export should ignore malformed scenario entries');
@@ -231,14 +232,14 @@ assert(malformedSignalReport.includes('智能建议数量：0'), 'quality report
 const sparseSignalQuality = calculateDataQuality(
     analyticsFixture,
     [null, { severity: 'warning', ruleId: 'sparse_rule', source: '原型规则' }] as unknown as Parameters<typeof calculateDataQuality>[1],
-    [null, { title: 'Valid recommendation' }] as unknown as Parameters<typeof calculateDataQuality>[2],
+    [null, {}, { title: 'Valid recommendation' }] as unknown as Parameters<typeof calculateDataQuality>[2],
 );
 assert(sparseSignalQuality.ruleCatalog.length === 1, 'data quality should keep valid sparse check entries');
 assert(sparseSignalQuality.prototypeRuleCount === 1, 'data quality should ignore malformed check entries');
 const sparseSignalReport = buildDataQualityReport(
     analyticsFixture,
     [null, { severity: 'warning', ruleId: 'sparse_rule', source: '原型规则' }] as unknown as Parameters<typeof buildDataQualityReport>[1],
-    [null, { title: 'Valid recommendation' }] as unknown as Parameters<typeof buildDataQualityReport>[2],
+    [null, {}, { title: 'Valid recommendation' }] as unknown as Parameters<typeof buildDataQualityReport>[2],
 );
 assert(sparseSignalReport.includes('智能建议数量：1'), 'quality report should ignore malformed recommendation entries');
 const scalarEvidenceQuality = calculateDataQuality({

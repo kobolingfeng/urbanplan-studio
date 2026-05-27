@@ -87,7 +87,7 @@ export function createUpfDocument<TProject extends ProjectLike>(
     evaluation?: unknown,
 ) {
     const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
-    const safeRecommendations = recordItems<RecommendationLike>(recommendations);
+    const safeRecommendations = recordItems<RecommendationLike>(recommendations).filter(hasRecommendationText);
     return {
         format: project.format ?? 'UPF',
         formatVersion: project.formatVersion ?? '0.1.0',
@@ -275,7 +275,7 @@ export function buildDataQualityReport(
     checks: CheckLike[],
     recommendations: RecommendationLike[],
 ): string {
-    const safeRecommendations = recordItems<RecommendationLike>(recommendations);
+    const safeRecommendations = recordItems<RecommendationLike>(recommendations).filter(hasRecommendationText);
     const quality = calculateDataQuality(project, checks, safeRecommendations);
 
     const lines = [
@@ -433,6 +433,10 @@ function recordItems<T extends AnyRecord>(values: unknown): T[] {
 
 function isRecord(value: unknown): value is AnyRecord {
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function hasRecommendationText(item: RecommendationLike): boolean {
+    return Boolean(identifierText(item.title) || identifierText(item.message));
 }
 
 function objectEvidence(object: PlanningObjectLike): EvidenceItem[] {

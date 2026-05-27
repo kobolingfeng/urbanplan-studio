@@ -220,7 +220,7 @@ export function evaluateScenario(
     weightProfile: EvaluationWeightProfile = EVALUATION_WEIGHT_PROFILES[0],
 ): ScenarioEvaluation {
     const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
-    const safeRecommendations = recordItems<RecommendationLike>(recommendations);
+    const safeRecommendations = recordItems<RecommendationLike>(recommendations).filter(hasRecommendationText);
     const safeWeightProfile = normalizeWeightProfile(weightProfile);
     const objects = projectObjects(project);
     const parcels = objects.filter(isParcel);
@@ -641,6 +641,10 @@ function recordItems<T extends AnyRecord>(values: unknown): T[] {
 
 function isRecord(value: unknown): value is AnyRecord {
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function hasRecommendationText(item: RecommendationLike): boolean {
+    return Boolean(identifierText(item.title) || identifierText(item.message));
 }
 
 function countBasis(project: ProjectLike): number {
