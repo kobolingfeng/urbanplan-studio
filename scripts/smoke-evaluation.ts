@@ -245,6 +245,7 @@ const trimmedScenarioValueProject = {
     }],
 } as unknown as typeof project;
 const trimmedScenarioValueReport = buildScenarioEvaluationReport(trimmedScenarioValueProject, 'scenario_update');
+assert(trimmedScenarioValueReport.includes('当前方案：Update'), 'evaluation should trim scenario ids before finding scenario names');
 assert(trimmedScenarioValueReport.includes('| Trimmed Scenario Key Parcel | 1455 |'), 'evaluation should trim scenario value keys before lookup');
 
 console.log('evaluation smoke passed');

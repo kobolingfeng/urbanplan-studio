@@ -223,7 +223,8 @@ export function evaluateScenario(
     const facilities = objects.filter(isFacility);
     const openSpaces = objects.filter(isOpenSpace);
     const entrances = objects.filter(isEntrance);
-    const scenario = (project.scenarios ?? []).find(item => item.id === scenarioId);
+    const targetScenarioId = identifierText(scenarioId);
+    const scenario = (project.scenarios ?? []).find(item => identifierText(item.id) === targetScenarioId);
     const totals = summarizeParcels(parcels, scenarioId);
 
     const dimensions: DimensionScore[] = [
