@@ -449,7 +449,7 @@ function evidenceDimension(project: ProjectLike, checks: CheckLike[], recommenda
         name: '证据可信度',
         weight,
         score,
-        reason: `${evidenceObjects}/${objects.length || 1} 个对象有证据来源，${structuredObjects} 个对象含结构化 EvidenceSource，规则依据 ${project.ruleset?.basis?.length ?? 0} 条`,
+        reason: `${evidenceObjects}/${objects.length || 1} 个对象有证据来源，${structuredObjects} 个对象含结构化 EvidenceSource，规则依据 ${countBasis(project)} 条`,
     };
 }
 
@@ -610,7 +610,7 @@ function evidenceConfidence(project: ProjectLike, checks: CheckLike[], recommend
         : 100;
     const evidenceItems = objects.flatMap(object => object.evidence ?? []);
     const evidenceQuality = evidenceItems.length ? average(evidenceItems.map(evidenceCompletenessScore)) : 45;
-    const basisScore = Math.min(100, (project.ruleset?.basis?.length ?? 0) * 18 + 28);
+    const basisScore = Math.min(100, countBasis(project) * 18 + 28);
     const prototypePenalty = checks.filter(check => String(check.source ?? '').includes('原型')).length * 3;
     const recommendationPenalty = Math.max(0, recommendations.length - 8) * 2;
     return roundScore(average([evidenceCoverage, structuredEvidenceCoverage, evidenceQuality, basisScore]) - prototypePenalty - recommendationPenalty);
@@ -618,6 +618,10 @@ function evidenceConfidence(project: ProjectLike, checks: CheckLike[], recommend
 
 function parcelValue(parcel: PlanningObjectLike, scenarioId: string) {
     return scenarioValueFor(parcel.scenarioValues, scenarioId) ?? Object.values(parcel.scenarioValues ?? {})[0] ?? {};
+}
+
+function countBasis(project: ProjectLike): number {
+    return Array.isArray(project.ruleset?.basis) ? project.ruleset.basis.length : 0;
 }
 
 function parcelResidents(parcel: PlanningObjectLike, scenarioId: string): number {

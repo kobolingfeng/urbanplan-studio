@@ -352,6 +352,7 @@ export function calculateDataQuality(
         .filter(object => object.type === 'parcel')
         .flatMap(object => [...scenarioIds].filter(id => !scenarioValueFor(object.scenarioValues, id)).map(id => `${object.name ?? object.id} 缺少 ${id}`));
 
+    const basisCount = countBasis(project);
     const deductions = [
         deduction('缺少证据来源', missingEvidence.length, 8),
         deduction('缺少结构化证据', Math.max(0, objects.length - structuredEvidenceObjects), 3),
@@ -371,7 +372,7 @@ export function calculateDataQuality(
         averageEvidenceConfidence,
         evidenceTypeCounts,
         deductions,
-        basisCount: project.ruleset?.basis?.length ?? 0,
+        basisCount,
         ruleCatalog,
         missingEvidence,
         prototypeRuleCount,
@@ -400,6 +401,10 @@ function buildEntranceReferenceDiagnostics(objects: PlanningObjectLike[]): { iss
             return issues;
         });
     return { issues, objectKeys };
+}
+
+function countBasis(project: ProjectLike): number {
+    return Array.isArray(project.ruleset?.basis) ? project.ruleset.basis.length : 0;
 }
 
 function identifierText(value: unknown): string | undefined {
