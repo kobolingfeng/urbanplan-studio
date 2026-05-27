@@ -225,6 +225,14 @@ const malformedBasisEvaluation = evaluateScenario({
 } as unknown as typeof project, 'scenario_update', [], []);
 const malformedBasisEvidence = malformedBasisEvaluation.dimensions.find(item => item.id === 'evidence');
 assert(malformedBasisEvidence?.reason.includes('规则依据 0 条'), 'evaluation should ignore non-array ruleset basis values');
+const sparseBasisEvaluation = evaluateScenario({
+    project: { name: 'Sparse Basis Evaluation' },
+    ruleset: { version: 'Sparse Basis Rules', basis: [null, 'fixture', ' '] },
+    scenarios: [{ id: 'scenario_update', name: 'Update' }],
+    objects: [],
+} as unknown as typeof project, 'scenario_update', [], []);
+const sparseBasisEvidence = sparseBasisEvaluation.dimensions.find(item => item.id === 'evidence');
+assert(sparseBasisEvidence?.reason.includes('规则依据 1 条'), 'evaluation should count only valid ruleset basis entries');
 
 const malformedObjectsEvaluation = evaluateScenario({
     project: { name: 'Malformed Objects Evaluation' },

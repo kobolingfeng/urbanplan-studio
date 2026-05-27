@@ -200,6 +200,12 @@ const malformedBasisQuality = calculateDataQuality({
     objects: [],
 } as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
 assert(malformedBasisQuality.basisCount === 0, 'data quality should ignore non-array ruleset basis values');
+const sparseBasisQuality = calculateDataQuality({
+    project: { name: 'Sparse Basis Quality' },
+    ruleset: { basis: [null, 'fixture', ' '] },
+    objects: [],
+} as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
+assert(sparseBasisQuality.basisCount === 1, 'data quality should count only valid ruleset basis entries');
 const malformedObjectsQuality = calculateDataQuality({
     project: { name: 'Malformed Objects Quality' },
     objects: 'not an array',

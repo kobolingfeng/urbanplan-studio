@@ -648,7 +648,9 @@ function hasRecommendationText(item: RecommendationLike): boolean {
 }
 
 function countBasis(project: ProjectLike): number {
-    return Array.isArray(project.ruleset?.basis) ? project.ruleset.basis.length : 0;
+    return Array.isArray(project.ruleset?.basis)
+        ? project.ruleset.basis.filter(value => identifierText(value)).length
+        : 0;
 }
 
 function normalizeWeightProfile(value: EvaluationWeightProfile): EvaluationWeightProfile {

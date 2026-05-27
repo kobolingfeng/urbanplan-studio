@@ -449,7 +449,9 @@ function objectEvidence(object: PlanningObjectLike): EvidenceItem[] {
 }
 
 function countBasis(project: ProjectLike): number {
-    return Array.isArray(project.ruleset?.basis) ? project.ruleset.basis.length : 0;
+    return Array.isArray(project.ruleset?.basis)
+        ? project.ruleset.basis.filter(value => identifierText(value)).length
+        : 0;
 }
 
 function identifierText(value: unknown): string | undefined {
