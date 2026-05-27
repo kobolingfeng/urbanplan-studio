@@ -74,4 +74,7 @@ assert(formattedJson.length === 2 && typeof formattedJson[0] === 'object' && (fo
 const emptyJson = parseEvidenceText('[]');
 assert(emptyJson.length === 0, 'empty JSON evidence arrays should stay empty');
 
+const legacyCarriageReturns = parseEvidenceText('CR 证据一\rCR 证据二');
+assert(legacyCarriageReturns.length === 2, 'evidence parser should split legacy carriage-return lines');
+
 console.log('evidence smoke passed');

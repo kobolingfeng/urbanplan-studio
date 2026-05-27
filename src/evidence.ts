@@ -74,7 +74,7 @@ export function parseEvidenceText(text: string): EvidenceItem[] {
     if (jsonBlock) return jsonBlock;
 
     const items: EvidenceItem[] = [];
-    for (const rawLine of text.split(/\r?\n/)) {
+    for (const rawLine of text.split(/\r\n?|\n/)) {
         const line = rawLine.trim();
         if (!line) continue;
         if (line.startsWith('{') || line.startsWith('[')) {
