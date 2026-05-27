@@ -39,6 +39,7 @@ assert(raw === '<pre class="modal-raw">&lt;svg onload=alert(1)&gt;</pre>', 'raw 
 
 const escapedRow = markdownTableRow(['A|B', 'line 1\nline 2', '<unsafe>']);
 assert(escapedRow === '| A\\|B | line 1 / line 2 | <unsafe> |', 'table row helper should escape pipes and flatten newlines');
+assert(markdownTableRow('bad' as unknown as unknown[]) === '|  |', 'table row helper should tolerate malformed cell collections');
 const split = splitMarkdownTableRow(escapedRow);
 assert(split.length === 3 && split[0] === 'A|B' && split[1] === 'line 1 / line 2', 'table row splitter should preserve escaped pipes');
 const tableHtml = markdownToHtml(['| 字段 | 值 | 备注 |', '|---|---|---|', escapedRow].join('\n'));

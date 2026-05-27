@@ -1,5 +1,6 @@
 export function markdownTableRow(cells: readonly unknown[]): string {
-    return `| ${cells.map(markdownTableCell).join(' | ')} |`;
+    const safeCells = Array.isArray(cells) ? cells : [];
+    return `| ${safeCells.map(markdownTableCell).join(' | ')} |`;
 }
 
 export function markdownTableCell(value: unknown): string {
