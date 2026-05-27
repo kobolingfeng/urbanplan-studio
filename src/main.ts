@@ -674,11 +674,12 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
     const roadIds = new Set(auditObjects.filter(object => object?.type === 'road').map(object => importIdentifierText(object.id)).filter((id): id is string => Boolean(id)));
     for (const [index, raw] of auditObjects.entries()) {
         const object = raw as Partial<PlanObject>;
+        const evidenceItems = importEvidenceItems(object);
         const objectId = importObjectIdLabel(object.id, index);
         if (!hasImportIdentifier(object.id)) findings.push({ severity: 'warning', objectId, message: '对象缺少 id，兼容层会生成临时 id。' });
         if (!object.name) findings.push({ severity: 'info', objectId, message: '对象缺少名称，兼容层会使用 id 代替。' });
-        if (!object.evidence?.length) findings.push({ severity: 'warning', objectId, message: '对象缺少证据来源，会降低数据质量和可信度。' });
-        else if (!object.evidence.some(isStructuredEvidence)) findings.push({ severity: 'info', objectId, message: '对象证据仍是旧版字符串，建议升级为结构化 EvidenceSource。' });
+        if (!evidenceItems.length) findings.push({ severity: 'warning', objectId, message: '对象缺少证据来源，会降低数据质量和可信度。' });
+        else if (!evidenceItems.some(isStructuredEvidence)) findings.push({ severity: 'info', objectId, message: '对象证据仍是旧版字符串，建议升级为结构化 EvidenceSource。' });
         if (object.type === 'parcel') {
             const parcel = object as Partial<Parcel>;
             if (!Array.isArray(parcel.points) || parcel.points.length < 3) findings.push({ severity: 'warning', objectId, message: '地块几何点不足，兼容层会补默认矩形。' });
@@ -722,7 +723,7 @@ function snapshotImportedProject(input: UrbanPlanProject): ImportProjectSnapshot
                 id: importObjectIdLabel(raw.id, index),
                 type,
                 knownType: ['parcel', 'road', 'facility', 'entrance', 'openSpace', 'constraint'].includes(type),
-                hasEvidence: Boolean(raw.evidence?.length),
+                hasEvidence: Boolean(importEvidenceItems(raw).length),
                 hasGeometry: hasImportGeometry(raw),
                 hasControls: type !== 'parcel' || Boolean((raw as Partial<Parcel>).controls),
                 scenarioIds: type === 'parcel'
@@ -849,6 +850,12 @@ function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: 
 
 function normalizeImportedReferenceId(value: unknown, fallback: string): string {
     return importIdentifierText(value) ?? fallback;
+}
+
+function importEvidenceItems(object: Partial<PlanObject>): unknown[] {
+    const evidence = (object as { evidence?: unknown }).evidence;
+    if (Array.isArray(evidence)) return evidence;
+    return evidence ? [evidence] : [];
 }
 
 function hasImportGeometry(object: Partial<PlanObject>): boolean {
