@@ -185,7 +185,8 @@ function text(value: unknown): string {
 function numberOrUndefined(value: unknown): number | undefined {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     if (typeof value === 'string' && value.trim()) {
-        const parsed = Number(value);
+        const text = value.trim();
+        const parsed = Number(text.endsWith('%') ? text.slice(0, -1).trim() : text);
         if (Number.isFinite(parsed)) return parsed;
     }
     return undefined;

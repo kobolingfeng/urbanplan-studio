@@ -60,6 +60,11 @@ stringConfidenceRaw.objects[0].evidence[0].confidence = '0.82';
 const stringConfidenceIssues = validateUpfDocument(stringConfidenceRaw);
 assert(stringConfidenceIssues.some(issue => issue.severity === 'info' && issue.path.endsWith('.confidence') && issue.message.includes('字符串数字')), 'numeric-string confidence should be reported as compatible');
 assert(!stringConfidenceIssues.some(issue => issue.severity === 'warning' && issue.path.endsWith('.confidence')), 'numeric-string confidence should not be warned as invalid');
+const percentSignConfidenceRaw = JSON.parse(minimalText);
+percentSignConfidenceRaw.objects[0].evidence[0].confidence = '86%';
+const percentSignConfidenceIssues = validateUpfDocument(percentSignConfidenceRaw);
+assert(percentSignConfidenceIssues.some(issue => issue.severity === 'info' && issue.path.endsWith('.confidence')), 'percent-suffixed confidence strings should be reported as compatible');
+assert(!percentSignConfidenceIssues.some(issue => issue.severity === 'warning' && issue.path.endsWith('.confidence')), 'percent-suffixed confidence strings should not be warned as invalid');
 
 const roundTrip = createUpfDocument(minimal.project, minimal.activeScenarioId, [], [], {
     scenarioId: minimal.activeScenarioId,

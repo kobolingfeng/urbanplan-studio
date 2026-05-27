@@ -352,7 +352,8 @@ function isFiniteNumber(value: unknown): value is number {
 function numberLike(value: unknown): number | undefined {
     if (isFiniteNumber(value)) return value;
     if (typeof value === 'string' && value.trim()) {
-        const parsed = Number(value);
+        const text = value.trim();
+        const parsed = Number(text.endsWith('%') ? text.slice(0, -1).trim() : text);
         if (Number.isFinite(parsed)) return parsed;
     }
     return undefined;
