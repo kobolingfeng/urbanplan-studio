@@ -88,14 +88,15 @@ export function createUpfDocument<TProject extends ProjectLike>(
 ) {
     const safeProject = projectRecord(project);
     const safeActiveScenarioId = identifierText(activeScenarioId) ?? '';
+    const safeFormatVersion = identifierText(safeProject.formatVersion) ?? '0.1.0';
     const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
     const safeRecommendations = recordItems<RecommendationLike>(recommendations).filter(hasRecommendationText);
     return {
-        format: safeProject.format ?? 'UPF',
-        formatVersion: safeProject.formatVersion ?? '0.1.0',
+        format: 'UPF',
+        formatVersion: safeFormatVersion,
         manifest: {
-            format: safeProject.format ?? 'UPF',
-            formatVersion: safeProject.formatVersion ?? '0.1.0',
+            format: 'UPF',
+            formatVersion: safeFormatVersion,
             exportedAt: new Date().toISOString(),
             software: {
                 name: 'UrbanPlan Studio',

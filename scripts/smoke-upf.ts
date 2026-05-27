@@ -150,6 +150,13 @@ const normalizedActiveExport = createUpfDocument(minimal.project, ' scenario_bas
 assert(normalizedActiveExport.activeScenarioId === 'scenario_base' && normalizedActiveExport.manifest.activeScenarioId === 'scenario_base', 'UPF export should normalize active scenario ids');
 const malformedActiveExport = createUpfDocument(minimal.project, null as unknown as string, [], []);
 assert(malformedActiveExport.activeScenarioId === '' && malformedActiveExport.manifest.activeScenarioId === '', 'UPF export should tolerate malformed active scenario ids');
+const normalizedFormatExport = createUpfDocument({
+    ...minimal.project,
+    format: 'BAD',
+    formatVersion: 1,
+} as unknown as typeof minimal.project, minimal.activeScenarioId, [], []);
+assert(normalizedFormatExport.format === 'UPF' && normalizedFormatExport.manifest.format === 'UPF', 'UPF export should force the UPF format marker');
+assert(normalizedFormatExport.formatVersion === '1' && normalizedFormatExport.manifest.formatVersion === '1', 'UPF export should normalize format versions to text');
 const parsedRoundTrip = parseUpfText(JSON.stringify(roundTrip), fallback);
 assert(parsedRoundTrip.project.format === 'UPF', 'round-trip format mismatch');
 assert(parsedRoundTrip.project.objects?.length === 1, 'round-trip objects mismatch');
