@@ -55,6 +55,7 @@ assert(sourceMain.includes('itemScenarioIds.has(scenarioId)'), 'normalization au
 assert(sourceMain.includes("showModal('保存失败', message, '文件保存')"), 'save failures should use a save-specific error modal');
 assert(sourceMain.includes('window.setTimeout(() => URL.revokeObjectURL(url), 0)'), 'browser downloads should revoke object URLs after click dispatch');
 assert(fileText(join(ROOT, 'src', 'ipc.ts')).includes("typeof safeOptions.timeoutMs === 'number'"), 'IPC bridge should only accept numeric timeout values');
+assert(fileText(join(ROOT, 'src', 'ipc.ts')).includes("String(event ?? '').trim()"), 'IPC bridge should ignore empty listener event names');
 assert(buildScript.includes('function configText(value: unknown, fallback: string): string'), 'build script should normalize malformed config text');
 assert(buildScript.includes("typeof cfg?.build?.command === 'string'"), 'build script should ignore malformed custom build commands');
 assert(buildScript.includes("typeof cfg?.build?.outDir === 'string'"), 'build script should ignore malformed custom build output directories');

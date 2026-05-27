@@ -99,7 +99,8 @@ export function invoke<T = unknown>(cmd: string, args: object = {}, options: Inv
 export function on<T = unknown>(event: string, handler: (data: T) => void): () => void {
     if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return () => {};
     if (typeof handler !== 'function') return () => {};
-    const safeEvent = String(event ?? '');
+    const safeEvent = String(event ?? '').trim();
+    if (!safeEvent) return () => {};
     const listener = ((e: CustomEvent<T>) => handler(e.detail)) as EventListener;
     window.addEventListener(`ipc:${safeEvent}`, listener);
     return () => window.removeEventListener(`ipc:${safeEvent}`, listener);
