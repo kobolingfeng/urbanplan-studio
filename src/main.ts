@@ -2520,7 +2520,7 @@ async function saveText(defaultName: string, content: string) {
     anchor.href = url;
     anchor.download = safeDefaultName;
     anchor.click();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
     if (safeDefaultName.endsWith('.upf')) {
         dirty = false;
         clearAutosave();
