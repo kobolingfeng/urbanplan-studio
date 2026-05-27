@@ -86,6 +86,8 @@ export function createUpfDocument<TProject extends ProjectLike>(
     recommendations: RecommendationLike[],
     evaluation?: unknown,
 ) {
+    const safeChecks = recordItems<CheckLike>(checks);
+    const safeRecommendations = recordItems<RecommendationLike>(recommendations);
     return {
         format: project.format ?? 'UPF',
         formatVersion: project.formatVersion ?? '0.1.0',
@@ -106,11 +108,11 @@ export function createUpfDocument<TProject extends ProjectLike>(
         },
         project: project.project,
         ruleset: project.ruleset,
-        scenarios: project.scenarios,
+        scenarios: recordItems<ScenarioLike>(project.scenarios),
         activeScenarioId,
-        objects: project.objects,
-        checks,
-        recommendations,
+        objects: recordItems<PlanningObjectLike>(project.objects),
+        checks: safeChecks,
+        recommendations: safeRecommendations,
         evaluation,
     };
 }

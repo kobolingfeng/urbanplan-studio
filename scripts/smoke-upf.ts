@@ -89,6 +89,20 @@ assert((roundTrip.evaluation as { score?: number }).score === 88, 'evaluation ex
 assert((roundTrip.evaluation as { modelId?: string }).modelId === 'balanced', 'evaluation model id export mismatch');
 assert((roundTrip.evaluation as { modelName?: string }).modelName === '均衡模型', 'evaluation model name export mismatch');
 assert(Array.isArray((roundTrip.evaluation as { riskRegister?: unknown[] }).riskRegister), 'evaluation risk register export mismatch');
+const sparseRoundTrip = createUpfDocument({
+    ...minimal.project,
+    scenarios: [null, ...(minimal.project.scenarios ?? [])],
+    objects: [null, ...(minimal.project.objects ?? [])],
+} as unknown as typeof minimal.project, minimal.activeScenarioId, [
+    null,
+    { ruleId: 'valid_check', severity: 'info', objectId: 'project', objectName: 'Project', title: 'Valid check', message: 'ok', source: 'smoke' },
+] as unknown as Parameters<typeof createUpfDocument>[2], [
+    null,
+    { title: 'Valid recommendation', message: 'ok', basis: 'smoke' },
+] as unknown as Parameters<typeof createUpfDocument>[3]);
+assert(sparseRoundTrip.scenarios.length === (minimal.project.scenarios?.length ?? 0), 'UPF export should ignore malformed scenario entries');
+assert(sparseRoundTrip.objects.length === (minimal.project.objects?.length ?? 0), 'UPF export should ignore malformed object entries');
+assert(sparseRoundTrip.checks.length === 1 && sparseRoundTrip.recommendations.length === 1, 'UPF export should ignore malformed signal entries');
 const parsedRoundTrip = parseUpfText(JSON.stringify(roundTrip), fallback);
 assert(parsedRoundTrip.project.format === 'UPF', 'round-trip format mismatch');
 assert(parsedRoundTrip.project.objects?.length === 1, 'round-trip objects mismatch');
