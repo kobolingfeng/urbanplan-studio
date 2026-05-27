@@ -104,6 +104,6 @@ bun run verify:release
 Expected:
 
 - Typecheck passes.
-- Geometry, UPF, rules, evaluation, static, and release smoke checks pass.
+- Geometry, UPF, rules, evaluation, evidence, ranges, robustness, static, and release smoke checks pass.
 - `release/UrbanPlan Studio-0.1.0-portable.zip` exists.
 - `release/SHA256SUMS.txt` matches the generated zip.
