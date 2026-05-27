@@ -221,6 +221,7 @@ export function evaluateScenario(
 ): ScenarioEvaluation {
     const safeChecks = Array.isArray(checks) ? checks : [];
     const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
+    const safeWeightProfile = normalizeWeightProfile(weightProfile);
     const objects = projectObjects(project);
     const parcels = objects.filter(isParcel);
     const roads = objects.filter(isRoad);
@@ -232,12 +233,12 @@ export function evaluateScenario(
     const totals = summarizeParcels(parcels, scenarioId);
 
     const dimensions: DimensionScore[] = [
-        complianceDimension(safeChecks, weightProfile.weights.compliance),
-        publicServiceDimension(parcels, facilities, scenarioId, totals.residents, totals.residentialGfa, weightProfile.weights.publicService),
-        mobilityDimension(parcels, roads, entrances, safeChecks, weightProfile.weights.mobility),
-        ecologyDimension(parcels, openSpaces, scenarioId, totals.residents, weightProfile.weights.ecology),
-        renewalValueDimension(project, parcels, scenarioId, weightProfile.weights.renewalValue),
-        evidenceDimension(project, safeChecks, safeRecommendations, weightProfile.weights.evidence),
+        complianceDimension(safeChecks, safeWeightProfile.weights.compliance),
+        publicServiceDimension(parcels, facilities, scenarioId, totals.residents, totals.residentialGfa, safeWeightProfile.weights.publicService),
+        mobilityDimension(parcels, roads, entrances, safeChecks, safeWeightProfile.weights.mobility),
+        ecologyDimension(parcels, openSpaces, scenarioId, totals.residents, safeWeightProfile.weights.ecology),
+        renewalValueDimension(project, parcels, scenarioId, safeWeightProfile.weights.renewalValue),
+        evidenceDimension(project, safeChecks, safeRecommendations, safeWeightProfile.weights.evidence),
     ];
 
     const totalWeight = dimensions.reduce((sum, item) => sum + item.weight, 0);
@@ -250,10 +251,10 @@ export function evaluateScenario(
     return {
         scenarioId,
         scenarioName: scenario?.name ?? scenarioId,
-        modelId: weightProfile.id,
-        modelName: weightProfile.name,
+        modelId: safeWeightProfile.id,
+        modelName: safeWeightProfile.name,
         weightSource: 'UrbanPlan Studio prototype built-in profile',
-        weights: { ...weightProfile.weights },
+        weights: { ...safeWeightProfile.weights },
         score,
         band: scoreBand(score),
         confidence,
@@ -635,6 +636,38 @@ function projectScenarios(project: ProjectLike): ScenarioLike[] {
 
 function countBasis(project: ProjectLike): number {
     return Array.isArray(project.ruleset?.basis) ? project.ruleset.basis.length : 0;
+}
+
+function normalizeWeightProfile(value: EvaluationWeightProfile): EvaluationWeightProfile {
+    const fallback = EVALUATION_WEIGHT_PROFILES[0];
+    const profile = value && typeof value === 'object' ? value as Partial<EvaluationWeightProfile> : {};
+    if (!profile.weights || typeof profile.weights !== 'object') return fallback;
+    const rawWeights = profile.weights as Record<string, unknown>;
+    const weights: EvaluationWeightSet = {
+        compliance: nonNegativeWeight(rawWeights.compliance, fallback.weights.compliance),
+        publicService: nonNegativeWeight(rawWeights.publicService, fallback.weights.publicService),
+        mobility: nonNegativeWeight(rawWeights.mobility, fallback.weights.mobility),
+        ecology: nonNegativeWeight(rawWeights.ecology, fallback.weights.ecology),
+        renewalValue: nonNegativeWeight(rawWeights.renewalValue, fallback.weights.renewalValue),
+        evidence: nonNegativeWeight(rawWeights.evidence, fallback.weights.evidence),
+    };
+    const total = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+    if (!Number.isFinite(total) || total <= 0) return fallback;
+    return {
+        id: textOr(profile.id, fallback.id),
+        name: textOr(profile.name, fallback.name),
+        description: textOr(profile.description, fallback.description),
+        weights,
+    };
+}
+
+function nonNegativeWeight(value: unknown, fallback: number): number {
+    const weight = finiteNumberOr(value, fallback);
+    return weight >= 0 ? weight : fallback;
+}
+
+function textOr(value: unknown, fallback: string): string {
+    return typeof value === 'string' && value.trim() ? value.trim() : fallback;
 }
 
 function objectEvidence(object: PlanningObjectLike): EvidenceItem[] {

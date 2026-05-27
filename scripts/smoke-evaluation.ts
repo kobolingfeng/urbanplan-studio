@@ -124,6 +124,15 @@ for (const profile of EVALUATION_WEIGHT_PROFILES) {
     assert(profiled.dimensions.reduce((sum, item) => sum + item.weight, 0) > 0.99, `${profile.name} weights should sum close to 1`);
 }
 
+const malformedWeightEvaluation = evaluateScenario(project, 'scenario_update', [], [], {
+    id: 'bad_profile',
+    name: 'Bad Profile',
+    description: 'Malformed profile',
+    weights: 'not an object',
+} as unknown as Parameters<typeof evaluateScenario>[4]);
+assert(malformedWeightEvaluation.modelId === 'balanced', 'evaluation should fall back when weight profile weights are malformed');
+assert(Object.values(malformedWeightEvaluation.weights).reduce((sum, value) => sum + value, 0) > 0.99, 'fallback weights should stay usable');
+
 const degenerateGeometryProject = {
     project: { name: 'Degenerate Evaluation' },
     ruleset: { version: 'Geometry Evaluation Rules', basis: ['fixture'] },
