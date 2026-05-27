@@ -174,6 +174,12 @@ assert(parsedWithMissingScenario?.project.scenarios.some(scenario => scenario.id
 const preservedParcel = parsedWithMissingScenario?.project.objects.find(object => object.id === 'parcel_a');
 assert(preservedParcel?.scenarioValues?.base?.far === 2, 'GeoJSON import should keep active-scenario parcel values discoverable');
 
+const parsedWithTrimmedFallbackScenario = parseGeoJsonProject(JSON.parse(text), {
+    ...fallback,
+    scenarios: [{ id: ' base ', name: 'Base', description: 'Existing scenario with whitespace' }],
+});
+assert(parsedWithTrimmedFallbackScenario?.project.scenarios.length === 1, 'GeoJSON import should not duplicate fallback scenarios whose ids differ only by whitespace');
+
 const whitespaceGeoJson = JSON.parse(text);
 whitespaceGeoJson.upf.activeScenarioId = '  trimmed_scenario  ';
 whitespaceGeoJson.features[0].id = '  ignored_feature_id  ';
@@ -188,6 +194,26 @@ const trimmedParcel = parsedWhitespace?.project.objects.find(object => object.id
 assert(parsedWhitespace?.activeScenarioId === 'trimmed_scenario', 'GeoJSON import should trim active scenario ids');
 assert(trimmedParcel?.name === 'Trimmed Parcel', 'GeoJSON import should trim object ids and names');
 assert(trimmedParcel?.scenarioValues?.trimmed_scenario?.far === 2, 'GeoJSON import should use trimmed scenario ids for parcel values');
+
+const trimmedScenarioExport = buildGeoJsonFeatureCollection({
+    project: { name: 'Trimmed Scenario Export', crs: 'DemoCanvasMetric' },
+    objects: [{
+        id: 'parcel_trimmed_scenario_export',
+        type: 'parcel',
+        name: 'Trimmed Scenario Export Parcel',
+        points: [
+            { x: 0, y: 0 },
+            { x: 10, y: 0 },
+            { x: 10, y: 10 },
+            { x: 0, y: 10 },
+        ],
+        scenarioValues: {
+            ' base ': { far: 3.4, buildingCoverage: 0.3, greenRatio: 0.32, residentialGfaSqm: 12000, publicServiceGfaSqm: 500 },
+        },
+    }],
+}, 'base', UNIT_SYSTEM);
+const trimmedScenarioExportParcel = trimmedScenarioExport.features.find(feature => feature.id === 'parcel_trimmed_scenario_export');
+assert(trimmedScenarioExportParcel?.properties.far === 3.4, 'GeoJSON export should trim scenario value keys before exporting properties');
 
 const typeAliasGeoJson = {
     type: 'FeatureCollection',

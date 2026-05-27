@@ -173,7 +173,8 @@ function ensureScenario(
     activeScenarioId: string,
     fallbackName: string,
 ): Array<{ id: string; name: string; description?: string }> {
-    if (scenarios.some(scenario => scenario.id === activeScenarioId)) return scenarios;
+    const activeId = identifierText(activeScenarioId);
+    if (activeId && scenarios.some(scenario => identifierText(scenario.id) === activeId)) return scenarios;
     return [
         ...scenarios,
         {
@@ -246,7 +247,7 @@ function geoJsonProperties(object: PlanningObjectLike, activeScenarioId: string)
 }
 
 function parcelScenario(object: PlanningObjectLike, activeScenarioId: string): ScenarioValueLike {
-    return object.scenarioValues?.[activeScenarioId] ?? Object.values(object.scenarioValues ?? {})[0] ?? {};
+    return scenarioValueFor(object.scenarioValues, activeScenarioId) ?? Object.values(object.scenarioValues ?? {})[0] ?? {};
 }
 
 function closedCoordinates(points: Point[]): number[][] {
@@ -477,6 +478,18 @@ function textOr(value: unknown, fallback: string): string {
     }
     if (typeof value === 'number' && Number.isFinite(value)) return String(value);
     return fallback;
+}
+
+function identifierText(value: unknown): string | undefined {
+    const text = textOr(value, '');
+    return text || undefined;
+}
+
+function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
+    const target = identifierText(scenarioId);
+    if (!values || !target) return undefined;
+    if (values[target]) return values[target];
+    return Object.entries(values).find(([key]) => identifierText(key) === target)?.[1];
 }
 
 function booleanOr(value: unknown, fallback: boolean): boolean {
