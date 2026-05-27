@@ -31,7 +31,8 @@ export function markdownToHtml(markdown: string): string {
         if (isMarkdownTableStart(lines, index)) {
             closeList();
             const tableLines: string[] = [];
-            while (index < lines.length && lines[index].trim().startsWith('|')) {
+            const expectedCells = splitMarkdownTableRow(lines[index]).length;
+            while (index < lines.length && isMarkdownTableRow(lines[index], expectedCells)) {
                 tableLines.push(lines[index]);
                 index++;
             }
@@ -86,6 +87,11 @@ function isMarkdownTableStart(lines: string[], index: number): boolean {
 
 function isMarkdownTableSeparatorCell(cell: string): boolean {
     return /^:?-{3,}:?$/.test(cell.trim());
+}
+
+function isMarkdownTableRow(line: string, expectedCells: number): boolean {
+    const trimmed = line.trim();
+    return trimmed.startsWith('|') && splitMarkdownTableRow(trimmed).length === expectedCells;
 }
 
 function markdownTableToHtml(lines: string[]): string {

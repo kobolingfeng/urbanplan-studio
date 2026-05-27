@@ -41,7 +41,7 @@ const escapedRow = markdownTableRow(['A|B', 'line 1\nline 2', '<unsafe>']);
 assert(escapedRow === '| A\\|B | line 1 / line 2 | <unsafe> |', 'table row helper should escape pipes and flatten newlines');
 const split = splitMarkdownTableRow(escapedRow);
 assert(split.length === 3 && split[0] === 'A|B' && split[1] === 'line 1 / line 2', 'table row splitter should preserve escaped pipes');
-const tableHtml = markdownToHtml(['| 字段 | 值 |', '|---|---|', escapedRow].join('\n'));
+const tableHtml = markdownToHtml(['| 字段 | 值 | 备注 |', '|---|---|---|', escapedRow].join('\n'));
 assert(tableHtml.includes('<td>A|B</td>') && tableHtml.includes('<td>&lt;unsafe&gt;</td>'), 'escaped table rows should render as safe table cells');
 
 const alignedTable = markdownToHtml(['| 左 | 右 |', '|:---|---:|', '| a | b |'].join('\n'));
@@ -50,6 +50,10 @@ assert(alignedTable.includes('<table>') && alignedTable.includes('<td>a</td>'), 
 const loosePipes = markdownToHtml(['| just a paragraph |', '| maybe --- text |'].join('\n'));
 assert(!loosePipes.includes('<table>'), 'pipe paragraphs with loose dashes should not render as a table');
 assert(loosePipes.includes('<p>| just a paragraph |</p>'), 'loose pipe lines should remain paragraphs');
+
+const boundedTable = markdownToHtml(['| A | B |', '|---|---|', '| 1 | 2 |', '| not table |'].join('\n'));
+assert(boundedTable.includes('<td>1</td><td>2</td>'), 'matching table rows should render');
+assert(boundedTable.includes('<p>| not table |</p>'), 'mismatched pipe rows after a table should stay paragraphs');
 
 const crlfMarkdown = markdownToHtml('## Windows Title\r\n  - indented item\r\n- second item\r\n  ```\r\n  <unsafe>\r\n  ```');
 assert(crlfMarkdown.includes('<h2>Windows Title</h2>'), 'markdown renderer should normalize CRLF line endings');
