@@ -196,6 +196,14 @@ const parsedWithTrimmedFallbackScenario = parseGeoJsonProject(JSON.parse(text), 
     scenarios: [{ id: ' base ', name: 'Base', description: 'Existing scenario with whitespace' }],
 });
 assert(parsedWithTrimmedFallbackScenario?.project.scenarios.length === 1, 'GeoJSON import should not duplicate fallback scenarios whose ids differ only by whitespace');
+const noActiveGeoJson = JSON.parse(text);
+delete noActiveGeoJson.upf.activeScenarioId;
+const parsedWithNumericFallbackScenario = parseGeoJsonProject(noActiveGeoJson, {
+    ...fallback,
+    scenarios: [{ id: 0, name: 'Zero', description: 'Numeric scenario' }],
+} as unknown as typeof fallback);
+assert(parsedWithNumericFallbackScenario?.activeScenarioId === '0', 'GeoJSON import should normalize numeric fallback active scenario ids');
+assert(parsedWithNumericFallbackScenario?.project.scenarios[0].id === '0', 'GeoJSON import should normalize numeric fallback scenario ids');
 
 const whitespaceGeoJson = JSON.parse(text);
 whitespaceGeoJson.upf.activeScenarioId = '  trimmed_scenario  ';

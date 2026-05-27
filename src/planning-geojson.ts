@@ -135,14 +135,14 @@ export function parseGeoJsonProject<TProject extends ProjectLike>(
     if (collection.type !== 'FeatureCollection' || !Array.isArray(collection.features)) return undefined;
 
     const upf = isRecord(collection.upf) ? collection.upf : {};
-    const fallbackScenarios = recordItems<{ id: string; name: string; description?: string }>(fallbackProject.scenarios);
+    const fallbackScenarios = recordItems<{ id: unknown; name?: unknown; description?: unknown }>(fallbackProject.scenarios)
+        .flatMap(normalizeScenario);
     const activeScenarioId = textOr(
         upf.activeScenarioId,
         fallbackScenarios[0]?.id ?? 'scenario_geojson',
     );
-    const usableFallbackScenarios = fallbackScenarios.filter(scenario => scenario.id && scenario.name);
     const scenarios = ensureScenario(
-        usableFallbackScenarios,
+        fallbackScenarios,
         activeScenarioId,
         'GeoJSON 导入',
     );
@@ -185,6 +185,16 @@ function ensureScenario(
             description: '由 GeoJSON FeatureCollection 导入。',
         },
     ];
+}
+
+function normalizeScenario(value: { id: unknown; name?: unknown; description?: unknown }): Array<{ id: string; name: string; description?: string }> {
+    const id = identifierText(value.id);
+    if (!id) return [];
+    return [{
+        id,
+        name: textOr(value.name, id),
+        ...(typeof value.description === 'string' ? { description: value.description.trim() } : {}),
+    }];
 }
 
 function geoJsonGeometry(object: PlanningObjectLike) {
