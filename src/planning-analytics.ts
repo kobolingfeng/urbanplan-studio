@@ -264,7 +264,8 @@ export function buildDataQualityReport(
     checks: CheckLike[],
     recommendations: RecommendationLike[],
 ): string {
-    const quality = calculateDataQuality(project, checks, recommendations);
+    const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
+    const quality = calculateDataQuality(project, checks, safeRecommendations);
 
     const lines = [
         `# ${project.project?.name ?? 'UrbanPlan'} 数据质量诊断`,
@@ -283,7 +284,7 @@ export function buildDataQualityReport(
         `- 仍依赖原型规则的检查：${quality.prototypeRuleCount}`,
         `- 未绑定或悬挂引用的出入口：${quality.unboundEntrances.length}`,
         `- 地块方案值缺口：${quality.parcelScenarioGaps.length}`,
-        `- 智能建议数量：${recommendations.length}`,
+        `- 智能建议数量：${safeRecommendations.length}`,
         '',
         '## 扣分项',
         '',
@@ -326,6 +327,8 @@ export function calculateDataQuality(
     checks: CheckLike[],
     recommendations: RecommendationLike[] = [],
 ) {
+    const safeChecks = Array.isArray(checks) ? checks : [];
+    const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
     const objects = projectObjects(project);
     const evidenceByObject = new Map(objects.map(object => [object, objectEvidence(object)]));
     const missingEvidence = objects.filter(object => !evidenceByObject.get(object)?.length);
@@ -343,8 +346,8 @@ export function calculateDataQuality(
             counts[kind] = (counts[kind] ?? 0) + 1;
             return counts;
         }, {});
-    const prototypeRuleCount = checks.filter(check => String(check.source ?? '').includes('原型')).length;
-    const ruleCatalog = buildRuleCatalog(checks);
+    const prototypeRuleCount = safeChecks.filter(check => String(check.source ?? '').includes('原型')).length;
+    const ruleCatalog = buildRuleCatalog(safeChecks);
     const entranceReferenceDiagnostics = buildEntranceReferenceDiagnostics(objects);
     const entranceReferenceIssues = entranceReferenceDiagnostics.issues;
     const unboundEntrances = objects.filter(object => object.type === 'entrance'
@@ -361,7 +364,7 @@ export function calculateDataQuality(
         deduction('原型规则触发', prototypeRuleCount, 4),
         deduction('出入口引用问题', entranceReferenceIssues.length, 12),
         deduction('地块方案值缺口', parcelScenarioGaps.length, 10),
-        deduction('建议过多需归并', Math.max(0, recommendations.length - 8), 1),
+        deduction('建议过多需归并', Math.max(0, safeRecommendations.length - 8), 1),
     ];
     const score = Math.max(0, Math.min(100, 100 - deductions.reduce((sum, item) => sum + item.points, 0)));
 

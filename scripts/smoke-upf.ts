@@ -159,6 +159,18 @@ const malformedObjectsQuality = calculateDataQuality({
     objects: 'not an array',
 } as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
 assert(malformedObjectsQuality.objectCount === 0, 'data quality should ignore non-array object collections');
+const malformedSignalQuality = calculateDataQuality(
+    analyticsFixture,
+    'not an array' as unknown as Parameters<typeof calculateDataQuality>[1],
+    'not an array' as unknown as Parameters<typeof calculateDataQuality>[2],
+);
+assert(malformedSignalQuality.ruleCatalog.length === 0, 'data quality should ignore non-array checks');
+const malformedSignalReport = buildDataQualityReport(
+    analyticsFixture,
+    'not an array' as unknown as Parameters<typeof buildDataQualityReport>[1],
+    'not an array' as unknown as Parameters<typeof buildDataQualityReport>[2],
+);
+assert(malformedSignalReport.includes('智能建议数量：0'), 'quality report should ignore non-array recommendations');
 const scalarEvidenceQuality = calculateDataQuality({
     project: { name: 'Scalar Evidence Quality' },
     objects: [{
