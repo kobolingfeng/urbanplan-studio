@@ -165,6 +165,12 @@ const parsedViaUpf = parseUpfText(text, fallback);
 assert(parsedViaUpf.activeScenarioId === 'base', 'UPF parser should accept GeoJSON active scenario');
 assert(parsedViaUpf.project.objects?.some(object => object.id === 'road_a'), 'UPF parser should accept GeoJSON features');
 
+const parsedMalformedFallback = parseGeoJsonProject(JSON.parse(text), {
+    ...fallback,
+    scenarios: 'bad',
+} as unknown as typeof fallback);
+assert(parsedMalformedFallback?.project.scenarios.some(scenario => scenario.id === 'base'), 'GeoJSON import should tolerate malformed fallback scenarios');
+
 const fallbackWithoutActive = {
     ...fallback,
     scenarios: [{ id: 'other', name: 'Other', description: 'Existing scenario' }],

@@ -134,13 +134,14 @@ export function parseGeoJsonProject<TProject extends ProjectLike>(
     if (collection.type !== 'FeatureCollection' || !Array.isArray(collection.features)) return undefined;
 
     const upf = isRecord(collection.upf) ? collection.upf : {};
+    const fallbackScenarios = Array.isArray(fallbackProject.scenarios) ? fallbackProject.scenarios : [];
     const activeScenarioId = textOr(
         upf.activeScenarioId,
-        fallbackProject.scenarios?.[0]?.id ?? 'scenario_geojson',
+        fallbackScenarios[0]?.id ?? 'scenario_geojson',
     );
-    const fallbackScenarios = (fallbackProject.scenarios ?? []).filter(scenario => scenario.id && scenario.name);
+    const usableFallbackScenarios = fallbackScenarios.filter(scenario => scenario.id && scenario.name);
     const scenarios = ensureScenario(
-        fallbackScenarios.length ? fallbackScenarios : [],
+        usableFallbackScenarios,
         activeScenarioId,
         'GeoJSON 导入',
     );
