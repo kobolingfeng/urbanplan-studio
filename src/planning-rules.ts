@@ -52,7 +52,7 @@ type RuleObject = {
 };
 
 type RuleProject = {
-    project: { name?: string };
+    project?: { name?: string };
     ruleset?: { version?: string };
     objects: RuleObject[];
 };
@@ -586,7 +586,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         add({
             ruleId: 'facility_kindergarten_gap',
             objectId: 'project',
-            objectName: project.project.name ?? '项目',
+            objectName: project.project?.name ?? '项目',
             severity: 'warning',
             title: '幼儿园学位存在缺口',
             message: `估算需求 ${kindergartenDemand} 个学位，当前配置 ${capacity('幼儿园')}。`,
@@ -597,7 +597,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         add({
             ruleId: 'facility_elderly_gap',
             objectId: 'project',
-            objectName: project.project.name ?? '项目',
+            objectName: project.project?.name ?? '项目',
             severity: 'warning',
             title: '社区养老服务能力不足',
             message: `估算需求 ${elderlyDemand} 人服务能力，当前配置 ${capacity('社区养老')}。`,
@@ -608,7 +608,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         add({
             ruleId: 'facility_health_gap',
             objectId: 'project',
-            objectName: project.project.name ?? '项目',
+            objectName: project.project?.name ?? '项目',
             severity: 'info',
             title: '社区卫生服务承载需复核',
             message: `估算服务人口 ${format(healthDemand)} 人，当前卫生服务容量 ${format(capacity('社区卫生'))}。`,

@@ -77,6 +77,10 @@ const noRulesetChecks = runPlanningRules({
     objects: [badParcel],
 } as unknown as Parameters<typeof runPlanningRules>[0], 's1').checks;
 assert(noRulesetChecks.some(check => check.ruleId === 'parcel_far_max'), 'rules should run when ruleset metadata is missing');
+const noProjectChecks = runPlanningRules({
+    objects: [badParcel],
+} as unknown as Parameters<typeof runPlanningRules>[0], 's1').checks;
+assert(noProjectChecks.some(check => check.objectId === 'project'), 'rules should run when project metadata is missing');
 
 assertTriggers('string numeric parcel controls', [{
     ...badParcel,
