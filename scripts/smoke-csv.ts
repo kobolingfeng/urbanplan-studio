@@ -41,6 +41,8 @@ const wide = buildScenarioDecisionCsv(rows);
 assert(wide.startsWith('scenario_id,scenario_name,score'), 'wide CSV header mismatch');
 assert(wide.includes('"方案 A, 引号""测试"'), 'wide CSV should escape commas and quotes');
 assert(wide.includes(',42201,880,'), 'wide CSV should round floor area values');
+const crCsv = buildScenarioDecisionCsv([{ ...rows[0], scenario: { id: 'scenario_cr', name: 'Line\rBreak' } }]);
+assert(crCsv.includes('"Line\rBreak"'), 'wide CSV should quote carriage returns');
 
 const long = buildScenarioDecisionLongCsv(rows);
 assert(long.startsWith('scenario_id,scenario_name,metric_group,metric_id,metric_name,value,unit'), 'long CSV header mismatch');

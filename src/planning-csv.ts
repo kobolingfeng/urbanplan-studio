@@ -240,7 +240,7 @@ function metricRow(
 
 function csvCell(value: string | number): string {
     const text = String(value);
-    if (!/[",\n]/.test(text)) return text;
+    if (!/[",\r\n]/.test(text)) return text;
     return `"${text.replace(/"/g, '""')}"`;
 }
 
