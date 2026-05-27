@@ -5,6 +5,10 @@ import { join, resolve } from 'path';
 const ROOT = resolve(import.meta.dir, '..');
 const DEPS = join(ROOT, 'deps');
 
+function quotePowerShell(value: string): string {
+    return `'${value.replace(/'/g, "''")}'`;
+}
+
 async function downloadWebView2() {
     const dir = join(DEPS, 'webview2');
     const marker = join(dir, 'build', 'native', 'include', 'WebView2.h');
@@ -23,9 +27,9 @@ async function downloadWebView2() {
 
     console.log('  Extracting...');
     const r = Bun.spawnSync(['powershell', '-NoProfile', '-Command',
-        `Remove-Item '${dir}' -Recurse -Force -ErrorAction SilentlyContinue; ` +
-        `Expand-Archive -Path '${zipPath}' -DestinationPath '${dir}' -Force; ` +
-        `Remove-Item '${zipPath}'`
+        `Remove-Item -LiteralPath ${quotePowerShell(dir)} -Recurse -Force -ErrorAction SilentlyContinue; ` +
+        `Expand-Archive -LiteralPath ${quotePowerShell(zipPath)} -DestinationPath ${quotePowerShell(dir)} -Force; ` +
+        `Remove-Item -LiteralPath ${quotePowerShell(zipPath)}`
     ]);
     if (r.exitCode !== 0) throw new Error('Extraction failed');
 

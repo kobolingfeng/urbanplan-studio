@@ -29,6 +29,7 @@ const sourceMain = fileText(join(ROOT, 'src', 'main.ts'));
 const buildScript = fileText(join(ROOT, 'scripts', 'build.ts'));
 const packageScript = fileText(join(ROOT, 'scripts', 'package.ts'));
 const smokeReleaseScript = fileText(join(ROOT, 'scripts', 'smoke-release.ts'));
+const setupScript = fileText(join(ROOT, 'scripts', 'setup.ts'));
 
 assert(html.includes('UrbanPlan Studio'), 'index.html misses app title');
 for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare', 'btn-csv', 'btn-quality', 'btn-rules', 'btn-validation', 'btn-report', 'btn-upf', 'btn-geojson', 'object-search', 'object-filter', 'optimize-preset', 'evaluation-list', 'plan-canvas']) {
@@ -54,6 +55,8 @@ assert(buildScript.includes('function configText(value: unknown, fallback: strin
 assert(buildScript.includes('const parts = configText(version, \'0.0.0\').split'), 'build script should tolerate non-string app versions');
 assert(packageScript.includes('function sanitizeFileName(value: unknown): string'), 'package script should tolerate non-string file name parts');
 assert(smokeReleaseScript.includes('function sanitizeFileName(value: unknown): string'), 'release smoke should mirror package filename sanitization');
+assert(setupScript.includes('function quotePowerShell(value: string): string'), 'setup script should quote PowerShell paths safely');
+assert(setupScript.includes('Expand-Archive -LiteralPath'), 'setup script should extract archives with literal paths');
 
 for (const entry of readdirSync(DIST)) {
     assert(!['edge-profile', 'Crashpad', 'EBWebView'].includes(entry), `dist contains runtime/cache directory ${entry}`);
