@@ -302,6 +302,7 @@ let autosaveTimer: number | undefined;
 let objectSearchText = '';
 let objectFilter = 'all';
 let runtimeIdCounter = 0;
+const reservedWindowsDefaultNamePattern = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 const DEFAULT_CANVAS_VIEWBOX: CanvasViewBox = { x: 0, y: 0, width: 1000, height: 640 };
 let canvasViewBox: CanvasViewBox = { ...DEFAULT_CANVAS_VIEWBOX };
 
@@ -2528,13 +2529,14 @@ async function saveText(defaultName: string, content: string) {
 }
 
 function sanitizeDefaultName(value: unknown): string {
-    return String(value ?? '')
+    const cleaned = String(value ?? '')
         .split(/[\\/]+/)
         .pop()!
         .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')
         .replace(/\s+/g, ' ')
         .trim()
         .replace(/[. ]+$/g, '') || 'urbanplan-output.txt';
+    return reservedWindowsDefaultNamePattern.test(cleaned) ? `${cleaned}-file` : cleaned;
 }
 
 async function loadUpf() {
