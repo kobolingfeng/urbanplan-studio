@@ -45,6 +45,7 @@ export function splitCommandLine(command: string): string[] {
     if (hasToken) {
         parts.push(current);
     }
+    if (quote) return [];
     return parts;
 }
 

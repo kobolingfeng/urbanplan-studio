@@ -14,6 +14,7 @@ const split = splitCommandLine('bunx vite --mode "local dev" --flag');
 assert(JSON.stringify(split) === JSON.stringify(['bunx', 'vite', '--mode', 'local dev', '--flag']), 'splitCommandLine should keep quoted args together');
 const splitEscaped = splitCommandLine(String.raw`cmd "a \"quoted\" arg" "C:\Program Files\App\app.exe" empty ""`);
 assert(JSON.stringify(splitEscaped) === JSON.stringify(['cmd', 'a "quoted" arg', 'C:\\Program Files\\App\\app.exe', 'empty', '']), 'splitCommandLine should preserve escaped quotes, paths, and empty args');
+assert(splitCommandLine('cmd "unterminated arg').length === 0, 'splitCommandLine should reject unterminated quotes');
 
 const viteArgs = withResolvedDevServerPort('vite', ['--mode', 'development'], 4173);
 assert(viteArgs.includes('--host') && viteArgs.includes('127.0.0.1'), 'vite args should include localhost host');
