@@ -377,6 +377,48 @@ for (const path of ['objects[1].redLineWidthM', 'objects[1].lanes', 'objects[2].
     assert(rangeErrors.some(issue => issue.path === path), `UPF validation should reject ${path}`);
 }
 
+const numericStringIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'numeric_string', name: 'Numeric String', city: '深圳市', district: '罗湖区', planningType: 'Numeric smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Numeric string fixture' }],
+    objects: [{
+        id: 'parcel_numeric_string',
+        type: 'parcel',
+        name: 'Numeric String Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: '3', buildingCoverageMax: '0.35', greenRatioMin: '0.3', heightMaxM: '80' },
+        scenarioValues: {
+            base: { far: '2', buildingCoverage: '0.3', greenRatio: '0.31', residentialGfaSqm: '42,000', publicServiceGfaSqm: '1,200', updateMode: '综合整治' },
+        },
+    }, {
+        id: 'road_numeric_string',
+        type: 'road',
+        name: 'Numeric String Road',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 90 }, { x: 80, y: 90 }],
+        level: '支路',
+        redLineWidthM: '18',
+        lanes: '2',
+    }, {
+        id: 'facility_numeric_string',
+        type: 'facility',
+        name: 'Numeric String Facility',
+        evidence: ['fixture'],
+        point: { x: 40, y: 40 },
+        kind: '社区养老',
+        capacity: '80',
+        serviceRadiusM: '500',
+        planned: true,
+    }],
+});
+assert(!numericStringIssues.some(issue => issue.severity === 'error' && issue.message.includes('必须是数字')), 'UPF validation should not error on compatible numeric strings');
+assert(numericStringIssues.some(issue => issue.severity === 'info' && issue.path === 'objects[0].scenarioValues.base.residentialGfaSqm'), 'UPF validation should report compatible numeric strings as info');
+
 const undefinedReferenceIssues = validateUpfDocument({
     format: 'UPF',
     formatVersion: '0.1.0',

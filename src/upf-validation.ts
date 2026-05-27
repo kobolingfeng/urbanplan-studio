@@ -293,12 +293,17 @@ function validateNumberInRange(
     add: (severity: UpfValidationSeverity, path: string, message: string) => void,
 ) {
     const value = record[field];
-    if (!isFiniteNumber(value)) {
+    const numeric = numberLike(value);
+    if (numeric === undefined) {
         add('error', `${path}.${field}`, `${label} 必须是数字。`);
         return;
     }
-    if (range && (value < range.min || value > range.max)) {
+    if (range && (numeric < range.min || numeric > range.max)) {
         add('error', `${path}.${field}`, `${label} 超出允许范围 ${formatRange(range)}。`);
+        return;
+    }
+    if (typeof value === 'string') {
+        add('info', `${path}.${field}`, `${label} 为字符串数字，兼容层可解析；建议导出为 JSON number。`);
     }
 }
 
@@ -353,11 +358,14 @@ function numberLike(value: unknown): number | undefined {
     if (isFiniteNumber(value)) return value;
     if (typeof value === 'string' && value.trim()) {
         const text = value.trim();
-        const parsed = Number(text.endsWith('%') ? text.slice(0, -1).trim() : text);
+        const numericText = text.endsWith('%') ? text.slice(0, -1).trim() : text;
+        const parsed = Number(thousandsNumberPattern.test(numericText) ? numericText.replace(/,/g, '') : numericText);
         if (Number.isFinite(parsed)) return parsed;
     }
     return undefined;
 }
+
+const thousandsNumberPattern = /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/;
 
 function isPoint(value: unknown): boolean {
     const point = asRecord(value);
