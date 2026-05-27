@@ -727,7 +727,7 @@ function snapshotImportedProject(input: UrbanPlanProject): ImportProjectSnapshot
                 hasGeometry: hasImportGeometry(raw),
                 hasControls: type !== 'parcel' || Boolean((raw as Partial<Parcel>).controls),
                 scenarioIds: type === 'parcel'
-                    ? Object.keys((raw as Partial<Parcel>).scenarioValues ?? {})
+                    ? importScenarioValueKeys((raw as Partial<Parcel>).scenarioValues)
                     : [],
             };
         }),
@@ -856,6 +856,10 @@ function importEvidenceItems(object: Partial<PlanObject>): unknown[] {
     const evidence = (object as { evidence?: unknown }).evidence;
     if (Array.isArray(evidence)) return evidence;
     return evidence ? [evidence] : [];
+}
+
+function importScenarioValueKeys(value: unknown): string[] {
+    return value && typeof value === 'object' && !Array.isArray(value) ? Object.keys(value) : [];
 }
 
 function hasImportGeometry(object: Partial<PlanObject>): boolean {
