@@ -122,14 +122,20 @@ export function parseUpfText<TProject extends ProjectLike>(
     fallbackProject: TProject,
 ): UpfParseResult<TProject> {
     const source = text.replace(/^\uFEFF/, '');
-    let data: AnyRecord;
+    let parsed: unknown;
     try {
-        data = JSON.parse(source) as AnyRecord;
+        parsed = JSON.parse(source);
     } catch {
         const csv = parseParcelIndicatorCsv(source, fallbackProject);
         if (csv) return csv;
         throw new Error('不是可识别的 UPF 文件');
     }
+    if (!isRecord(parsed)) {
+        const csv = parseParcelIndicatorCsv(source, fallbackProject);
+        if (csv) return csv;
+        throw new Error('不是可识别的 UPF 文件');
+    }
+    const data = parsed;
     const importedScenarios = Array.isArray(data.scenarios) ? data.scenarios : [];
     const fallbackScenarios = Array.isArray(fallbackProject.scenarios) ? fallbackProject.scenarios : [];
     const activeScenarioId = firstIdentifier(

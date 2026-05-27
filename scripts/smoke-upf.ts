@@ -60,6 +60,14 @@ const importedDefaultScenario = parseUpfText(JSON.stringify(importedDefaultScena
 assert(importedDefaultScenario.activeScenarioId === 'scenario_imported', 'UPF parser should use imported scenarios before fallback scenarios');
 const minimalWithBom = parseUpfText(`\uFEFF${minimalText}`, fallback);
 assert(minimalWithBom.project.project?.id === 'minimal_demo', 'UPF parser should accept JSON files with UTF-8 BOM');
+for (const invalidJsonRoot of ['null', '[]', '42']) {
+    try {
+        parseUpfText(invalidJsonRoot, fallback);
+        fail(`UPF parser should reject ${invalidJsonRoot} roots`);
+    } catch (error) {
+        assert(error instanceof Error && error.message.includes('不是可识别'), 'UPF parser should reject non-object JSON roots cleanly');
+    }
+}
 const minimalObjects = minimal.project.objects as Array<{ evidence?: unknown[] }> | undefined;
 assert(typeof minimalObjects?.[0]?.evidence?.[0] === 'object', 'minimal evidence should demonstrate structured EvidenceSource');
 const stringConfidenceRaw = JSON.parse(minimalText);
