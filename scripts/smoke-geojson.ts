@@ -120,16 +120,16 @@ const degenerateExport = buildGeoJsonFeatureCollection({
         name: 'NaN Facility Export',
         point: { x: Number.NaN, y: 0 },
     }, {
-        id: 'road_valid_after_filter',
+        id: 'road_invalid_coordinate_export',
         type: 'road',
-        name: 'Road Valid After Filter',
+        name: 'Road Invalid Coordinate Export',
         points: [{ x: Number.NaN, y: 0 }, { x: 0, y: 5 }, { x: 10, y: 5 }],
     }],
 }, 'base', UNIT_SYSTEM);
 assert(!degenerateExport.features.some(feature => feature.id === 'parcel_line_export'), 'GeoJSON export should skip zero-area polygons');
 assert(!degenerateExport.features.some(feature => feature.id === 'road_point_export'), 'GeoJSON export should skip single-point lines');
 assert(!degenerateExport.features.some(feature => feature.id === 'facility_nan_export'), 'GeoJSON export should skip non-finite points');
-assert(degenerateExport.features.some(feature => feature.id === 'road_valid_after_filter'), 'GeoJSON export should keep lines after dropping invalid coordinates');
+assert(!degenerateExport.features.some(feature => feature.id === 'road_invalid_coordinate_export'), 'GeoJSON export should skip lines with invalid coordinates');
 
 const text = buildGeoJsonText(project, 'base', UNIT_SYSTEM);
 assert(text.includes('"FeatureCollection"') && text.includes('"parcel_a"'), 'GeoJSON text export mismatch');
@@ -234,6 +234,18 @@ const typeAliasGeoJson = {
 const parsedTypeAliases = parseGeoJsonProject(typeAliasGeoJson, fallback);
 assert(parsedTypeAliases?.project.objects.find(object => object.id === 'alias_open_space')?.type === 'openSpace', 'GeoJSON import should normalize open space type aliases');
 assert(parsedTypeAliases?.project.objects.find(object => object.id === 'alias_entrance')?.type === 'entrance', 'GeoJSON import should normalize entrance type aliases');
+
+const invalidCoordinateGeoJson = {
+    type: 'FeatureCollection',
+    features: [{
+        type: 'Feature',
+        id: 'road_invalid_coordinate',
+        properties: { upfType: 'road' },
+        geometry: { type: 'LineString', coordinates: [[0, 0], ['0x10', 0], [10, 0]] },
+    }],
+    upf: { activeScenarioId: 'base', formatVersion: '0.1.0', crs: 'DemoCanvasMetric' },
+};
+assert(parseGeoJsonProject(invalidCoordinateGeoJson, fallback) === undefined, 'GeoJSON import should reject geometries with invalid coordinates');
 
 const multiGeometryGeoJson = {
     type: 'FeatureCollection',

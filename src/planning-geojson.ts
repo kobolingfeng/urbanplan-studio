@@ -259,17 +259,19 @@ function closedCoordinates(points: Point[]): number[][] {
 }
 
 function usablePolygonPoints(points: Point[] | undefined): Point[] | undefined {
-    const clean = dropClosingPoint((points ?? []).filter(isUsablePoint));
+    const source = points ?? [];
+    if (!source.every(isUsablePoint)) return undefined;
+    const clean = dropClosingPoint(source);
     if (clean.length < 3 || rawPolygonArea(clean) < 0.0001) return undefined;
     return clean;
 }
 
 function usableLinePoints(points: Point[] | undefined): Point[] | undefined {
-    const clean = (points ?? []).filter(isUsablePoint);
-    if (clean.length < 2) return undefined;
-    const first = clean[0];
-    if (clean.every(point => point.x === first.x && point.y === first.y)) return undefined;
-    return clean;
+    const source = points ?? [];
+    if (source.length < 2 || !source.every(isUsablePoint)) return undefined;
+    const first = source[0];
+    if (source.every(point => point.x === first.x && point.y === first.y)) return undefined;
+    return source;
 }
 
 function isUsablePoint(point: unknown): point is Point {
@@ -446,10 +448,13 @@ function pointGeometry(geometry: GeoJsonGeometryLike): Point | undefined {
 
 function pointsFromCoordinates(coordinates: unknown): Point[] {
     if (!Array.isArray(coordinates)) return [];
-    return coordinates.flatMap((coordinate) => {
+    const points: Point[] = [];
+    for (const coordinate of coordinates) {
         const point = pointFromCoordinate(coordinate);
-        return point ? [point] : [];
-    });
+        if (!point) return [];
+        points.push(point);
+    }
+    return points;
 }
 
 function pointFromCoordinate(coordinate: unknown): Point | undefined {
