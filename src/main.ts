@@ -785,7 +785,11 @@ function auditNormalizationChanges(
                 message: '兼容层已补齐地块控制指标默认值。',
             });
         }
-        const missingScenarioIds = before.scenarioIds.filter(id => !item.scenarioIds.includes(id));
+        const itemScenarioIds = new Set(item.scenarioIds.map(importIdentifierText).filter((id): id is string => Boolean(id)));
+        const missingScenarioIds = before.scenarioIds.filter((id) => {
+            const scenarioId = importIdentifierText(id);
+            return scenarioId && !itemScenarioIds.has(scenarioId);
+        });
         if (item.type === 'parcel' && missingScenarioIds.length) {
             findings.push({
                 severity: 'info',
