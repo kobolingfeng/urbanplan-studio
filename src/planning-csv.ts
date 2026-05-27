@@ -104,7 +104,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
     text: string,
     fallbackProject: TProject,
 ): CsvParseResult<TProject> | undefined {
-    const rows = parseCsvTable(text);
+    const rows = parseCsvTable(typeof text === 'string' ? text : String(text ?? ''));
     if (!rows.length) return undefined;
     const headers = new Set(Object.keys(rows[0] ?? {}));
     if (!hasAny(headers, ['parcel_id', 'object_id', 'id']) || !hasAny(headers, ['scenario_id', 'scenario'])) return undefined;

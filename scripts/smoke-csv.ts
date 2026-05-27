@@ -111,6 +111,7 @@ const parsedMalformedFallback = parseParcelIndicatorCsv([
     'parcel_a,update,2.0',
 ].join('\n'), { scenarios: 'bad', objects: 'bad' } as unknown as typeof fallback);
 assert(parsedMalformedFallback?.project.objects.length === 0 && parsedMalformedFallback.importSummary.skippedRows === 1, 'CSV import should tolerate malformed fallback collections');
+assert(parseParcelIndicatorCsv(null as unknown as string, fallback) === undefined, 'CSV import should tolerate malformed text inputs');
 
 const multilineCsv = [
     'parcel_id,scenario_id,far,notes',

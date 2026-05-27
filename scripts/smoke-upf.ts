@@ -74,6 +74,12 @@ for (const invalidJsonRoot of ['null', '[]', '42']) {
         assert(error instanceof Error && error.message.includes('不是可识别'), 'UPF parser should reject non-object JSON roots cleanly');
     }
 }
+try {
+    parseUpfText(null as unknown as string, fallback);
+    fail('UPF parser should reject malformed text inputs');
+} catch (error) {
+    assert(error instanceof Error && error.message.includes('不是可识别'), 'UPF parser should reject malformed text inputs cleanly');
+}
 const minimalObjects = minimal.project.objects as Array<{ evidence?: unknown[] }> | undefined;
 assert(typeof minimalObjects?.[0]?.evidence?.[0] === 'object', 'minimal evidence should demonstrate structured EvidenceSource');
 const stringConfidenceRaw = JSON.parse(minimalText);

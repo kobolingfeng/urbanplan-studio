@@ -121,7 +121,7 @@ export function parseUpfText<TProject extends ProjectLike>(
     text: string,
     fallbackProject: TProject,
 ): UpfParseResult<TProject> {
-    const source = text.replace(/^\uFEFF/, '');
+    const source = (typeof text === 'string' ? text : String(text ?? '')).replace(/^\uFEFF/, '');
     let parsed: unknown;
     try {
         parsed = JSON.parse(source);
