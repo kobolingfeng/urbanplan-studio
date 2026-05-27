@@ -50,20 +50,27 @@ let buildCommand: string | undefined;
 let buildOutDir: string | undefined;
 let appName = 'UrbanPlan Studio';
 let appVersion = '0.0.0';
+
+function configText(value: unknown, fallback: string): string {
+    if (typeof value === 'string') return value.trim() || fallback;
+    if (value === undefined || value === null) return fallback;
+    return String(value).trim() || fallback;
+}
+
 try {
     const cfg = await Bun.file(join(ROOT, 'app.config.json')).json();
     buildCommand = cfg?.build?.command;
     buildOutDir  = cfg?.build?.outDir;
-    appName = cfg?.app?.name ?? cfg?.window?.title ?? appName;
-    appVersion = cfg?.app?.version ?? appVersion;
+    appName = configText(cfg?.app?.name ?? cfg?.window?.title, appName);
+    appVersion = configText(cfg?.app?.version, appVersion);
 } catch {}
 
-function rcString(value: string): string {
-    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+function rcString(value: unknown): string {
+    return configText(value, '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
-function versionTuple(version: string): string {
-    const parts = version.split(/[^\d]+/).filter(Boolean).map(value => Number.parseInt(value, 10));
+function versionTuple(version: unknown): string {
+    const parts = configText(version, '0.0.0').split(/[^\d]+/).filter(Boolean).map(value => Number.parseInt(value, 10));
     while (parts.length < 4) parts.push(0);
     return parts.slice(0, 4).map(value => Number.isFinite(value) ? value : 0).join(',');
 }

@@ -26,6 +26,9 @@ const js = fileText(join(DIST, 'main.js'));
 const config = JSON.parse(fileText(join(DIST, 'app.config.json')));
 const sourceHtml = fileText(join(ROOT, 'src', 'index.html'));
 const sourceMain = fileText(join(ROOT, 'src', 'main.ts'));
+const buildScript = fileText(join(ROOT, 'scripts', 'build.ts'));
+const packageScript = fileText(join(ROOT, 'scripts', 'package.ts'));
+const smokeReleaseScript = fileText(join(ROOT, 'scripts', 'smoke-release.ts'));
 
 assert(html.includes('UrbanPlan Studio'), 'index.html misses app title');
 for (const id of ['btn-run', 'btn-evaluation', 'btn-sensitivity', 'btn-compare', 'btn-csv', 'btn-quality', 'btn-rules', 'btn-validation', 'btn-report', 'btn-upf', 'btn-geojson', 'object-search', 'object-filter', 'optimize-preset', 'evaluation-list', 'plan-canvas']) {
@@ -45,6 +48,10 @@ assert(sourceMain.includes('function importScenarioValueKeys'), 'import snapshot
 assert(sourceMain.includes('function scenarioValueMap'), 'main scenario helpers should ignore malformed scenario value maps');
 assert(sourceMain.includes('scenarioValueFor(parcel.scenarioValues, scenarioId)'), 'import audit should normalize scenario value keys before reporting gaps');
 assert(sourceMain.includes('itemScenarioIds.has(scenarioId)'), 'normalization audit should compare normalized scenario ids');
+assert(buildScript.includes('function configText(value: unknown, fallback: string): string'), 'build script should normalize malformed config text');
+assert(buildScript.includes('const parts = configText(version, \'0.0.0\').split'), 'build script should tolerate non-string app versions');
+assert(packageScript.includes('function sanitizeFileName(value: unknown): string'), 'package script should tolerate non-string file name parts');
+assert(smokeReleaseScript.includes('function sanitizeFileName(value: unknown): string'), 'release smoke should mirror package filename sanitization');
 
 for (const entry of readdirSync(DIST)) {
     assert(!['edge-profile', 'Crashpad', 'EBWebView'].includes(entry), `dist contains runtime/cache directory ${entry}`);

@@ -10,8 +10,14 @@ const out  = join(root, 'release');
 const singleExe = process.argv.includes('--single-exe');
 const buildCommand = singleExe ? 'bun run build:single' : 'bun run build';
 
-function sanitizeFileName(value: string): string {
-    return value
+function configText(value: unknown, fallback: string): string {
+    if (typeof value === 'string') return value.trim() || fallback;
+    if (value === undefined || value === null) return fallback;
+    return String(value).trim() || fallback;
+}
+
+function sanitizeFileName(value: unknown): string {
+    return configText(value, 'app')
         .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')
         .replace(/\s+/g, ' ')
         .trim()
@@ -44,8 +50,8 @@ let name = 'app';
 let version = '0.0.0';
 try {
     const cfg = JSON.parse(readFileSync(join(root, 'app.config.json'), 'utf8'));
-    name = cfg.app?.name || cfg.window?.title || name;
-    version = cfg.app?.version || version;
+    name = configText(cfg.app?.name || cfg.window?.title, name);
+    version = configText(cfg.app?.version, version);
 } catch {}
 
 if (existsSync(out)) {

@@ -6,8 +6,14 @@ import { join, resolve } from 'path';
 const ROOT = resolve(import.meta.dir, '..');
 const RELEASE = join(ROOT, 'release');
 
-function sanitizeFileName(value: string): string {
-    return value
+function configText(value: unknown, fallback: string): string {
+    if (typeof value === 'string') return value.trim() || fallback;
+    if (value === undefined || value === null) return fallback;
+    return String(value).trim() || fallback;
+}
+
+function sanitizeFileName(value: unknown): string {
+    return configText(value, 'app')
         .replace(/[<>:"/\\|?*\x00-\x1f]/g, '-')
         .replace(/\s+/g, ' ')
         .trim()
@@ -25,8 +31,8 @@ function assert(condition: unknown, message: string) {
 
 assert(existsSync(RELEASE), 'release directory does not exist');
 const config = JSON.parse(readFileSync(join(ROOT, 'app.config.json'), 'utf8'));
-const appName = config.app?.name || config.window?.title || 'app';
-const appVersion = config.app?.version || '0.0.0';
+const appName = configText(config.app?.name || config.window?.title, 'app');
+const appVersion = configText(config.app?.version, '0.0.0');
 const expectedZipName = `${sanitizeFileName(appName)}-${sanitizeFileName(appVersion)}-portable.zip`;
 const zips = readdirSync(RELEASE).filter(name => name.endsWith('.zip'));
 assert(zips.length === 1, `expected one zip, found ${zips.length}`);
