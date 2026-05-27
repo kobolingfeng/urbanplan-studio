@@ -70,11 +70,12 @@ export function normalizeEvidenceItem(value: unknown): EvidenceItem | undefined 
 }
 
 export function parseEvidenceText(text: string): EvidenceItem[] {
-    const jsonBlock = parseEvidenceJson(text.trim());
+    const source = String(text ?? '');
+    const jsonBlock = parseEvidenceJson(source.trim());
     if (jsonBlock) return jsonBlock;
 
     const items: EvidenceItem[] = [];
-    for (const rawLine of text.split(/\r\n?|\n/)) {
+    for (const rawLine of source.split(/\r\n?|\n/)) {
         const line = rawLine.trim();
         if (!line) continue;
         if (line.startsWith('{') || line.startsWith('[')) {
@@ -110,7 +111,8 @@ function parseEvidenceJson(text: string): EvidenceItem[] | undefined {
 }
 
 export function formatEvidenceForEditing(items: EvidenceItem[] = []): string {
-    return items.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join('\n');
+    const safeItems = Array.isArray(items) ? items : [];
+    return safeItems.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join('\n');
 }
 
 export function evidenceDisplayText(item: EvidenceItem): string {
@@ -125,7 +127,8 @@ export function evidenceDisplayText(item: EvidenceItem): string {
 }
 
 export function evidenceSearchText(items: EvidenceItem[] = []): string {
-    return items.map(item => {
+    const safeItems = Array.isArray(items) ? items : [];
+    return safeItems.map(item => {
         if (typeof item === 'string') return item;
         return [
             item.title,

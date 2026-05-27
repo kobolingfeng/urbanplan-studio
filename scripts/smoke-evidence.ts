@@ -4,6 +4,7 @@ import {
     evidenceDisplayText,
     evidenceKind,
     evidenceSearchText,
+    formatEvidenceForEditing,
     normalizeEvidenceItem,
     parseEvidenceText,
     type EvidenceSource,
@@ -81,5 +82,8 @@ assert(emptyJson.length === 0, 'empty JSON evidence arrays should stay empty');
 
 const legacyCarriageReturns = parseEvidenceText('CR 证据一\rCR 证据二');
 assert(legacyCarriageReturns.length === 2, 'evidence parser should split legacy carriage-return lines');
+assert(parseEvidenceText(null as unknown as string).length === 0, 'evidence parser should tolerate non-string text');
+assert(formatEvidenceForEditing('bad' as unknown as []).length === 0, 'evidence formatter should tolerate malformed item collections');
+assert(evidenceSearchText('bad' as unknown as []).length === 0, 'evidence search should tolerate malformed item collections');
 
 console.log('evidence smoke passed');
