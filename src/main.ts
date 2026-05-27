@@ -567,11 +567,13 @@ function getParcelScenario(parcel: Parcel): ParcelScenarioValue {
 
 function normalizeProject(input: UrbanPlanProject): UrbanPlanProject {
     const fallback = createDemoProject();
+    const inputProject = importRecord(input.project);
+    const inputRuleset = importRecord(input.ruleset);
     const normalized: UrbanPlanProject = {
         format: input.format === 'UPF' ? input.format : 'UPF',
         formatVersion: input.formatVersion === '0.1.0' ? input.formatVersion : '0.1.0',
-        project: { ...fallback.project, ...(input.project ?? {}) },
-        ruleset: { ...fallback.ruleset, ...(input.ruleset ?? {}) },
+        project: { ...fallback.project, ...inputProject },
+        ruleset: { ...fallback.ruleset, ...inputRuleset },
         scenarios: Array.isArray(input.scenarios) && input.scenarios.length
             ? input.scenarios.flatMap(normalizeImportedScenario)
             : fallback.scenarios,
@@ -861,6 +863,10 @@ function importEvidenceItems(object: Partial<PlanObject>): unknown[] {
     const evidence = (object as { evidence?: unknown }).evidence;
     if (Array.isArray(evidence)) return evidence;
     return evidence ? [evidence] : [];
+}
+
+function importRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
 function importScenarioValueKeys(value: unknown): string[] {
