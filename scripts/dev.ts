@@ -17,8 +17,8 @@ let waitForPort = true;
 try {
     const cfg = await Bun.file(join(ROOT, 'app.config.json')).json();
     PORT       = resolveDevPort(process.env.PORT ?? cfg?.dev?.port, 3000);
-    devCommand = cfg?.dev?.command;
-    waitForPort = cfg?.dev?.waitForPort ?? true;
+    devCommand = typeof cfg?.dev?.command === 'string' && cfg.dev.command.trim() ? cfg.dev.command.trim() : undefined;
+    waitForPort = typeof cfg?.dev?.waitForPort === 'boolean' ? cfg.dev.waitForPort : true;
 } catch {}
 
 async function isPortFree(port: number) {

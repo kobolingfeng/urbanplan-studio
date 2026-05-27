@@ -60,6 +60,8 @@ assert(buildScript.includes('Math.min(65535, Math.floor(value))'), 'build script
 assert(buildScript.includes('currentOwner !== buildLockOwner'), 'build lock cleanup should only release the current process lock');
 assert(buildScript.includes('releaseBuildLock(true)'), 'build lock cleanup should force-release stale locks only after timeout');
 assert(devScript.includes('Math.min(65535, preferred + 49)'), 'dev server port probing should not exceed the valid TCP port range');
+assert(devScript.includes("typeof cfg?.dev?.command === 'string'"), 'dev script should ignore malformed custom dev commands');
+assert(devScript.includes("typeof cfg?.dev?.waitForPort === 'boolean'"), 'dev script should ignore malformed waitForPort config');
 assert(packageScript.includes('function sanitizeFileName(value: unknown): string'), 'package script should tolerate non-string file name parts');
 assert(packageScript.includes('reservedWindowsNamePattern'), 'package script should avoid Windows reserved device names');
 assert(smokeReleaseScript.includes('function sanitizeFileName(value: unknown): string'), 'release smoke should mirror package filename sanitization');
