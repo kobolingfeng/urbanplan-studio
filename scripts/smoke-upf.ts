@@ -258,6 +258,23 @@ const malformedNumericComparison = buildScenarioComparisonReport({
 assert(!malformedNumericComparison.includes('NaN'), 'scenario comparison should not emit NaN for malformed numeric values');
 assert(malformedNumericComparison.includes('1,200'), 'scenario comparison should still accept strict thousands-formatted numeric strings');
 
+const malformedScenarioValuesProject = {
+    project: { name: 'Malformed Scenario Values' },
+    scenarios: [{ id: 0, name: 'Zero Scenario' }],
+    objects: [{
+        id: 'parcel_bad_values',
+        type: 'parcel',
+        name: 'Bad Values Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        scenarioValues: 'bad',
+    }],
+} as unknown as Parameters<typeof buildScenarioComparisonReport>[0];
+const malformedScenarioValuesComparison = buildScenarioComparisonReport(malformedScenarioValuesProject, '0');
+assert(malformedScenarioValuesComparison.includes('| Zero Scenario | 0/1 | 1 |'), 'scenario comparison should ignore malformed scenario value maps');
+const malformedScenarioValuesQuality = calculateDataQuality(malformedScenarioValuesProject, [], []);
+assert(malformedScenarioValuesQuality.parcelScenarioGaps.length === 1, 'data quality should report malformed scenario value maps as gaps');
+
 const trimmedScenarioProject = {
     project: { name: 'Trimmed Scenario Analytics' },
     ruleset: { basis: ['fixture basis'] },

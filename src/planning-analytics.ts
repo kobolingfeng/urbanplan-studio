@@ -448,8 +448,8 @@ function firstIdentifier(...values: unknown[]): string | undefined {
 
 function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
     const target = identifierText(scenarioId);
-    if (!values || !target) return undefined;
-    if (values[target]) return values[target];
+    if (!values || typeof values !== 'object' || Array.isArray(values) || !target) return undefined;
+    if (Object.prototype.hasOwnProperty.call(values, target)) return values[target];
     return Object.entries(values).find(([key]) => identifierText(key) === target)?.[1];
 }
 
