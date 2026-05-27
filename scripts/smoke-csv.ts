@@ -43,6 +43,9 @@ assert(wide.includes('"方案 A, 引号""测试"'), 'wide CSV should escape comm
 assert(wide.includes(',42201,880,'), 'wide CSV should round floor area values');
 const crCsv = buildScenarioDecisionCsv([{ ...rows[0], scenario: { id: 'scenario_cr', name: 'Line\rBreak' } }]);
 assert(crCsv.includes('"Line\rBreak"'), 'wide CSV should quote carriage returns');
+const wideWithMalformedRows = buildScenarioDecisionCsv([rows[0], { scenario: { id: 'broken' } }] as unknown as ScenarioDecisionCsvRow[]);
+assert(wideWithMalformedRows.includes('scenario_a'), 'wide CSV should keep valid rows when malformed rows are present');
+assert(!wideWithMalformedRows.includes('broken'), 'wide CSV should skip malformed row entries');
 
 const long = buildScenarioDecisionLongCsv(rows);
 assert(long.startsWith('scenario_id,scenario_name,metric_group,metric_id,metric_name,value,unit'), 'long CSV header mismatch');
@@ -52,10 +55,13 @@ assert(long.includes('dimension_weight,publicService_weight,公共服务权重,2
 assert(buildScenarioDecisionCsv('bad' as unknown as ScenarioDecisionCsvRow[]).trim() === 'scenario_id,scenario_name,score,band,confidence,residents,residential_gfa_sqm,public_service_gfa_sqm,rule_errors,rule_warnings', 'wide CSV should tolerate malformed row collections');
 const longWithMalformedDimensions = buildScenarioDecisionLongCsv([{
     ...rows[0],
-    evaluation: { ...rows[0].evaluation, dimensions: 'bad' },
+    evaluation: { ...rows[0].evaluation, dimensions: [rows[0].evaluation.dimensions[0], 'bad'] },
 } as unknown as ScenarioDecisionCsvRow]);
 assert(longWithMalformedDimensions.includes('summary,score,综合评分,86,score'), 'long CSV should keep summary metrics when dimensions are malformed');
-assert(!longWithMalformedDimensions.includes('dimension_score'), 'long CSV should skip malformed dimension collections');
+assert(longWithMalformedDimensions.includes('dimension_score,compliance_score'), 'long CSV should keep valid dimensions when malformed dimensions are present');
+assert(!longWithMalformedDimensions.includes('undefined_score'), 'long CSV should skip malformed dimension entries');
+const longWithMalformedRows = buildScenarioDecisionLongCsv([rows[0], { scenario: { id: 'broken' } }] as unknown as ScenarioDecisionCsvRow[]);
+assert(longWithMalformedRows.includes('scenario_a') && !longWithMalformedRows.includes('broken'), 'long CSV should skip malformed row entries');
 
 const fallback = {
     format: 'UPF',

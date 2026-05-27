@@ -72,7 +72,7 @@ export type CsvImportSummary = {
 };
 
 export function buildScenarioDecisionCsv(rows: ScenarioDecisionCsvRow[]): string {
-    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeRows = scenarioDecisionRows(rows);
     const header = [
         'scenario_id',
         'scenario_name',
@@ -189,7 +189,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
 }
 
 export function buildScenarioDecisionLongCsv(rows: ScenarioDecisionCsvRow[]): string {
-    const safeRows = Array.isArray(rows) ? rows : [];
+    const safeRows = scenarioDecisionRows(rows);
     const header = [
         'scenario_id',
         'scenario_name',
@@ -223,8 +223,38 @@ export function buildScenarioDecisionLongCsv(rows: ScenarioDecisionCsvRow[]): st
     return [header.join(','), ...body].join('\n');
 }
 
+function scenarioDecisionRows(rows: unknown): ScenarioDecisionCsvRow[] {
+    return Array.isArray(rows) ? rows.filter(isScenarioDecisionRow) : [];
+}
+
+function isScenarioDecisionRow(value: unknown): value is ScenarioDecisionCsvRow {
+    const row = csvRecord(value);
+    const scenario = csvRecord(row.scenario);
+    const evaluation = csvRecord(row.evaluation);
+    return Boolean(csvIdentifierText(scenario.id))
+        && typeof scenario.name === 'string'
+        && Number.isFinite(evaluation.score)
+        && typeof evaluation.band === 'string'
+        && Number.isFinite(evaluation.confidence)
+        && Number.isFinite(row.residents)
+        && Number.isFinite(row.residentialGfa)
+        && Number.isFinite(row.publicServiceGfa)
+        && Number.isFinite(row.errors)
+        && Number.isFinite(row.warnings);
+}
+
 function rowDimensions(row: ScenarioDecisionCsvRow) {
-    return Array.isArray(row.evaluation.dimensions) ? row.evaluation.dimensions : [];
+    return Array.isArray(row.evaluation.dimensions)
+        ? row.evaluation.dimensions.filter(isScenarioDimension)
+        : [];
+}
+
+function isScenarioDimension(value: unknown): value is ScenarioDecisionCsvRow['evaluation']['dimensions'][number] {
+    const dimension = csvRecord(value);
+    return typeof dimension.id === 'string'
+        && typeof dimension.name === 'string'
+        && Number.isFinite(dimension.score)
+        && Number.isFinite(dimension.weight);
 }
 
 function metricRow(
@@ -250,6 +280,10 @@ function csvCell(value: string | number): string {
     const text = String(value);
     if (!/[",\r\n]/.test(text)) return text;
     return `"${text.replace(/"/g, '""')}"`;
+}
+
+function csvRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
 function parseCsvTable(text: string): Array<Record<string, string>> {
