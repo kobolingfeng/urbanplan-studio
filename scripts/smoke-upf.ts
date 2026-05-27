@@ -154,6 +154,11 @@ const malformedBasisQuality = calculateDataQuality({
     objects: [],
 } as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
 assert(malformedBasisQuality.basisCount === 0, 'data quality should ignore non-array ruleset basis values');
+const malformedObjectsQuality = calculateDataQuality({
+    project: { name: 'Malformed Objects Quality' },
+    objects: 'not an array',
+} as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
+assert(malformedObjectsQuality.objectCount === 0, 'data quality should ignore non-array object collections');
 const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
 assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
 assert(comparison.includes(String(Math.round(14000 / SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident))), 'scenario comparison should use shared resident assumptions');
@@ -188,6 +193,13 @@ const coercedGeometryComparison = buildScenarioComparisonReport({
     }],
 } as unknown as Parameters<typeof buildScenarioComparisonReport>[0], 'base');
 assert(coercedGeometryComparison.includes('| Base | 0/0 | 0 |'), 'scenario comparison should reject string-coerced polygon coordinates');
+
+const malformedObjectsComparison = buildScenarioComparisonReport({
+    project: { name: 'Malformed Objects Comparison' },
+    scenarios: [{ id: 'base', name: 'Base' }],
+    objects: 'not an array',
+} as unknown as Parameters<typeof buildScenarioComparisonReport>[0], 'base');
+assert(malformedObjectsComparison.includes('| Base | 0/0 | 0 |'), 'scenario comparison should ignore non-array object collections');
 
 const malformedNumericComparison = buildScenarioComparisonReport({
     project: { name: 'Malformed Numeric Comparison' },

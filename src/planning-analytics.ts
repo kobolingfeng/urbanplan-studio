@@ -183,7 +183,7 @@ export function buildScenarioComparisonReport(
     options: { headingLevel?: number } = {},
 ): string {
     const scenarios = project.scenarios ?? [];
-    const parcels = (project.objects ?? []).filter(isComparableParcel);
+    const parcels = projectObjects(project).filter(isComparableParcel);
     const titleLevel = Math.max(1, Math.min(6, options.headingLevel ?? 1));
     const rows = scenarios.map((scenario) => {
         const scenarioId = identifierText(scenario.id) ?? scenario.id;
@@ -325,7 +325,7 @@ export function calculateDataQuality(
     checks: CheckLike[],
     recommendations: RecommendationLike[] = [],
 ) {
-    const objects = project.objects ?? [];
+    const objects = projectObjects(project);
     const missingEvidence = objects.filter(object => !object.evidence?.length);
     const evidenceCoverage = objects.length ? (objects.length - missingEvidence.length) / objects.length * 100 : 100;
     const structuredEvidenceObjects = objects.filter(object => object.evidence?.some(isStructuredEvidence)).length;
@@ -401,6 +401,10 @@ function buildEntranceReferenceDiagnostics(objects: PlanningObjectLike[]): { iss
             return issues;
         });
     return { issues, objectKeys };
+}
+
+function projectObjects(project: ProjectLike): PlanningObjectLike[] {
+    return Array.isArray(project.objects) ? project.objects : [];
 }
 
 function countBasis(project: ProjectLike): number {
