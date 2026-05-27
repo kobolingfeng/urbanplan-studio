@@ -53,6 +53,8 @@ assert(sourceMain.includes('scenarioValueFor(parcel.scenarioValues, scenarioId)'
 assert(sourceMain.includes('itemScenarioIds.has(scenarioId)'), 'normalization audit should compare normalized scenario ids');
 assert(buildScript.includes('function configText(value: unknown, fallback: string): string'), 'build script should normalize malformed config text');
 assert(buildScript.includes('const parts = configText(version, \'0.0.0\').split'), 'build script should tolerate non-string app versions');
+assert(buildScript.includes('currentOwner !== buildLockOwner'), 'build lock cleanup should only release the current process lock');
+assert(buildScript.includes('releaseBuildLock(true)'), 'build lock cleanup should force-release stale locks only after timeout');
 assert(packageScript.includes('function sanitizeFileName(value: unknown): string'), 'package script should tolerate non-string file name parts');
 assert(smokeReleaseScript.includes('function sanitizeFileName(value: unknown): string'), 'release smoke should mirror package filename sanitization');
 assert(setupScript.includes('function quotePowerShell(value: string): string'), 'setup script should quote PowerShell paths safely');

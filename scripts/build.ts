@@ -15,8 +15,18 @@ const frontendOnly = process.argv.includes('--frontend-only');
 
 const buildLockRoot = join(ROOT, 'native', 'build');
 const buildLockDir = join(buildLockRoot, '.build.lock');
+let buildLockOwner = '';
 
-function releaseBuildLock() {
+function releaseBuildLock(force = false) {
+    const ownerPath = join(buildLockDir, 'owner.txt');
+    if (!force && buildLockOwner) {
+        try {
+            const currentOwner = readFileSync(ownerPath, 'utf-8');
+            if (currentOwner !== buildLockOwner) return;
+        } catch {
+            return;
+        }
+    }
     try { unlinkSync(join(buildLockDir, 'owner.txt')); } catch {}
     try { rmdirSync(buildLockDir); } catch {}
 }
@@ -27,12 +37,13 @@ async function acquireBuildLock(timeoutMs = 5 * 60 * 1000) {
     while (true) {
         try {
             mkdirSync(buildLockDir);
-            writeFileSync(join(buildLockDir, 'owner.txt'), `${process.pid}\n${new Date().toISOString()}\n`, 'utf-8');
+            buildLockOwner = `${process.pid}\n${new Date().toISOString()}\n`;
+            writeFileSync(join(buildLockDir, 'owner.txt'), buildLockOwner, 'utf-8');
             return;
         } catch {
             try {
                 const ageMs = Date.now() - statSync(buildLockDir).mtimeMs;
-                if (ageMs > timeoutMs) releaseBuildLock();
+                if (ageMs > timeoutMs) releaseBuildLock(true);
             } catch {}
             if (Date.now() - startedAt > timeoutMs) {
                 throw new Error('Timed out waiting for another build to finish.');
@@ -43,7 +54,7 @@ async function acquireBuildLock(timeoutMs = 5 * 60 * 1000) {
 }
 
 await acquireBuildLock();
-process.once('exit', releaseBuildLock);
+process.once('exit', () => releaseBuildLock());
 
 // ── Load config ───────────────────────────────────────
 let buildCommand: string | undefined;
