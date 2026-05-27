@@ -51,6 +51,13 @@ const manifestActiveScenario = parseUpfText(JSON.stringify({
     manifest: { ...minimalRaw.manifest, activeScenarioId: ' scenario_base ' },
 }), fallback);
 assert(manifestActiveScenario.activeScenarioId === 'scenario_base', 'UPF parser should fall back to manifest active scenario ids');
+const importedDefaultScenarioRaw = {
+    ...minimalRaw,
+    activeScenarioId: undefined,
+    scenarios: [{ id: 'scenario_imported', name: 'Imported' }],
+};
+const importedDefaultScenario = parseUpfText(JSON.stringify(importedDefaultScenarioRaw), fallback);
+assert(importedDefaultScenario.activeScenarioId === 'scenario_imported', 'UPF parser should use imported scenarios before fallback scenarios');
 const minimalWithBom = parseUpfText(`\uFEFF${minimalText}`, fallback);
 assert(minimalWithBom.project.project?.id === 'minimal_demo', 'UPF parser should accept JSON files with UTF-8 BOM');
 const minimalObjects = minimal.project.objects as Array<{ evidence?: unknown[] }> | undefined;

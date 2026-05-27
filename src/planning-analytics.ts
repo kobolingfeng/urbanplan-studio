@@ -128,10 +128,13 @@ export function parseUpfText<TProject extends ProjectLike>(
         if (csv) return csv;
         throw new Error('不是可识别的 UPF 文件');
     }
+    const importedScenarios = Array.isArray(data.scenarios) ? data.scenarios : [];
+    const fallbackScenarios = Array.isArray(fallbackProject.scenarios) ? fallbackProject.scenarios : [];
     const activeScenarioId = firstIdentifier(
         data.activeScenarioId,
         (data.manifest as AnyRecord | undefined)?.activeScenarioId,
-        fallbackProject.scenarios?.[0]?.id,
+        (importedScenarios[0] as AnyRecord | undefined)?.id,
+        fallbackScenarios[0]?.id,
     ) ?? '';
 
     if (data.format === 'UPF' && Array.isArray(data.objects) && Array.isArray(data.scenarios)) {
