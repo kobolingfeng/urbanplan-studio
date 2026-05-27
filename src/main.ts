@@ -683,7 +683,7 @@ function auditImportedProject(input: UrbanPlanProject): ImportFinding[] {
             if (!Array.isArray(parcel.points) || parcel.points.length < 3) findings.push({ severity: 'warning', objectId, message: '地块几何点不足，兼容层会补默认矩形。' });
             if (!parcel.controls) findings.push({ severity: 'warning', objectId, message: '地块缺少控制指标，兼容层会补默认 FAR/密度/绿地率。' });
             for (const scenarioId of scenarioIds) {
-                if (!parcel.scenarioValues?.[scenarioId]) findings.push({ severity: 'info', objectId, message: `地块缺少 ${scenarioId} 的方案值，兼容层会复制或补默认值。` });
+                if (!scenarioValueFor(parcel.scenarioValues, scenarioId)) findings.push({ severity: 'info', objectId, message: `地块缺少 ${scenarioId} 的方案值，兼容层会复制或补默认值。` });
             }
         } else if (object.type === 'road') {
             const road = object as Partial<Road>;

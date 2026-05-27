@@ -38,6 +38,7 @@ for (const token of ['panCanvas', 'zoomCanvas', 'resetCanvasView', 'shiftKey', '
     assert(sourceMain.includes(token), `main source misses canvas keyboard token ${token}`);
 }
 assert(!sourceMain.includes("object.type === 'road' || object.type === 'constraint'"), 'delete action should not hard-block roads or constraints');
+assert(sourceMain.includes('scenarioValueFor(parcel.scenarioValues, scenarioId)'), 'import audit should normalize scenario value keys before reporting gaps');
 
 for (const entry of readdirSync(DIST)) {
     assert(!['edge-profile', 'Crashpad', 'EBWebView'].includes(entry), `dist contains runtime/cache directory ${entry}`);
