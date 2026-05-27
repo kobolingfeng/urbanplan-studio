@@ -6,6 +6,7 @@ import {
     evidenceSearchText,
     formatEvidenceForEditing,
     normalizeEvidenceItem,
+    normalizeEvidenceList,
     parseEvidenceText,
     type EvidenceItem,
     type EvidenceSource,
@@ -83,6 +84,9 @@ assert(emptyJson.length === 0, 'empty JSON evidence arrays should stay empty');
 
 const legacyCarriageReturns = parseEvidenceText('CR 证据一\rCR 证据二');
 assert(legacyCarriageReturns.length === 2, 'evidence parser should split legacy carriage-return lines');
+assert(normalizeEvidenceList('标量旧证据', ['fallback'])[0] === '标量旧证据', 'evidence list normalizer should preserve scalar legacy evidence');
+assert((normalizeEvidenceList({ title: '标量结构化证据', type: 'survey' }, ['fallback'])[0] as EvidenceSource).title === '标量结构化证据', 'evidence list normalizer should preserve scalar structured evidence');
+assert(normalizeEvidenceList(null, ['fallback'])[0] === 'fallback', 'evidence list normalizer should keep fallback for empty inputs');
 assert(parseEvidenceText(null as unknown as string).length === 0, 'evidence parser should tolerate non-string text');
 assert(formatEvidenceForEditing('bad' as unknown as []).length === 0, 'evidence formatter should tolerate malformed item collections');
 assert(evidenceSearchText('bad' as unknown as []).length === 0, 'evidence search should tolerate malformed item collections');

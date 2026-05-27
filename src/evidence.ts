@@ -41,8 +41,12 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export function normalizeEvidenceList(value: unknown, fallback: EvidenceItem[] = []): EvidenceItem[] {
-    if (!Array.isArray(value)) return fallback;
-    const items = value.map(normalizeEvidenceItem).filter((item): item is EvidenceItem => Boolean(item));
+    const source = Array.isArray(value)
+        ? value
+        : value === undefined || value === null
+            ? []
+            : [value];
+    const items = source.map(normalizeEvidenceItem).filter((item): item is EvidenceItem => Boolean(item));
     return items.length ? items : fallback;
 }
 
