@@ -83,7 +83,12 @@ function rcString(value: unknown): string {
 function versionTuple(version: unknown): string {
     const parts = configText(version, '0.0.0').split(/[^\d]+/).filter(Boolean).map(value => Number.parseInt(value, 10));
     while (parts.length < 4) parts.push(0);
-    return parts.slice(0, 4).map(value => Number.isFinite(value) ? value : 0).join(',');
+    return parts.slice(0, 4).map(versionPart).join(',');
+}
+
+function versionPart(value: number): number {
+    if (!Number.isFinite(value) || value < 0) return 0;
+    return Math.min(65535, Math.floor(value));
 }
 
 function versionInfoResource(name: string, version: string): string {

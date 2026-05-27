@@ -55,6 +55,7 @@ assert(sourceMain.includes("showModal('保存失败', message, '文件保存')")
 assert(sourceMain.includes('window.setTimeout(() => URL.revokeObjectURL(url), 0)'), 'browser downloads should revoke object URLs after click dispatch');
 assert(buildScript.includes('function configText(value: unknown, fallback: string): string'), 'build script should normalize malformed config text');
 assert(buildScript.includes('const parts = configText(version, \'0.0.0\').split'), 'build script should tolerate non-string app versions');
+assert(buildScript.includes('Math.min(65535, Math.floor(value))'), 'build script should clamp VERSIONINFO version parts to WORD range');
 assert(buildScript.includes('currentOwner !== buildLockOwner'), 'build lock cleanup should only release the current process lock');
 assert(buildScript.includes('releaseBuildLock(true)'), 'build lock cleanup should force-release stale locks only after timeout');
 assert(packageScript.includes('function sanitizeFileName(value: unknown): string'), 'package script should tolerate non-string file name parts');
