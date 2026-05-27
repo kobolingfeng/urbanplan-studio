@@ -224,6 +224,31 @@ const malformedObjectsEvaluation = evaluateScenario({
     objects: 'not an array',
 } as unknown as typeof project, 'scenario_update', [], []);
 assert(malformedObjectsEvaluation.dimensions.length === 6 && malformedObjectsEvaluation.parcels.length === 0, 'evaluation should ignore non-array object collections');
+const scalarEvidenceEvaluation = evaluateScenario({
+    project: { name: 'Scalar Evidence Evaluation' },
+    ruleset: { version: 'Scalar Evidence Rules', basis: ['fixture'] },
+    scenarios: [{ id: 'scenario_update', name: 'Update' }],
+    objects: [{
+        id: 'parcel_scalar_legacy',
+        type: 'parcel',
+        name: 'Scalar Legacy Parcel',
+        evidence: 'single legacy evidence',
+        points: [{ x: 0, y: 0 }, { x: 120, y: 0 }, { x: 120, y: 100 }, { x: 0, y: 100 }],
+        controls: { farMax: 4, buildingCoverageMax: 0.35, greenRatioMin: 0.30 },
+        scenarioValues: { scenario_update: { far: 2, buildingCoverage: 0.3, greenRatio: 0.32, residentialGfaSqm: 12000, publicServiceGfaSqm: 300 } },
+    }, {
+        id: 'parcel_scalar_structured',
+        type: 'parcel',
+        name: 'Scalar Structured Parcel',
+        evidence: { title: 'single structured evidence', type: 'survey', collectedAt: '2026-05-26', precision: 'parcel', license: 'test', confidence: 0.8 },
+        points: [{ x: 140, y: 0 }, { x: 260, y: 0 }, { x: 260, y: 100 }, { x: 140, y: 100 }],
+        controls: { farMax: 4, buildingCoverageMax: 0.35, greenRatioMin: 0.30 },
+        scenarioValues: { scenario_update: { far: 2, buildingCoverage: 0.3, greenRatio: 0.32, residentialGfaSqm: 12000, publicServiceGfaSqm: 300 } },
+    }],
+} as unknown as typeof project, 'scenario_update', [], []);
+const scalarEvidenceDimension = scalarEvidenceEvaluation.dimensions.find(item => item.id === 'evidence');
+assert(scalarEvidenceDimension?.reason.includes('2/2 个对象有证据来源，1 个对象含结构化'), 'evaluation should count scalar evidence in evidence dimensions');
+assert(!scalarEvidenceEvaluation.parcels.find(parcel => parcel.objectId === 'parcel_scalar_legacy')?.drivers.includes('缺少证据来源'), 'parcel scoring should count scalar legacy evidence');
 const malformedScenariosEvaluation = evaluateScenario({
     project: { name: 'Malformed Scenarios Evaluation' },
     ruleset: { version: 'Malformed Scenarios Rules', basis: ['fixture'] },

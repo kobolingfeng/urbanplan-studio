@@ -1,6 +1,7 @@
 import {
     evidenceCompletenessScore,
     isStructuredEvidence,
+    normalizeEvidenceItem,
     type EvidenceItem,
 } from './evidence';
 import { markdownTableRow } from './markdown-table';
@@ -16,6 +17,7 @@ import { finiteNumberOr } from './planning-ranges';
 
 type Severity = 'error' | 'warning' | 'info' | 'ok';
 type FacilityKind = '幼儿园' | '社区养老' | '社区卫生' | '文化活动' | '便民商业';
+type AnyRecord = Record<string, unknown>;
 
 type ScenarioLike = {
     id: string;
@@ -442,8 +444,8 @@ function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike
 function evidenceDimension(project: ProjectLike, checks: CheckLike[], recommendations: RecommendationLike[], weight: number): DimensionScore {
     const score = evidenceConfidence(project, checks, recommendations);
     const objects = projectObjects(project);
-    const evidenceObjects = objects.filter(object => object.evidence?.length).length;
-    const structuredObjects = objects.filter(object => object.evidence?.some(isStructuredEvidence)).length;
+    const evidenceObjects = objects.filter(object => objectEvidence(object).length).length;
+    const structuredObjects = objects.filter(object => objectEvidence(object).some(isStructuredEvidence)).length;
     return {
         id: 'evidence',
         name: '证据可信度',
@@ -466,8 +468,9 @@ function evaluateParcel(parcel: PlanningObjectLike, scenarioId: string, checks: 
     const farScore = farMax ? clamp(100 - Math.max(0, far - farMax) * 35 - Math.max(0, farMax * 0.45 - far) * 8) : 80;
     const greenScore = targetRatioScore(greenRatio, greenMin);
     const serviceScore = targetRatioScore(serviceRatio, SERVICE_DEMAND_ASSUMPTIONS.publicServiceGfaToResidentialTarget);
-    const evidenceScore = parcel.evidence?.length
-        ? Math.max(60, average(parcel.evidence.map(evidenceCompletenessScore)))
+    const evidence = objectEvidence(parcel);
+    const evidenceScore = evidence.length
+        ? Math.max(60, average(evidence.map(evidenceCompletenessScore)))
         : 45;
     const score = roundScore(compliance * 0.35 + greenScore * 0.20 + serviceScore * 0.20 + farScore * 0.15 + evidenceScore * 0.10);
     return {
@@ -475,7 +478,7 @@ function evaluateParcel(parcel: PlanningObjectLike, scenarioId: string, checks: 
         name: String(parcel.name ?? parcel.id ?? '未命名地块'),
         score,
         band: scoreBand(score),
-        drivers: parcelDrivers(parcelChecks, far, farMax, greenRatio, greenMin, serviceRatio, parcel.evidence?.length ?? 0),
+        drivers: parcelDrivers(parcelChecks, far, farMax, greenRatio, greenMin, serviceRatio, evidence.length),
     };
 }
 
@@ -603,12 +606,12 @@ function parcelDrivers(
 function evidenceConfidence(project: ProjectLike, checks: CheckLike[], recommendations: RecommendationLike[] = []): number {
     const objects = projectObjects(project);
     const evidenceCoverage = objects.length
-        ? objects.filter(object => object.evidence?.length).length / objects.length * 100
+        ? objects.filter(object => objectEvidence(object).length).length / objects.length * 100
         : 100;
     const structuredEvidenceCoverage = objects.length
-        ? objects.filter(object => object.evidence?.some(isStructuredEvidence)).length / objects.length * 100
+        ? objects.filter(object => objectEvidence(object).some(isStructuredEvidence)).length / objects.length * 100
         : 100;
-    const evidenceItems = objects.flatMap(object => object.evidence ?? []);
+    const evidenceItems = objects.flatMap(objectEvidence);
     const evidenceQuality = evidenceItems.length ? average(evidenceItems.map(evidenceCompletenessScore)) : 45;
     const basisScore = Math.min(100, countBasis(project) * 18 + 28);
     const prototypePenalty = checks.filter(check => String(check.source ?? '').includes('原型')).length * 3;
@@ -630,6 +633,15 @@ function projectScenarios(project: ProjectLike): ScenarioLike[] {
 
 function countBasis(project: ProjectLike): number {
     return Array.isArray(project.ruleset?.basis) ? project.ruleset.basis.length : 0;
+}
+
+function objectEvidence(object: PlanningObjectLike): EvidenceItem[] {
+    const value = (object as AnyRecord).evidence;
+    const values = Array.isArray(value) ? value : [value];
+    return values.flatMap((item) => {
+        const normalized = normalizeEvidenceItem(item);
+        return normalized ? [normalized] : [];
+    });
 }
 
 function parcelResidents(parcel: PlanningObjectLike, scenarioId: string): number {
