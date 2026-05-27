@@ -121,7 +121,7 @@ assert((roundTrip.evaluation as { modelName?: string }).modelName === '均衡模
 assert(Array.isArray((roundTrip.evaluation as { riskRegister?: unknown[] }).riskRegister), 'evaluation risk register export mismatch');
 const sparseRoundTrip = createUpfDocument({
     ...minimal.project,
-    scenarios: [null, ...(minimal.project.scenarios ?? [])],
+    scenarios: [null, {}, ...(minimal.project.scenarios ?? [])],
     objects: [null, ...(minimal.project.objects ?? [])],
 } as unknown as typeof minimal.project, minimal.activeScenarioId, [
     null,
@@ -317,6 +317,12 @@ const malformedScenariosComparison = buildScenarioComparisonReport({
     objects: [],
 } as unknown as Parameters<typeof buildScenarioComparisonReport>[0], 'base');
 assert(malformedScenariosComparison.includes('所有方案均覆盖全部地块'), 'scenario comparison should ignore non-array scenario collections');
+const sparseScenariosComparison = buildScenarioComparisonReport({
+    project: { name: 'Sparse Scenarios Comparison' },
+    scenarios: [null, {}, { id: 'base', name: 'Base' }],
+    objects: [],
+} as unknown as Parameters<typeof buildScenarioComparisonReport>[0], 'base');
+assert(sparseScenariosComparison.includes('| Base | 0/0 | 0 |') && !sparseScenariosComparison.includes('undefined'), 'scenario comparison should ignore malformed scenario entries');
 
 const malformedNumericComparison = buildScenarioComparisonReport({
     project: { name: 'Malformed Numeric Comparison' },

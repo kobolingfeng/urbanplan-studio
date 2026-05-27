@@ -108,7 +108,7 @@ export function createUpfDocument<TProject extends ProjectLike>(
         },
         project: project.project,
         ruleset: project.ruleset,
-        scenarios: recordItems<ScenarioLike>(project.scenarios),
+        scenarios: projectScenarios(project),
         activeScenarioId,
         objects: recordItems<PlanningObjectLike>(project.objects),
         checks: safeChecks,
@@ -424,7 +424,7 @@ function projectObjects(project: ProjectLike): PlanningObjectLike[] {
 }
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
-    return recordItems<ScenarioLike>(project.scenarios);
+    return recordItems<ScenarioLike>(project.scenarios).filter(scenario => identifierText(scenario.id));
 }
 
 function recordItems<T extends AnyRecord>(values: unknown): T[] {

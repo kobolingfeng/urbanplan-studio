@@ -632,7 +632,7 @@ function projectObjects(project: ProjectLike): PlanningObjectLike[] {
 }
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
-    return recordItems<ScenarioLike>(project.scenarios);
+    return recordItems<ScenarioLike>(project.scenarios).filter(scenario => identifierText(scenario.id));
 }
 
 function recordItems<T extends AnyRecord>(values: unknown): T[] {
