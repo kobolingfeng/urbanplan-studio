@@ -224,7 +224,7 @@ export function evaluateScenario(
     const openSpaces = objects.filter(isOpenSpace);
     const entrances = objects.filter(isEntrance);
     const targetScenarioId = identifierText(scenarioId);
-    const scenario = (project.scenarios ?? []).find(item => identifierText(item.id) === targetScenarioId);
+    const scenario = projectScenarios(project).find(item => identifierText(item.id) === targetScenarioId);
     const totals = summarizeParcels(parcels, scenarioId);
 
     const dimensions: DimensionScore[] = [
@@ -410,7 +410,7 @@ function ecologyDimension(
 }
 
 function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike[], scenarioId: string, weight: number): DimensionScore {
-    const baselineId = (project.scenarios ?? []).find(scenario => identifierText(scenario.id)?.toLowerCase().includes('baseline'))?.id;
+    const baselineId = projectScenarios(project).find(scenario => identifierText(scenario.id)?.toLowerCase().includes('baseline'))?.id;
     const fitScores = parcels.map(parcel => {
         const value = parcelValue(parcel, scenarioId);
         const farMax = number(parcel.controls?.farMax, 4);
@@ -622,6 +622,10 @@ function parcelValue(parcel: PlanningObjectLike, scenarioId: string) {
 
 function projectObjects(project: ProjectLike): PlanningObjectLike[] {
     return Array.isArray(project.objects) ? project.objects : [];
+}
+
+function projectScenarios(project: ProjectLike): ScenarioLike[] {
+    return Array.isArray(project.scenarios) ? project.scenarios : [];
 }
 
 function countBasis(project: ProjectLike): number {

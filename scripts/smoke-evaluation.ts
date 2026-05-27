@@ -224,6 +224,13 @@ const malformedObjectsEvaluation = evaluateScenario({
     objects: 'not an array',
 } as unknown as typeof project, 'scenario_update', [], []);
 assert(malformedObjectsEvaluation.dimensions.length === 6 && malformedObjectsEvaluation.parcels.length === 0, 'evaluation should ignore non-array object collections');
+const malformedScenariosEvaluation = evaluateScenario({
+    project: { name: 'Malformed Scenarios Evaluation' },
+    ruleset: { version: 'Malformed Scenarios Rules', basis: ['fixture'] },
+    scenarios: 'not an array',
+    objects: [],
+} as unknown as typeof project, 'scenario_update', [], []);
+assert(malformedScenariosEvaluation.scenarioName === 'scenario_update', 'evaluation should ignore non-array scenario collections');
 
 const stringNumericProject = {
     project: { name: 'String Numeric Evaluation' },
