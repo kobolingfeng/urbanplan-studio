@@ -146,6 +146,10 @@ const sparseRoundTrip = createUpfDocument({
 assert(sparseRoundTrip.scenarios.length === (minimal.project.scenarios?.length ?? 0), 'UPF export should ignore malformed scenario entries');
 assert(sparseRoundTrip.objects.length === (minimal.project.objects?.length ?? 0), 'UPF export should ignore malformed object entries');
 assert(sparseRoundTrip.checks.length === 1 && sparseRoundTrip.recommendations.length === 1, 'UPF export should ignore malformed signal entries');
+const normalizedActiveExport = createUpfDocument(minimal.project, ' scenario_base ' as unknown as string, [], []);
+assert(normalizedActiveExport.activeScenarioId === 'scenario_base' && normalizedActiveExport.manifest.activeScenarioId === 'scenario_base', 'UPF export should normalize active scenario ids');
+const malformedActiveExport = createUpfDocument(minimal.project, null as unknown as string, [], []);
+assert(malformedActiveExport.activeScenarioId === '' && malformedActiveExport.manifest.activeScenarioId === '', 'UPF export should tolerate malformed active scenario ids');
 const parsedRoundTrip = parseUpfText(JSON.stringify(roundTrip), fallback);
 assert(parsedRoundTrip.project.format === 'UPF', 'round-trip format mismatch');
 assert(parsedRoundTrip.project.objects?.length === 1, 'round-trip objects mismatch');

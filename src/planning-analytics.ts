@@ -87,6 +87,7 @@ export function createUpfDocument<TProject extends ProjectLike>(
     evaluation?: unknown,
 ) {
     const safeProject = projectRecord(project);
+    const safeActiveScenarioId = identifierText(activeScenarioId) ?? '';
     const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
     const safeRecommendations = recordItems<RecommendationLike>(recommendations).filter(hasRecommendationText);
     return {
@@ -105,12 +106,12 @@ export function createUpfDocument<TProject extends ProjectLike>(
                 name: 'DemoCanvasMetric',
                 metersPerCanvasUnit: 0.68,
             },
-            activeScenarioId,
+            activeScenarioId: safeActiveScenarioId,
         },
         project: safeProject.project,
         ruleset: safeProject.ruleset,
         scenarios: projectScenarios(safeProject),
-        activeScenarioId,
+        activeScenarioId: safeActiveScenarioId,
         objects: recordItems<PlanningObjectLike>(safeProject.objects),
         checks: safeChecks,
         recommendations: safeRecommendations,
