@@ -53,7 +53,7 @@ type RuleObject = {
 
 type RuleProject = {
     project: { name?: string };
-    ruleset: { version?: string };
+    ruleset?: { version?: string };
     objects: RuleObject[];
 };
 
@@ -366,6 +366,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
     const add = (result: Omit<PlanningRuleResult, 'id'>) => {
         checks.push({ ...result, id: `check_${checks.length + 1}` });
     };
+    const rulesetVersion = project.ruleset?.version;
 
     const parcels = project.objects.filter(object => object.type === 'parcel' && isUsablePolygon(object.points));
     const roads = project.objects.filter(object => object.type === 'road' && isUsableLine(object.points));
@@ -384,7 +385,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'error',
                 title: '容积率超过控制值',
                 message: `当前 FAR ${number(value.far).toFixed(2)}，控制值 ${number(controls.farMax).toFixed(2)}。`,
-                source: ruleSource('parcel_far_max', project.ruleset.version),
+                source: ruleSource('parcel_far_max', rulesetVersion),
             });
         }
         if (number(value.greenRatio) < number(controls.greenRatioMin, 0)) {
@@ -395,7 +396,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'error',
                 title: '绿地率低于控制值',
                 message: `当前 ${(number(value.greenRatio) * 100).toFixed(1)}%，要求不低于 ${(number(controls.greenRatioMin) * 100).toFixed(1)}%。`,
-                source: ruleSource('parcel_green_min', project.ruleset.version),
+                source: ruleSource('parcel_green_min', rulesetVersion),
             });
         }
         if (number(value.buildingCoverage) > number(controls.buildingCoverageMax, 99)) {
@@ -406,7 +407,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'warning',
                 title: '建筑密度偏高',
                 message: `当前 ${(number(value.buildingCoverage) * 100).toFixed(1)}%，控制值 ${(number(controls.buildingCoverageMax) * 100).toFixed(1)}%。`,
-                source: ruleSource('parcel_coverage_max', project.ruleset.version),
+                source: ruleSource('parcel_coverage_max', rulesetVersion),
             });
         }
         if (number(value.publicServiceGfaSqm) < parcelArea * SERVICE_DEMAND_ASSUMPTIONS.parcelPublicServiceGfaRatio && residents > 800) {
@@ -417,7 +418,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'info',
                 title: '公共服务建筑面积偏少',
                 message: `服务人口约 ${format(residents)} 人，地块内公共服务空间仅 ${format(number(value.publicServiceGfaSqm))} 平方米。`,
-                source: ruleSource('parcel_public_service_ratio', project.ruleset.version),
+                source: ruleSource('parcel_public_service_ratio', rulesetVersion),
             });
         }
         if (isIndustrialLand(parcel) && number(value.residentialGfaSqm) > 0) {
@@ -428,7 +429,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'warning',
                 title: '工业用地承载居住功能',
                 message: `${parcel.landUseName ?? parcel.landUseCode ?? '当前用地'} 中包含 ${format(number(value.residentialGfaSqm))} 平方米住宅建面，需补充用地调整、混合兼容或更新单元论证。`,
-                source: ruleSource('landuse_industrial_residential_mix', project.ruleset.version),
+                source: ruleSource('landuse_industrial_residential_mix', rulesetVersion),
             });
         }
         const overlapsHistoric = project.objects.some(item => item.type === 'constraint'
@@ -443,7 +444,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'warning',
                 title: '历史风貌区拆除重建风险',
                 message: '地块与历史风貌协调区存在空间重叠，拆除重建应优先触发风貌、保留建筑和街道界面复核。',
-                source: ruleSource('historic_area_rebuild_risk', project.ruleset.version),
+                source: ruleSource('historic_area_rebuild_risk', rulesetVersion),
             });
         }
         const center = centroid(parcel.points!);
@@ -455,7 +456,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'warning',
                 title: '幼儿园服务半径未覆盖地块',
                 message: '该居住地块估算人口较高，但地块中心未落入现有或规划幼儿园服务半径。',
-                source: ruleSource('facility_kindergarten_coverage_gap', project.ruleset.version),
+                source: ruleSource('facility_kindergarten_coverage_gap', rulesetVersion),
             });
         }
         if (residents > 900 && !coveredByFacility(facilities, center, '社区养老')) {
@@ -466,7 +467,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'info',
                 title: '社区养老服务半径未覆盖地块',
                 message: '该地块服务人口较高，建议在 5-10 分钟步行范围内嵌入养老、助餐或日间照料点。',
-                source: ruleSource('facility_elderly_coverage_gap', project.ruleset.version),
+                source: ruleSource('facility_elderly_coverage_gap', rulesetVersion),
             });
         }
     }
@@ -490,7 +491,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'warning',
                 title: '道路红线宽度偏窄',
                 message: `${road.level ?? '未声明等级'}、${format(number(road.lanes))} 车道建议红线不低于 ${minimum.toFixed(1)} 米，当前 ${width.toFixed(1)} 米。`,
-                source: ruleSource('road_redline_width_min', project.ruleset.version),
+                source: ruleSource('road_redline_width_min', rulesetVersion),
             });
         }
     }
@@ -506,7 +507,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'error',
                 title: '出入口地块引用缺失',
                 message: '出入口绑定的地块不存在，请重新选择关联地块。',
-                source: ruleSource('entrance_dangling_parcel', project.ruleset.version),
+                source: ruleSource('entrance_dangling_parcel', rulesetVersion),
             });
         }
         const road = roads.find(item => normalizedObjectId(item) === roadId);
@@ -518,7 +519,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'error',
                 title: '出入口道路引用缺失',
                 message: '出入口绑定的道路不存在，请重新选择关联道路。',
-                source: ruleSource('entrance_dangling_road', project.ruleset.version),
+                source: ruleSource('entrance_dangling_road', rulesetVersion),
             });
             continue;
         }
@@ -530,7 +531,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'error',
                 title: '出入口关联道路缺少线位',
                 message: '出入口绑定的道路对象存在，但缺少可计算线位；请补齐道路 points 后再复核距离和交叉口间距。',
-                source: ruleSource('entrance_road_geometry_missing', project.ruleset.version),
+                source: ruleSource('entrance_road_geometry_missing', rulesetVersion),
             });
             continue;
         }
@@ -542,7 +543,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'warning',
                 title: '机动车出入口不宜直接开向主干路',
                 message: `${entrance.name} 关联 ${road.name}，建议优先转向支路或内部街巷组织交通。`,
-                source: ruleSource('entrance_arterial_risk', project.ruleset.version),
+                source: ruleSource('entrance_arterial_risk', rulesetVersion),
             });
         }
         const roadDistance = distanceToPolyline(entrance.point!, road.points!);
@@ -554,7 +555,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'info',
                 title: '出入口与关联道路距离偏大',
                 message: `出入口到关联道路约 ${format(roadDistance)} 米，请确认路网绑定是否正确。`,
-                source: ruleSource('entrance_road_distance', project.ruleset.version),
+                source: ruleSource('entrance_road_distance', rulesetVersion),
             });
         }
         const intersection = nearestRoadIntersection(roads, entrance.point!);
@@ -568,7 +569,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 severity: 'warning',
                 title: '出入口接近交叉口',
                 message: `${road.level ?? '未声明等级'}建议控制在 ${format(intersectionThreshold)} 米以外，当前距离主要交叉口约 ${format(intersectionDistance)} 米。`,
-                source: ruleSource('entrance_intersection_distance', project.ruleset.version),
+                source: ruleSource('entrance_intersection_distance', rulesetVersion),
             });
         }
     }
@@ -589,7 +590,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
             severity: 'warning',
             title: '幼儿园学位存在缺口',
             message: `估算需求 ${kindergartenDemand} 个学位，当前配置 ${capacity('幼儿园')}。`,
-            source: ruleSource('facility_kindergarten_gap', project.ruleset.version),
+            source: ruleSource('facility_kindergarten_gap', rulesetVersion),
         });
     }
     if (capacity('社区养老') < elderlyDemand) {
@@ -600,7 +601,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
             severity: 'warning',
             title: '社区养老服务能力不足',
             message: `估算需求 ${elderlyDemand} 人服务能力，当前配置 ${capacity('社区养老')}。`,
-            source: ruleSource('facility_elderly_gap', project.ruleset.version),
+            source: ruleSource('facility_elderly_gap', rulesetVersion),
         });
     }
     if (capacity('社区卫生') < healthDemand) {
@@ -611,7 +612,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
             severity: 'info',
             title: '社区卫生服务承载需复核',
             message: `估算服务人口 ${format(healthDemand)} 人，当前卫生服务容量 ${format(capacity('社区卫生'))}。`,
-            source: ruleSource('facility_health_gap', project.ruleset.version),
+            source: ruleSource('facility_health_gap', rulesetVersion),
         });
     }
 
