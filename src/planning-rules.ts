@@ -312,7 +312,8 @@ export const RULE_CATALOG: PlanningRuleDefinition[] = RULE_CATALOG_DRAFT.map(rul
 const RULE_CATALOG_BY_ID = new Map(RULE_CATALOG.map(rule => [rule.id, rule]));
 
 export function buildRuleCatalogReport(triggered: PlanningRuleResult[] = []): string {
-    const counts = triggered.reduce<Record<string, number>>((next, check) => {
+    const safeTriggered = Array.isArray(triggered) ? triggered : [];
+    const counts = safeTriggered.reduce<Record<string, number>>((next, check) => {
         next[check.ruleId] = (next[check.ruleId] ?? 0) + 1;
         return next;
     }, {});
