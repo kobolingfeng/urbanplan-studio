@@ -1,12 +1,13 @@
 import { isAbsolute, relative, resolve } from 'path';
 
 export function resolveDevPort(value: unknown, fallback = 3000): number {
+    const safeFallback = Number.isInteger(fallback) && fallback >= 1 && fallback <= 65535 ? fallback : 3000;
     const parsed = typeof value === 'number'
         ? value
         : typeof value === 'string' && decimalIntegerPattern.test(value.trim())
             ? Number(value.trim())
-            : fallback;
-    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) return fallback;
+            : safeFallback;
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) return safeFallback;
     return parsed;
 }
 
