@@ -109,8 +109,9 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
     const headers = new Set(Object.keys(rows[0] ?? {}));
     if (!hasAny(headers, ['parcel_id', 'object_id', 'id']) || !hasAny(headers, ['scenario_id', 'scenario'])) return undefined;
 
-    const fallbackScenarios = csvRecordItems<CsvScenarioLike>(fallbackProject.scenarios).filter(scenario => csvIdentifierText(scenario.id));
-    const fallbackObjects = csvRecordItems<CsvObjectLike>(fallbackProject.objects);
+    const fallback = csvRecord(fallbackProject) as CsvProjectLike;
+    const fallbackScenarios = csvRecordItems<CsvScenarioLike>(fallback.scenarios).filter(scenario => csvIdentifierText(scenario.id));
+    const fallbackObjects = csvRecordItems<CsvObjectLike>(fallback.objects);
     const scenarios = [...fallbackScenarios];
     const scenarioIds = new Set(scenarios.map(scenario => csvIdentifierText(scenario.id)).filter((id): id is string => Boolean(id)));
     const objects = fallbackObjects.map(object => ({
@@ -171,7 +172,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
 
     return {
         project: {
-            ...fallbackProject,
+            ...fallback,
             scenarios,
             objects,
         } as TProject,

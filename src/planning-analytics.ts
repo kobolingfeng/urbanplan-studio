@@ -136,9 +136,10 @@ export function parseUpfText<TProject extends ProjectLike>(
         throw new Error('不是可识别的 UPF 文件');
     }
     const data = parsed;
+    const fallback = isRecord(fallbackProject) ? fallbackProject as ProjectLike : {};
     const importedScenarios = scenarioItems(data.scenarios);
     const importedObjects = recordItems<PlanningObjectLike>(data.objects);
-    const fallbackScenarios = scenarioItems(fallbackProject.scenarios);
+    const fallbackScenarios = scenarioItems(fallback.scenarios);
     const activeScenarioId = firstIdentifier(
         data.activeScenarioId,
         (data.manifest as AnyRecord | undefined)?.activeScenarioId,
@@ -177,9 +178,9 @@ export function parseUpfText<TProject extends ProjectLike>(
     if (Array.isArray(data.objects)) {
         return {
             project: {
-                ...fallbackProject,
+                ...fallback,
                 objects: importedObjects,
-            },
+            } as TProject,
             activeScenarioId,
         };
     }

@@ -135,7 +135,9 @@ export function parseGeoJsonProject<TProject extends ProjectLike>(
     if (collection.type !== 'FeatureCollection' || !Array.isArray(collection.features)) return undefined;
 
     const upf = isRecord(collection.upf) ? collection.upf : {};
-    const fallbackScenarios = recordItems<{ id: unknown; name?: unknown; description?: unknown }>(fallbackProject.scenarios)
+    const fallback = isRecord(fallbackProject) ? fallbackProject as ProjectLike : {};
+    const fallbackProjectMeta = isRecord(fallback.project) ? fallback.project : {};
+    const fallbackScenarios = recordItems<{ id: unknown; name?: unknown; description?: unknown }>(fallback.scenarios)
         .flatMap(normalizeScenario);
     const activeScenarioId = textOr(
         upf.activeScenarioId,
@@ -154,15 +156,15 @@ export function parseGeoJsonProject<TProject extends ProjectLike>(
 
     return {
         project: {
-            ...fallbackProject,
+            ...fallback,
             format: 'UPF',
-            formatVersion: textOr(upf.formatVersion, fallbackProject.formatVersion ?? '0.1.0'),
+            formatVersion: textOr(upf.formatVersion, fallback.formatVersion ?? '0.1.0'),
             project: {
-                ...(fallbackProject.project ?? {}),
-                name: textOr(collection.name, fallbackProject.project?.name ?? 'GeoJSON 导入项目'),
-                crs: textOr(upf.crs, fallbackProject.project?.crs ?? 'DemoCanvasMetric'),
+                ...fallbackProjectMeta,
+                name: textOr(collection.name, fallbackProjectMeta.name ?? 'GeoJSON 导入项目'),
+                crs: textOr(upf.crs, fallbackProjectMeta.crs ?? 'DemoCanvasMetric'),
             },
-            ruleset: fallbackProject.ruleset,
+            ruleset: fallback.ruleset,
             scenarios,
             objects,
         } as TProject,

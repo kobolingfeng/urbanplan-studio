@@ -40,6 +40,7 @@ try {
 }
 
 assertNoThrow('CSV parser sparse fallback', () => parseParcelIndicatorCsv('parcel_id,scenario_id,far\np,base,1', fallbackProject as never));
+assertNoThrow('CSV parser malformed fallback', () => parseParcelIndicatorCsv('parcel_id,scenario_id,far\np,base,1', null as never));
 assertNoThrow('CSV parser malformed text', () => parseParcelIndicatorCsv(null as unknown as string, fallbackProject as never));
 assertNoThrow('wide CSV malformed rows', () => buildScenarioDecisionCsv([null, {}] as never));
 assertNoThrow('long CSV malformed rows', () => buildScenarioDecisionLongCsv([null, {}] as never));
@@ -53,6 +54,11 @@ assertNoThrow('rules sparse objects', () => runPlanningRules({ objects: [null, {
 assertNoThrow('rule catalog sparse checks', () => buildRuleCatalogReport([null, {}] as never));
 assertNoThrow('GeoJSON export sparse objects', () => buildGeoJsonFeatureCollection({ objects: [null, {}] } as never, 'base', unitSystem));
 assertNoThrow('GeoJSON parse malformed input', () => parseGeoJsonProject(null, fallbackProject as never));
+assertNoThrow('GeoJSON parse malformed fallback', () => parseGeoJsonProject({
+    type: 'FeatureCollection',
+    features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: { upfType: 'facility' } }],
+}, null as never));
+assertNoThrow('UPF parse malformed fallback', () => parseUpfText(JSON.stringify({ objects: [], scenarios: [] }), null as never));
 assertNoThrow('validation summary malformed issues', () => summarizeUpfValidation([null, {}] as unknown as UpfValidationIssue[]));
 assertNoThrow('validation report malformed issues', () => buildUpfValidationReport([null, {}] as unknown as UpfValidationIssue[]));
 assertNoThrow('markdown malformed inputs', () => {
