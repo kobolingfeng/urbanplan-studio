@@ -22,6 +22,8 @@ assert(viteArgs.includes('--host') && viteArgs.includes('127.0.0.1'), 'vite args
 assert(viteArgs.includes('--port') && viteArgs.includes('4173'), 'vite args should include resolved port');
 const malformedViteArgs = withResolvedDevServerPort('vite', 'bad' as unknown as string[], 4173);
 assert(JSON.stringify(malformedViteArgs) === JSON.stringify(['--host', '127.0.0.1', '--port', '4173']), 'vite args should tolerate malformed arg collections');
+const invalidPortViteArgs = withResolvedDevServerPort('vite', [], 70000);
+assert(invalidPortViteArgs.includes('3000'), 'vite args should normalize invalid dev server ports');
 
 const existing = withResolvedDevServerPort('vite', ['--host', '0.0.0.0', '--port=3001'], 4173);
 assert(existing.filter(arg => arg === '--host').length === 1, 'existing host should not be duplicated');

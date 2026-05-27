@@ -69,6 +69,7 @@ export function resolveDevServerPath(root: string, urlPath: string): string | un
 export function withResolvedDevServerPort(cmd: string, args: string[], port: number): string[] {
     const safeCmd = String(cmd ?? '');
     const safeArgs = Array.isArray(args) ? args.map(arg => String(arg)) : [];
+    const safePort = resolveDevPort(port, 3000);
     const tokens = [safeCmd, ...safeArgs].map((part) => part.toLowerCase());
     const isVite = tokens.some((part) => /(^|[\\/])vite(\.cmd|\.exe)?$/.test(part) || part === 'vite');
     if (!isVite) return safeArgs;
@@ -78,6 +79,6 @@ export function withResolvedDevServerPort(cmd: string, args: string[], port: num
     return [
         ...safeArgs,
         ...(hasHost ? [] : ['--host', '127.0.0.1']),
-        ...(hasPort ? [] : ['--port', String(port)]),
+        ...(hasPort ? [] : ['--port', String(safePort)]),
     ];
 }
