@@ -364,12 +364,13 @@ export function buildRuleCatalogReport(triggered: PlanningRuleResult[] = []): st
 }
 
 export function runPlanningRules(project: RuleProject, scenarioId: string) {
+    const safeProject = isRecord(project) ? project as RuleProject : {};
     const checks: PlanningRuleResult[] = [];
     const add = (result: Omit<PlanningRuleResult, 'id'>) => {
         checks.push({ ...result, id: `check_${checks.length + 1}` });
     };
-    const rulesetVersion = project.ruleset?.version;
-    const objects = recordItems<RuleObject>(project.objects);
+    const rulesetVersion = safeProject.ruleset?.version;
+    const objects = recordItems<RuleObject>(safeProject.objects);
 
     const parcels = objects.filter(object => object.type === 'parcel' && isUsablePolygon(object.points));
     const roads = objects.filter(object => object.type === 'road' && isUsableLine(object.points));
@@ -589,7 +590,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         add({
             ruleId: 'facility_kindergarten_gap',
             objectId: 'project',
-            objectName: project.project?.name ?? '项目',
+            objectName: safeProject.project?.name ?? '项目',
             severity: 'warning',
             title: '幼儿园学位存在缺口',
             message: `估算需求 ${kindergartenDemand} 个学位，当前配置 ${capacity('幼儿园')}。`,
@@ -600,7 +601,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         add({
             ruleId: 'facility_elderly_gap',
             objectId: 'project',
-            objectName: project.project?.name ?? '项目',
+            objectName: safeProject.project?.name ?? '项目',
             severity: 'warning',
             title: '社区养老服务能力不足',
             message: `估算需求 ${elderlyDemand} 人服务能力，当前配置 ${capacity('社区养老')}。`,
@@ -611,7 +612,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         add({
             ruleId: 'facility_health_gap',
             objectId: 'project',
-            objectName: project.project?.name ?? '项目',
+            objectName: safeProject.project?.name ?? '项目',
             severity: 'info',
             title: '社区卫生服务承载需复核',
             message: `估算服务人口 ${format(healthDemand)} 人，当前卫生服务容量 ${format(capacity('社区卫生'))}。`,

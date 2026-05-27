@@ -86,14 +86,15 @@ export function createUpfDocument<TProject extends ProjectLike>(
     recommendations: RecommendationLike[],
     evaluation?: unknown,
 ) {
+    const safeProject = projectRecord(project);
     const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
     const safeRecommendations = recordItems<RecommendationLike>(recommendations).filter(hasRecommendationText);
     return {
-        format: project.format ?? 'UPF',
-        formatVersion: project.formatVersion ?? '0.1.0',
+        format: safeProject.format ?? 'UPF',
+        formatVersion: safeProject.formatVersion ?? '0.1.0',
         manifest: {
-            format: project.format ?? 'UPF',
-            formatVersion: project.formatVersion ?? '0.1.0',
+            format: safeProject.format ?? 'UPF',
+            formatVersion: safeProject.formatVersion ?? '0.1.0',
             exportedAt: new Date().toISOString(),
             software: {
                 name: 'UrbanPlan Studio',
@@ -106,11 +107,11 @@ export function createUpfDocument<TProject extends ProjectLike>(
             },
             activeScenarioId,
         },
-        project: project.project,
-        ruleset: project.ruleset,
-        scenarios: projectScenarios(project),
+        project: safeProject.project,
+        ruleset: safeProject.ruleset,
+        scenarios: projectScenarios(safeProject),
         activeScenarioId,
-        objects: recordItems<PlanningObjectLike>(project.objects),
+        objects: recordItems<PlanningObjectLike>(safeProject.objects),
         checks: safeChecks,
         recommendations: safeRecommendations,
         evaluation,
@@ -196,8 +197,9 @@ export function buildScenarioComparisonReport(
     activeScenarioId: string,
     options: { headingLevel?: number } = {},
 ): string {
-    const scenarios = projectScenarios(project);
-    const parcels = projectObjects(project).filter(isComparableParcel);
+    const safeProject = projectRecord(project);
+    const scenarios = projectScenarios(safeProject);
+    const parcels = projectObjects(safeProject).filter(isComparableParcel);
     const titleLevel = Math.max(1, Math.min(6, options.headingLevel ?? 1));
     const rows = scenarios.map((scenario) => {
         const scenarioId = identifierText(scenario.id) ?? scenario.id;
@@ -242,7 +244,7 @@ export function buildScenarioComparisonReport(
     const active = rows.find(row => row.scenarioId === activeId);
     const dataGapRows = rows.filter(row => row.missingParcels.length);
     const lines = [
-        `${heading(titleLevel)} ${project.project?.name ?? 'UrbanPlan'} 方案对比`,
+        `${heading(titleLevel)} ${safeProject.project?.name ?? 'UrbanPlan'} 方案对比`,
         '',
         `当前方案：${active?.scenario.name ?? activeScenarioId}`,
         '',
@@ -278,10 +280,11 @@ export function buildDataQualityReport(
     recommendations: RecommendationLike[],
 ): string {
     const safeRecommendations = recordItems<RecommendationLike>(recommendations).filter(hasRecommendationText);
-    const quality = calculateDataQuality(project, checks, safeRecommendations);
+    const safeProject = projectRecord(project);
+    const quality = calculateDataQuality(safeProject, checks, safeRecommendations);
 
     const lines = [
-        `# ${project.project?.name ?? 'UrbanPlan'} 数据质量诊断`,
+        `# ${safeProject.project?.name ?? 'UrbanPlan'} 数据质量诊断`,
         '',
         `质量分：${quality.score}/100`,
         `证据覆盖率：${quality.evidenceCoverage.toFixed(1)}%`,
@@ -422,11 +425,11 @@ function buildEntranceReferenceDiagnostics(objects: PlanningObjectLike[]): { iss
 }
 
 function projectObjects(project: ProjectLike): PlanningObjectLike[] {
-    return recordItems<PlanningObjectLike>(project.objects);
+    return recordItems<PlanningObjectLike>(projectRecord(project).objects);
 }
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
-    return scenarioItems(project.scenarios);
+    return scenarioItems(projectRecord(project).scenarios);
 }
 
 function scenarioItems(values: unknown): ScenarioLike[] {
@@ -459,9 +462,14 @@ function objectEvidence(object: PlanningObjectLike): EvidenceItem[] {
 }
 
 function countBasis(project: ProjectLike): number {
-    return Array.isArray(project.ruleset?.basis)
-        ? project.ruleset.basis.filter(value => identifierText(value)).length
+    const safeProject = projectRecord(project);
+    return Array.isArray(safeProject.ruleset?.basis)
+        ? safeProject.ruleset.basis.filter(value => identifierText(value)).length
         : 0;
+}
+
+function projectRecord(value: unknown): ProjectLike {
+    return isRecord(value) ? value as ProjectLike : {};
 }
 
 function identifierText(value: unknown): string | undefined {

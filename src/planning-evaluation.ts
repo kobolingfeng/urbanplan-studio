@@ -271,9 +271,10 @@ export function buildScenarioEvaluationReport(
     checks: CheckLike[] = [],
     recommendations: RecommendationLike[] = [],
 ): string {
-    const evaluation = evaluateScenario(project, scenarioId, checks, recommendations);
-    const projectName = project.project?.name ?? 'UrbanPlan';
-    const serviceRows = buildParcelServiceAllocation(project, scenarioId);
+    const safeProject = projectRecord(project);
+    const evaluation = evaluateScenario(safeProject, scenarioId, checks, recommendations);
+    const projectName = safeProject.project?.name ?? 'UrbanPlan';
+    const serviceRows = buildParcelServiceAllocation(safeProject, scenarioId);
     const lines = [
         `# ${projectName} 方案综合评估`,
         '',
@@ -282,7 +283,7 @@ export function buildScenarioEvaluationReport(
         `权重来源：${evaluation.weightSource}`,
         `综合评分：${evaluation.score}/100（${evaluation.band}）`,
         `证据可信度：${evaluation.confidence}/100`,
-        `规则版本：${project.ruleset?.version ?? '未声明'}`,
+        `规则版本：${safeProject.ruleset?.version ?? '未声明'}`,
         '',
         '## 一、维度评分',
         '',
@@ -628,11 +629,11 @@ function parcelValue(parcel: PlanningObjectLike, scenarioId: string) {
 }
 
 function projectObjects(project: ProjectLike): PlanningObjectLike[] {
-    return recordItems<PlanningObjectLike>(project.objects);
+    return recordItems<PlanningObjectLike>(projectRecord(project).objects);
 }
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
-    return recordItems<ScenarioLike>(project.scenarios).filter(scenario => identifierText(scenario.id));
+    return recordItems<ScenarioLike>(projectRecord(project).scenarios).filter(scenario => identifierText(scenario.id));
 }
 
 function recordItems<T extends AnyRecord>(values: unknown): T[] {
@@ -648,9 +649,14 @@ function hasRecommendationText(item: RecommendationLike): boolean {
 }
 
 function countBasis(project: ProjectLike): number {
-    return Array.isArray(project.ruleset?.basis)
-        ? project.ruleset.basis.filter(value => identifierText(value)).length
+    const safeProject = projectRecord(project);
+    return Array.isArray(safeProject.ruleset?.basis)
+        ? safeProject.ruleset.basis.filter(value => identifierText(value)).length
         : 0;
+}
+
+function projectRecord(value: unknown): ProjectLike {
+    return isRecord(value) ? value as ProjectLike : {};
 }
 
 function normalizeWeightProfile(value: EvaluationWeightProfile): EvaluationWeightProfile {
