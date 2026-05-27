@@ -27,6 +27,7 @@ const config = JSON.parse(fileText(join(DIST, 'app.config.json')));
 const sourceHtml = fileText(join(ROOT, 'src', 'index.html'));
 const sourceMain = fileText(join(ROOT, 'src', 'main.ts'));
 const buildScript = fileText(join(ROOT, 'scripts', 'build.ts'));
+const devScript = fileText(join(ROOT, 'scripts', 'dev.ts'));
 const packageScript = fileText(join(ROOT, 'scripts', 'package.ts'));
 const smokeReleaseScript = fileText(join(ROOT, 'scripts', 'smoke-release.ts'));
 const setupScript = fileText(join(ROOT, 'scripts', 'setup.ts'));
@@ -58,6 +59,7 @@ assert(buildScript.includes('const parts = configText(version, \'0.0.0\').split'
 assert(buildScript.includes('Math.min(65535, Math.floor(value))'), 'build script should clamp VERSIONINFO version parts to WORD range');
 assert(buildScript.includes('currentOwner !== buildLockOwner'), 'build lock cleanup should only release the current process lock');
 assert(buildScript.includes('releaseBuildLock(true)'), 'build lock cleanup should force-release stale locks only after timeout');
+assert(devScript.includes('Math.min(65535, preferred + 49)'), 'dev server port probing should not exceed the valid TCP port range');
 assert(packageScript.includes('function sanitizeFileName(value: unknown): string'), 'package script should tolerate non-string file name parts');
 assert(packageScript.includes('reservedWindowsNamePattern'), 'package script should avoid Windows reserved device names');
 assert(smokeReleaseScript.includes('function sanitizeFileName(value: unknown): string'), 'release smoke should mirror package filename sanitization');

@@ -31,7 +31,8 @@ async function isPortFree(port: number) {
 }
 
 async function pickPort(preferred: number) {
-    for (let port = preferred; port < preferred + 50; port++) {
+    const upperPort = Math.min(65535, preferred + 49);
+    for (let port = preferred; port <= upperPort; port++) {
         if (await isPortFree(port)) {
             if (port !== preferred) {
                 console.log(`⚠️ Port ${preferred} is busy, using ${port} instead.`);
@@ -39,7 +40,7 @@ async function pickPort(preferred: number) {
             return port;
         }
     }
-    throw new Error(`No free dev port found from ${preferred} to ${preferred + 49}`);
+    throw new Error(`No free dev port found from ${preferred} to ${upperPort}`);
 }
 
 PORT = await pickPort(PORT);
