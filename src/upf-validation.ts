@@ -272,7 +272,7 @@ function validateParcel(
         return;
     }
     for (const scenarioId of scenarioIds) {
-        const value = asRecord(values[scenarioId]);
+        const value = asRecord(scenarioValueFor(values, scenarioId));
         if (!value) {
             add('warning', `${path}.scenarioValues.${scenarioId}`, `缺少 ${scenarioId} 的地块情景指标。`);
             continue;
@@ -369,6 +369,13 @@ function numberLike(value: unknown): number | undefined {
         if (Number.isFinite(parsed)) return parsed;
     }
     return undefined;
+}
+
+function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
+    const target = identifierText(scenarioId);
+    if (!values || !target) return undefined;
+    if (values[target] !== undefined) return values[target];
+    return Object.entries(values).find(([key]) => identifierText(key) === target)?.[1];
 }
 
 const thousandsNumberPattern = /^[-+]?\d{1,3}(,\d{3})+(\.\d+)?$/;

@@ -547,6 +547,29 @@ const trimmedReferenceIssues = validateUpfDocument({
 assert(!trimmedReferenceIssues.some(issue => issue.message.includes('不存在')), 'UPF validation should trim ids before reference checks');
 assert(!trimmedReferenceIssues.some(issue => issue.path === 'activeScenarioId'), 'UPF validation should trim active scenario ids');
 
+const trimmedScenarioValueKeyValidationIssues = validateUpfDocument({
+    format: 'UPF',
+    formatVersion: '0.1.0',
+    project: { id: 'trimmed_value_key', name: 'Trimmed Value Key', city: '深圳市', district: '罗湖区', planningType: 'Reference smoke', planningHorizon: '2026-2035', crs: 'DemoCanvasMetric' },
+    ruleset: { jurisdiction: 'CN-DEMO', version: 'test', basis: ['fixture'] },
+    scenarios: [{ id: 'base', name: 'Base', description: 'Reference fixture' }],
+    activeScenarioId: 'base',
+    objects: [{
+        id: 'parcel_trimmed_value_key',
+        type: 'parcel',
+        name: 'Trimmed Value Key Parcel',
+        evidence: ['fixture'],
+        points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 0, y: 80 }],
+        landUseCode: '0701',
+        landUseName: '城镇住宅用地',
+        controls: { farMax: 3, buildingCoverageMax: 0.35, greenRatioMin: 0.3, heightMaxM: 80 },
+        scenarioValues: {
+            ' base ': { far: 2, buildingCoverage: 0.3, greenRatio: 0.31, residentialGfaSqm: 10000, publicServiceGfaSqm: 300, updateMode: '综合整治' },
+        },
+    }],
+});
+assert(!trimmedScenarioValueKeyValidationIssues.some(issue => issue.path === 'objects[0].scenarioValues.base' && issue.message.includes('缺少')), 'UPF validation should trim scenario value keys before lookup');
+
 try {
     const invalidText = readFileSync(join(examples, 'invalid.upf'), 'utf8');
     const invalidIssues = validateUpfDocument(JSON.parse(invalidText));
