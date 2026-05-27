@@ -303,6 +303,18 @@ assertDoesNotTrigger('degenerate parcel geometry', [{
     'parcel_public_service_ratio',
 ]);
 
+assertDoesNotTrigger('collinear parcel geometry', [{
+    ...badParcel,
+    id: 'parcel_collinear',
+    name: 'Collinear Parcel',
+    points: [{ x: 0, y: 0 }, { x: 60, y: 0 }, { x: 120, y: 0 }],
+}], [
+    'parcel_far_max',
+    'parcel_green_min',
+    'parcel_coverage_max',
+    'parcel_public_service_ratio',
+]);
+
 assertTriggers('road redline width', [
     {
         id: 'road_too_narrow',

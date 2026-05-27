@@ -684,7 +684,7 @@ function asPercent(value: number): string {
 }
 
 function isParcel(object: PlanningObjectLike): boolean {
-    return object.type === 'parcel' && (object.points?.length ?? 0) >= 3;
+    return object.type === 'parcel' && isUsablePolygon(object.points);
 }
 
 function isRoad(object: PlanningObjectLike): boolean {
@@ -700,5 +700,9 @@ function isEntrance(object: PlanningObjectLike): boolean {
 }
 
 function isOpenSpace(object: PlanningObjectLike): boolean {
-    return object.type === 'openSpace' && (object.points?.length ?? 0) >= 3;
+    return object.type === 'openSpace' && isUsablePolygon(object.points);
+}
+
+function isUsablePolygon(points: Point[] | undefined): boolean {
+    return (points?.length ?? 0) >= 3 && areaSqm(points ?? []) > 0.0001;
 }

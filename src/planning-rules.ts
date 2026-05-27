@@ -367,7 +367,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         checks.push({ ...result, id: `check_${checks.length + 1}` });
     };
 
-    const parcels = project.objects.filter(object => object.type === 'parcel' && (object.points?.length ?? 0) >= 3);
+    const parcels = project.objects.filter(object => object.type === 'parcel' && isUsablePolygon(object.points));
     const roads = project.objects.filter(object => object.type === 'road' && (object.points?.length ?? 0) >= 2);
     const facilities = project.objects.filter(object => object.type === 'facility' && object.point);
 
@@ -433,7 +433,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
         const overlapsHistoric = project.objects.some(item => item.type === 'constraint'
             && item.kind === '历史风貌控制'
-            && (item.points?.length ?? 0) >= 3
+            && isUsablePolygon(item.points)
             && polygonsOverlap(parcel.points!, item.points!));
         if (overlapsHistoric && value.updateMode === '拆除重建') {
             add({
@@ -755,6 +755,10 @@ function nearestRoadIntersection(roads: RuleObject[], point: Point): Point | nul
 
 function number(value: unknown, fallback = 0): number {
     return finiteNumberOr(value, fallback);
+}
+
+function isUsablePolygon(points: Point[] | undefined): boolean {
+    return (points?.length ?? 0) >= 3 && areaSqm(points ?? []) > 0.0001;
 }
 
 function normalizedObjectId(object: RuleObject): string | undefined {

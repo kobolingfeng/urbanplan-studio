@@ -146,6 +146,22 @@ const degenerateGeometryProject = {
             },
         },
         {
+            id: 'parcel_collinear',
+            type: 'parcel',
+            name: 'Collinear Parcel',
+            evidence: ['smoke fixture'],
+            points: [{ x: 0, y: 0 }, { x: 60, y: 0 }, { x: 120, y: 0 }],
+            scenarioValues: {
+                scenario_update: {
+                    far: 2,
+                    buildingCoverage: 0.3,
+                    greenRatio: 0.3,
+                    residentialGfaSqm: 12000,
+                    publicServiceGfaSqm: 300,
+                },
+            },
+        },
+        {
             id: 'road_point',
             type: 'road',
             name: 'Point Road',
@@ -162,6 +178,7 @@ const degenerateGeometryProject = {
 const degenerateEvaluation = evaluateScenario(degenerateGeometryProject, 'scenario_update', [], []);
 assert(degenerateEvaluation.parcels.length === 0, 'evaluation should exclude degenerate parcel geometry from parcel priority');
 assert(!buildScenarioEvaluationReport(degenerateGeometryProject, 'scenario_update').includes('Line Parcel'), 'evaluation report should not allocate service demand to degenerate parcels');
+assert(!buildScenarioEvaluationReport(degenerateGeometryProject, 'scenario_update').includes('Collinear Parcel'), 'evaluation report should not allocate service demand to zero-area parcels');
 
 const stringNumericProject = {
     project: { name: 'String Numeric Evaluation' },
