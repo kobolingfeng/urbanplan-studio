@@ -115,6 +115,25 @@ const unclosedQuoteCsv = [
 ].join('\n');
 assert(parseParcelIndicatorCsv(unclosedQuoteCsv, fallback) === undefined, 'CSV import should reject unclosed quoted cells');
 
+const embeddedQuoteCsv = [
+    'parcel_id,scenario_id,notes',
+    'parcel_a,broken,unquoted"quote',
+].join('\n');
+assert(parseParcelIndicatorCsv(embeddedQuoteCsv, fallback) === undefined, 'CSV import should reject quotes embedded in unquoted cells');
+
+const trailingQuoteGarbageCsv = [
+    'parcel_id,scenario_id,notes',
+    'parcel_a,broken,"quoted"x',
+].join('\n');
+assert(parseParcelIndicatorCsv(trailingQuoteGarbageCsv, fallback) === undefined, 'CSV import should reject non-delimiter content after closing quotes');
+
+const quotedTrailingSpaceCsv = [
+    'parcel_id,scenario_id,notes',
+    'parcel_a,quote_space,"quoted note"   ',
+].join('\n');
+const parsedQuotedTrailingSpace = parseParcelIndicatorCsv(quotedTrailingSpaceCsv, fallback);
+assert(parsedQuotedTrailingSpace?.project.objects[0].scenarioValues?.quote_space?.notes === 'quoted note', 'CSV import should allow whitespace after closing quotes');
+
 const formattedNumberCsv = [
     'parcel_id,scenario_id,far,building_coverage,green_ratio,residential_gfa_sqm,public_service_gfa_sqm',
     'parcel_a,formatted,2.8,31%,36%,"42,000","1,200"',

@@ -263,19 +263,31 @@ function parseCsvRecords(text: string): string[][] {
     let row: string[] = [];
     let cell = '';
     let quoted = false;
+    let quoteClosed = false;
     const source = text.replace(/^\uFEFF/, '');
 
     for (let index = 0; index < source.length; index++) {
         const char = source[index];
         const next = source[index + 1];
-        if (char === '"' && quoted && next === '"') {
-            cell += '"';
-            index++;
+        if (quoted) {
+            if (char === '"' && next === '"') {
+                cell += '"';
+                index++;
+            } else if (char === '"') {
+                quoted = false;
+                quoteClosed = true;
+            } else {
+                cell += char;
+            }
+        } else if (quoteClosed && char !== ',' && char !== '\n' && char !== '\r') {
+            if (!/\s/.test(char)) return [];
         } else if (char === '"') {
-            quoted = !quoted;
+            if (cell) return [];
+            quoted = true;
         } else if (char === ',' && !quoted) {
             row.push(cell);
             cell = '';
+            quoteClosed = false;
         } else if ((char === '\n' || char === '\r') && !quoted) {
             if (char === '\r' && next === '\n') index++;
             pushRow();
@@ -290,6 +302,7 @@ function parseCsvRecords(text: string): string[][] {
     function pushRow() {
         row.push(cell);
         cell = '';
+        quoteClosed = false;
         if (row.some(value => value.trim())) records.push(row);
         row = [];
     }
