@@ -141,6 +141,34 @@ const sparseObjectsExport = buildGeoJsonFeatureCollection({
     objects: [null, ...project.objects],
 } as unknown as typeof project, 'base', UNIT_SYSTEM);
 assert(sparseObjectsExport.features.length === collection.features.length, 'GeoJSON export should ignore malformed object entries');
+const malformedGeometryExport = buildGeoJsonFeatureCollection({
+    project: { name: 'Malformed Geometry Export', crs: 'DemoCanvasMetric' },
+    objects: [{
+        id: 'parcel_string_points_export',
+        type: 'parcel',
+        name: 'String Points Export',
+        points: 'bad',
+    }, {
+        id: 'road_string_points_export',
+        type: 'road',
+        name: 'String Road Points Export',
+        points: 'bad',
+    }, {
+        id: 'parcel_scalar_evidence_export',
+        type: 'parcel',
+        name: 'Scalar Evidence Export',
+        evidence: 'legacy source',
+        points: [
+            { x: 0, y: 0 },
+            { x: 10, y: 0 },
+            { x: 10, y: 10 },
+            { x: 0, y: 10 },
+        ],
+    }],
+} as unknown as typeof project, 'base', UNIT_SYSTEM);
+assert(!malformedGeometryExport.features.some(feature => feature.id === 'parcel_string_points_export'), 'GeoJSON export should ignore non-array polygon points');
+assert(!malformedGeometryExport.features.some(feature => feature.id === 'road_string_points_export'), 'GeoJSON export should ignore non-array line points');
+assert(malformedGeometryExport.features.find(feature => feature.id === 'parcel_scalar_evidence_export')?.properties.evidenceCount === 1, 'GeoJSON export should count scalar evidence as one source');
 
 const text = buildGeoJsonText(project, 'base', UNIT_SYSTEM);
 assert(text.includes('"FeatureCollection"') && text.includes('"parcel_a"'), 'GeoJSON text export mismatch');

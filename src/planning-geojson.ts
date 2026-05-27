@@ -228,7 +228,7 @@ function geoJsonProperties(object: PlanningObjectLike, activeScenarioId: string)
         upfId: object.id ?? '',
         upfType: object.type,
         name: object.name ?? object.id ?? '未命名对象',
-        evidenceCount: object.evidence?.length ?? 0,
+        evidenceCount: evidenceItemCount(object.evidence),
     };
     if (object.type === 'parcel') {
         const value = parcelScenario(object, activeScenarioId);
@@ -271,20 +271,25 @@ function closedCoordinates(points: Point[]): number[][] {
     return coordinates;
 }
 
-function usablePolygonPoints(points: Point[] | undefined): Point[] | undefined {
-    const source = points ?? [];
+function usablePolygonPoints(points: unknown): Point[] | undefined {
+    const source = Array.isArray(points) ? points : [];
     if (!source.every(isUsablePoint)) return undefined;
     const clean = dropClosingPoint(source);
     if (clean.length < 3 || rawPolygonArea(clean) < 0.0001) return undefined;
     return clean;
 }
 
-function usableLinePoints(points: Point[] | undefined): Point[] | undefined {
-    const source = points ?? [];
+function usableLinePoints(points: unknown): Point[] | undefined {
+    const source = Array.isArray(points) ? points : [];
     if (source.length < 2 || !source.every(isUsablePoint)) return undefined;
     const first = source[0];
     if (source.every(point => point.x === first.x && point.y === first.y)) return undefined;
     return source;
+}
+
+function evidenceItemCount(value: unknown): number {
+    if (Array.isArray(value)) return value.length;
+    return value ? 1 : 0;
 }
 
 function isUsablePoint(point: unknown): point is Point {
