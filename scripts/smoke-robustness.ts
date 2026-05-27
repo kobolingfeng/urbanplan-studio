@@ -61,6 +61,7 @@ assertNoThrow('rules malformed project', () => runPlanningRules(null as never, '
 assertNoThrow('rules sparse objects', () => runPlanningRules({ objects: [null, {}] } as never, 'base'));
 assertNoThrow('rules malformed road points', () => runPlanningRules({ objects: [{ type: 'road', points: 'bad' }] } as never, 'base'));
 assertNoThrow('rule catalog sparse checks', () => buildRuleCatalogReport([null, {}] as never));
+assertNoThrow('GeoJSON export malformed project', () => buildGeoJsonFeatureCollection(null as never, 'base', unitSystem));
 assertNoThrow('GeoJSON export sparse objects', () => buildGeoJsonFeatureCollection({ objects: [null, {}] } as never, 'base', unitSystem));
 assertNoThrow('GeoJSON parse malformed input', () => parseGeoJsonProject(null, fallbackProject as never));
 assertNoThrow('GeoJSON parse malformed fallback', () => parseGeoJsonProject({

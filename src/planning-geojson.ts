@@ -102,7 +102,8 @@ export function buildGeoJsonFeatureCollection(
     activeScenarioId: string,
     unitSystem: UnitSystemLike,
 ) {
-    const objects = recordItems<PlanningObjectLike>(project.objects);
+    const safeProject = projectRecord(project);
+    const objects = recordItems<PlanningObjectLike>(safeProject.objects);
     const features = objects
         .map(object => ({
             type: 'Feature',
@@ -114,11 +115,11 @@ export function buildGeoJsonFeatureCollection(
 
     return {
         type: 'FeatureCollection',
-        name: project.project?.name ?? 'UrbanPlan',
+        name: safeProject.project?.name ?? 'UrbanPlan',
         upf: {
-            formatVersion: project.formatVersion ?? '0.1.0',
+            formatVersion: safeProject.formatVersion ?? '0.1.0',
             activeScenarioId,
-            crs: project.project?.crs ?? 'DemoCanvasMetric',
+            crs: safeProject.project?.crs ?? 'DemoCanvasMetric',
             unitSystem,
             note: 'Coordinates are exported in the UPF project coordinate space; transform before mixing with GIS layers.',
         },
@@ -498,6 +499,10 @@ function isRecord(value: unknown): value is AnyRecord {
 
 function recordItems<T extends AnyRecord>(values: unknown): T[] {
     return Array.isArray(values) ? values.filter(isRecord) as T[] : [];
+}
+
+function projectRecord(value: unknown): ProjectLike {
+    return isRecord(value) ? value as ProjectLike : {};
 }
 
 function textOr(value: unknown, fallback: string): string {
