@@ -203,6 +203,18 @@ const trimmedScenarioComparison = buildScenarioComparisonReport(trimmedScenarioP
 assert(trimmedScenarioComparison.includes('| Base | 1/1 | 0 |'), 'scenario comparison should trim scenario ids before value lookup');
 const trimmedScenarioQuality = calculateDataQuality(trimmedScenarioProject, [], []);
 assert(trimmedScenarioQuality.parcelScenarioGaps.length === 0, 'data quality should trim scenario ids before gap checks');
+const trimmedScenarioValueKeyProject = {
+    ...trimmedScenarioProject,
+    scenarios: [{ id: 'base', name: 'Base' }],
+    objects: [{
+        ...trimmedScenarioProject.objects[0],
+        scenarioValues: { ' base ': { far: 2, greenRatio: 0.3, residentialGfaSqm: 12000, publicServiceGfaSqm: 400 } },
+    }],
+};
+const trimmedScenarioValueKeyComparison = buildScenarioComparisonReport(trimmedScenarioValueKeyProject, 'base');
+assert(trimmedScenarioValueKeyComparison.includes('| Base | 1/1 | 0 |'), 'scenario comparison should trim scenario value keys before lookup');
+const trimmedScenarioValueKeyQuality = calculateDataQuality(trimmedScenarioValueKeyProject, [], []);
+assert(trimmedScenarioValueKeyQuality.parcelScenarioGaps.length === 0, 'data quality should trim scenario value keys before gap checks');
 
 const numericReferenceQuality = calculateDataQuality({
     project: { name: 'Numeric Reference Fixture' },

@@ -195,7 +195,7 @@ export function buildScenarioComparisonReport(
         let valuesCount = 0;
         const missingParcels: string[] = [];
         for (const parcel of parcels) {
-            const value = parcel.scenarioValues?.[scenarioId];
+            const value = scenarioValueFor(parcel.scenarioValues, scenarioId);
             if (!value) {
                 missingParcels.push(String(parcel.name ?? parcel.id ?? '未命名地块'));
                 continue;
@@ -350,7 +350,7 @@ export function calculateDataQuality(
     const scenarioIds = new Set((project.scenarios ?? []).map(scenario => identifierText(scenario.id)).filter((id): id is string => Boolean(id)));
     const parcelScenarioGaps = objects
         .filter(object => object.type === 'parcel')
-        .flatMap(object => [...scenarioIds].filter(id => !object.scenarioValues?.[id]).map(id => `${object.name ?? object.id} 缺少 ${id}`));
+        .flatMap(object => [...scenarioIds].filter(id => !scenarioValueFor(object.scenarioValues, id)).map(id => `${object.name ?? object.id} 缺少 ${id}`));
 
     const deductions = [
         deduction('缺少证据来源', missingEvidence.length, 8),
@@ -414,6 +414,13 @@ function firstIdentifier(...values: unknown[]): string | undefined {
         if (id) return id;
     }
     return undefined;
+}
+
+function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
+    const target = identifierText(scenarioId);
+    if (!values || !target) return undefined;
+    if (values[target]) return values[target];
+    return Object.entries(values).find(([key]) => identifierText(key) === target)?.[1];
 }
 
 function referenceObjectKey(object: PlanningObjectLike): string {
