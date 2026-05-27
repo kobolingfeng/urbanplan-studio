@@ -90,5 +90,6 @@ assert(formatEvidenceForEditing([null, '有效证据'] as unknown as EvidenceIte
 assert(evidenceSearchText([null, { title: '有效调研', type: 'survey' }] as unknown as EvidenceItem[]).includes('调研/空间数据'), 'evidence search should skip malformed entries');
 assert(evidenceKind(null as unknown as EvidenceItem) === '其他证据', 'evidence kind should tolerate malformed entries');
 assert(evidenceCompletenessScore(null as unknown as EvidenceItem) === 0, 'evidence score should tolerate malformed entries');
+assert(evidenceCompletenessScore({} as unknown as EvidenceItem) === 0, 'evidence score should reject untitled structured entries');
 
 console.log('evidence smoke passed');

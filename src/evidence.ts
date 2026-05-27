@@ -159,7 +159,7 @@ export function evidenceKind(item: EvidenceItem): string {
 
 export function evidenceCompletenessScore(item: EvidenceItem): number {
     if (typeof item === 'string') return 55;
-    if (!asRecord(item)) return 0;
+    if (!asRecord(item) || !textOrEmpty(item.title)) return 0;
     const confidenceScore = typeof item.confidence === 'number' ? confidencePercent(item.confidence) : 65;
     const metadataScore = [
         item.title,
