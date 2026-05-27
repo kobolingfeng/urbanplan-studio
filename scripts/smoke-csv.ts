@@ -93,6 +93,12 @@ assert(parsedUnmatchedOnly?.importSummary.unmatchedParcelIds.join(',') === 'miss
 const parsedUnmatchedViaUpf = parseUpfText(unmatchedOnlyCsv, fallback);
 assert((parsedUnmatchedViaUpf as { importSummary?: { updatedRows?: number } }).importSummary?.updatedRows === 0, 'UPF parser should surface unmatched-only CSV import summaries');
 
+const parsedMalformedFallback = parseParcelIndicatorCsv([
+    'parcel_id,scenario_id,far',
+    'parcel_a,update,2.0',
+].join('\n'), { scenarios: 'bad', objects: 'bad' } as unknown as typeof fallback);
+assert(parsedMalformedFallback?.project.objects.length === 0 && parsedMalformedFallback.importSummary.skippedRows === 1, 'CSV import should tolerate malformed fallback collections');
+
 const multilineCsv = [
     'parcel_id,scenario_id,far,notes',
     'parcel_a,multiline,2.1,"line 1',

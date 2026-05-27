@@ -108,9 +108,11 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
     const headers = new Set(Object.keys(rows[0] ?? {}));
     if (!hasAny(headers, ['parcel_id', 'object_id', 'id']) || !hasAny(headers, ['scenario_id', 'scenario'])) return undefined;
 
-    const scenarios = [...(fallbackProject.scenarios ?? [])];
+    const fallbackScenarios = Array.isArray(fallbackProject.scenarios) ? fallbackProject.scenarios : [];
+    const fallbackObjects = Array.isArray(fallbackProject.objects) ? fallbackProject.objects : [];
+    const scenarios = [...fallbackScenarios];
     const scenarioIds = new Set(scenarios.map(scenario => csvIdentifierText(scenario.id)).filter((id): id is string => Boolean(id)));
-    const objects = (fallbackProject.objects ?? []).map(object => ({
+    const objects = fallbackObjects.map(object => ({
         ...object,
         scenarioValues: object.type === 'parcel' ? { ...(object.scenarioValues ?? {}) } : object.scenarioValues,
     }));
@@ -120,7 +122,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
         const id = csvIdentifierText(object.id);
         if (id) parcels.set(id, object);
     }
-    let activeScenarioId = fallbackProject.scenarios?.[0]?.id ?? 'scenario_csv';
+    let activeScenarioId = fallbackScenarios[0]?.id ?? 'scenario_csv';
     let updatedRows = 0;
     let skippedRows = 0;
     const unmatchedParcelIds = new Set<string>();
