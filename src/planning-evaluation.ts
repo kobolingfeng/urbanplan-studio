@@ -219,8 +219,8 @@ export function evaluateScenario(
     recommendations: RecommendationLike[] = [],
     weightProfile: EvaluationWeightProfile = EVALUATION_WEIGHT_PROFILES[0],
 ): ScenarioEvaluation {
-    const safeChecks = Array.isArray(checks) ? checks : [];
-    const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
+    const safeChecks = recordItems<CheckLike>(checks);
+    const safeRecommendations = recordItems<RecommendationLike>(recommendations);
     const safeWeightProfile = normalizeWeightProfile(weightProfile);
     const objects = projectObjects(project);
     const parcels = objects.filter(isParcel);
@@ -633,6 +633,14 @@ function projectObjects(project: ProjectLike): PlanningObjectLike[] {
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
     return Array.isArray(project.scenarios) ? project.scenarios : [];
+}
+
+function recordItems<T extends AnyRecord>(values: unknown): T[] {
+    return Array.isArray(values) ? values.filter(isRecord) as T[] : [];
+}
+
+function isRecord(value: unknown): value is AnyRecord {
+    return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
 function countBasis(project: ProjectLike): number {

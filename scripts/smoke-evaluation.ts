@@ -248,6 +248,14 @@ const malformedSignalEvaluationReport = buildScenarioEvaluationReport(
     'not an array' as unknown as Parameters<typeof buildScenarioEvaluationReport>[3],
 );
 assert(malformedSignalEvaluationReport.includes('方案综合评估'), 'evaluation report should tolerate malformed signals');
+const sparseSignalEvaluation = evaluateScenario(
+    project,
+    'scenario_update',
+    [null, { severity: 'warning', ruleId: 'sparse_rule', objectName: 'Sparse Object', title: 'Sparse signal' }] as unknown as Parameters<typeof evaluateScenario>[2],
+    [null, { title: 'Valid recommendation' }] as unknown as Parameters<typeof evaluateScenario>[3],
+);
+assert(sparseSignalEvaluation.riskRegister.some(item => item.includes('Sparse signal')), 'evaluation should keep valid sparse signal entries');
+assert(sparseSignalEvaluation.highlights.some(item => item.includes('1 条')), 'evaluation should ignore malformed recommendation entries');
 const scalarEvidenceEvaluation = evaluateScenario({
     project: { name: 'Scalar Evidence Evaluation' },
     ruleset: { version: 'Scalar Evidence Rules', basis: ['fixture'] },

@@ -267,7 +267,7 @@ export function buildDataQualityReport(
     checks: CheckLike[],
     recommendations: RecommendationLike[],
 ): string {
-    const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
+    const safeRecommendations = recordItems<RecommendationLike>(recommendations);
     const quality = calculateDataQuality(project, checks, safeRecommendations);
 
     const lines = [
@@ -330,8 +330,8 @@ export function calculateDataQuality(
     checks: CheckLike[],
     recommendations: RecommendationLike[] = [],
 ) {
-    const safeChecks = Array.isArray(checks) ? checks : [];
-    const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
+    const safeChecks = recordItems<CheckLike>(checks);
+    const safeRecommendations = recordItems<RecommendationLike>(recommendations);
     const objects = projectObjects(project);
     const evidenceByObject = new Map(objects.map(object => [object, objectEvidence(object)]));
     const missingEvidence = objects.filter(object => !evidenceByObject.get(object)?.length);
@@ -417,6 +417,14 @@ function projectObjects(project: ProjectLike): PlanningObjectLike[] {
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
     return Array.isArray(project.scenarios) ? project.scenarios : [];
+}
+
+function recordItems<T extends AnyRecord>(values: unknown): T[] {
+    return Array.isArray(values) ? values.filter(isRecord) as T[] : [];
+}
+
+function isRecord(value: unknown): value is AnyRecord {
+    return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
 function objectEvidence(object: PlanningObjectLike): EvidenceItem[] {

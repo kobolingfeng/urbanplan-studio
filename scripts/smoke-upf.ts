@@ -178,6 +178,19 @@ const malformedSignalReport = buildDataQualityReport(
     'not an array' as unknown as Parameters<typeof buildDataQualityReport>[2],
 );
 assert(malformedSignalReport.includes('智能建议数量：0'), 'quality report should ignore non-array recommendations');
+const sparseSignalQuality = calculateDataQuality(
+    analyticsFixture,
+    [null, { severity: 'warning', ruleId: 'sparse_rule', source: '原型规则' }] as unknown as Parameters<typeof calculateDataQuality>[1],
+    [null, { title: 'Valid recommendation' }] as unknown as Parameters<typeof calculateDataQuality>[2],
+);
+assert(sparseSignalQuality.ruleCatalog.length === 1, 'data quality should keep valid sparse check entries');
+assert(sparseSignalQuality.prototypeRuleCount === 1, 'data quality should ignore malformed check entries');
+const sparseSignalReport = buildDataQualityReport(
+    analyticsFixture,
+    [null, { severity: 'warning', ruleId: 'sparse_rule', source: '原型规则' }] as unknown as Parameters<typeof buildDataQualityReport>[1],
+    [null, { title: 'Valid recommendation' }] as unknown as Parameters<typeof buildDataQualityReport>[2],
+);
+assert(sparseSignalReport.includes('智能建议数量：1'), 'quality report should ignore malformed recommendation entries');
 const scalarEvidenceQuality = calculateDataQuality({
     project: { name: 'Scalar Evidence Quality' },
     objects: [{
