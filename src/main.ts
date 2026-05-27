@@ -51,6 +51,7 @@ import {
     PARCEL_CONTROL_RANGES as PARCEL_CONTROL_IMPORT_RANGES,
     PARCEL_SCENARIO_VALUE_RANGES as PARCEL_IMPORT_RANGES,
     ROAD_RANGES as ROAD_IMPORT_RANGES,
+    finiteNumberOr,
     integerInRangeOr,
     numberInRangeOr,
 } from './planning-ranges';
@@ -1783,8 +1784,7 @@ function percentField(label: string, value: number, onChange: (value: number) =>
 }
 
 function normalizeNumberInput(value: string, fallback: number, options: NumberFieldOptions): number {
-    let next = Number(value);
-    if (!Number.isFinite(next)) next = fallback;
+    let next = finiteNumberOr(value, fallback);
     if (options.integer) next = Math.round(next);
     if (options.min !== undefined) next = Math.max(options.min, next);
     if (options.max !== undefined) next = Math.min(options.max, next);
