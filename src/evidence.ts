@@ -120,14 +120,16 @@ export function formatEvidenceForEditing(items: EvidenceItem[] = []): string {
 }
 
 export function evidenceDisplayText(item: EvidenceItem): string {
-    if (typeof item === 'string') return item;
+    const normalized = normalizeEvidenceItem(item);
+    if (!normalized) return '';
+    if (typeof normalized === 'string') return normalized;
     const meta = [
-        item.type ? evidenceKind(item) : '',
-        item.collectedAt ?? '',
-        item.precision ?? '',
-        typeof item.confidence === 'number' ? `可信度 ${formatConfidence(item.confidence)}` : '',
+        normalized.type ? evidenceKind(normalized) : '',
+        normalized.collectedAt ?? '',
+        normalized.precision ?? '',
+        typeof normalized.confidence === 'number' ? `可信度 ${formatConfidence(normalized.confidence)}` : '',
     ].filter(Boolean);
-    return meta.length ? `${item.title}（${meta.join('，')}）` : item.title;
+    return meta.length ? `${normalized.title}（${meta.join('，')}）` : normalized.title;
 }
 
 export function evidenceSearchText(items: EvidenceItem[] = []): string {
