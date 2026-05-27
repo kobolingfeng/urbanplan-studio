@@ -91,7 +91,9 @@ export function invoke<T = unknown>(cmd: string, args: object = {}, options: Inv
 
 /** Listen for a native-pushed event. Returns an unsubscribe function. */
 export function on<T = unknown>(event: string, handler: (data: T) => void): () => void {
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return () => {};
+    const safeEvent = String(event ?? '');
     const listener = ((e: CustomEvent<T>) => handler(e.detail)) as EventListener;
-    window.addEventListener(`ipc:${event}`, listener);
-    return () => window.removeEventListener(`ipc:${event}`, listener);
+    window.addEventListener(`ipc:${safeEvent}`, listener);
+    return () => window.removeEventListener(`ipc:${safeEvent}`, listener);
 }

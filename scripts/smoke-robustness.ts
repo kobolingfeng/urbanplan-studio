@@ -7,6 +7,7 @@ import { evidenceCompletenessScore, evidenceKind, evidenceSearchText, formatEvid
 import { markdownTableRow, splitMarkdownTableRow } from '../src/markdown-table';
 import { markdownToHtml, renderModalContent } from '../src/markdown-renderer';
 import { buildUpfValidationReport, summarizeUpfValidation, type UpfValidationIssue } from '../src/upf-validation';
+import { invoke, on } from '../src/ipc';
 
 function fail(message: string): never {
     console.error(`robustness smoke failed: ${message}`);
@@ -67,5 +68,12 @@ assertNoThrow('evidence malformed inputs', () => {
     evidenceKind(null as unknown as EvidenceItem);
     evidenceCompletenessScore({} as unknown as EvidenceItem);
 });
+assertNoThrow('IPC listener without WebView', () => on(null as unknown as string, () => {})());
+try {
+    await invoke('test');
+    fail('invoke should reject outside WebView2');
+} catch (error) {
+    assert(error instanceof Error && error.message.includes('Not running in WebView2'), 'invoke should fail cleanly outside WebView2');
+}
 
 console.log('robustness smoke passed');
