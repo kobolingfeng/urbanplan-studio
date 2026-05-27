@@ -246,6 +246,7 @@ const multiGeometryGeoJson = {
             type: 'MultiPolygon',
             coordinates: [
                 [[[0, 0], [1, 1]]],
+                [[[0, 0], [10, 0], [20, 0], [0, 0]]],
                 [[[0, 0], [30, 0], [30, 30], [0, 30], [0, 0]]],
             ],
         },
@@ -268,6 +269,19 @@ const multiParcel = parsedMultiGeometry?.project.objects.find(object => object.i
 const multiRoad = parsedMultiGeometry?.project.objects.find(object => object.id === 'multi_road');
 assert(multiParcel?.points?.length === 4, 'GeoJSON import should use the first valid MultiPolygon ring');
 assert(multiRoad?.points?.length === 2, 'GeoJSON import should use the first valid MultiLineString part');
+
+const zeroAreaGeoJson = {
+    type: 'FeatureCollection',
+    name: 'Zero Area Geometry',
+    upf: { activeScenarioId: 'base', formatVersion: '0.1.0', crs: 'DemoCanvasMetric' },
+    features: [{
+        type: 'Feature',
+        id: 'zero_area_parcel',
+        geometry: { type: 'Polygon', coordinates: [[[0, 0], [10, 0], [20, 0], [0, 0]]] },
+        properties: { upfType: 'parcel', upfId: 'zero_area_parcel', name: 'Zero Area Parcel' },
+    }],
+};
+assert(parseGeoJsonProject(zeroAreaGeoJson, fallback) === undefined, 'GeoJSON import should skip zero-area polygons');
 
 const invalidNumberGeoJson = JSON.parse(text);
 invalidNumberGeoJson.features[0].properties = {

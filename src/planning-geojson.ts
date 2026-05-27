@@ -434,7 +434,7 @@ function firstUsableRing(rings: unknown): Point[] {
     if (!Array.isArray(rings)) return [];
     for (const ring of rings) {
         const points = dropClosingPoint(pointsFromCoordinates(ring));
-        if (points.length >= 3) return points;
+        if (points.length >= 3 && rawPolygonArea(points) > 0.0001) return points;
     }
     return [];
 }
