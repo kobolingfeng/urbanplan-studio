@@ -54,7 +54,7 @@ type RuleObject = {
 type RuleProject = {
     project?: { name?: string };
     ruleset?: { version?: string };
-    objects: RuleObject[];
+    objects?: RuleObject[];
 };
 
 export type PlanningRuleDefinition = {
@@ -367,10 +367,11 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         checks.push({ ...result, id: `check_${checks.length + 1}` });
     };
     const rulesetVersion = project.ruleset?.version;
+    const objects = project.objects ?? [];
 
-    const parcels = project.objects.filter(object => object.type === 'parcel' && isUsablePolygon(object.points));
-    const roads = project.objects.filter(object => object.type === 'road' && isUsableLine(object.points));
-    const facilities = project.objects.filter(object => object.type === 'facility' && isFinitePoint(object.point));
+    const parcels = objects.filter(object => object.type === 'parcel' && isUsablePolygon(object.points));
+    const roads = objects.filter(object => object.type === 'road' && isUsableLine(object.points));
+    const facilities = objects.filter(object => object.type === 'facility' && isFinitePoint(object.point));
 
     for (const parcel of parcels) {
         const value = parcelValue(parcel, scenarioId);
@@ -432,7 +433,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
                 source: ruleSource('landuse_industrial_residential_mix', rulesetVersion),
             });
         }
-        const overlapsHistoric = project.objects.some(item => item.type === 'constraint'
+        const overlapsHistoric = objects.some(item => item.type === 'constraint'
             && item.kind === '历史风貌控制'
             && isUsablePolygon(item.points)
             && polygonsOverlap(parcel.points!, item.points!));
@@ -472,11 +473,11 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
     }
 
-    const allParcelIds = new Set(project.objects
+    const allParcelIds = new Set(objects
         .filter(object => object.type === 'parcel')
         .map(normalizedObjectId)
         .filter((id): id is string => Boolean(id)));
-    const allRoadIds = new Set(project.objects
+    const allRoadIds = new Set(objects
         .filter(object => object.type === 'road')
         .map(normalizedObjectId)
         .filter((id): id is string => Boolean(id)));
@@ -496,7 +497,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
     }
 
-    for (const entrance of project.objects.filter(object => object.type === 'entrance' && isFinitePoint(object.point))) {
+    for (const entrance of objects.filter(object => object.type === 'entrance' && isFinitePoint(object.point))) {
         const parcelId = identifierText((entrance as unknown as AnyRecord).parcelId);
         const roadId = identifierText((entrance as unknown as AnyRecord).roadId);
         if (!parcelId || !allParcelIds.has(parcelId)) {
