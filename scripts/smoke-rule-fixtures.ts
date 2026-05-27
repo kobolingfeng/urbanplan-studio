@@ -83,6 +83,10 @@ const noProjectChecks = runPlanningRules({
 assert(noProjectChecks.some(check => check.objectId === 'project'), 'rules should run when project metadata is missing');
 const noObjectsResult = runPlanningRules({} as unknown as Parameters<typeof runPlanningRules>[0], 's1');
 assert(noObjectsResult.checks.length === 0 && noObjectsResult.recommendations.length === 1, 'rules should run when objects are missing');
+const malformedObjectsResult = runPlanningRules({
+    objects: 'not an array',
+} as unknown as Parameters<typeof runPlanningRules>[0], 's1');
+assert(malformedObjectsResult.checks.length === 0 && malformedObjectsResult.recommendations.length === 1, 'rules should ignore non-array object collections');
 
 assertTriggers('string numeric parcel controls', [{
     ...badParcel,

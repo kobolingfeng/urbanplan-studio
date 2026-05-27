@@ -367,7 +367,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         checks.push({ ...result, id: `check_${checks.length + 1}` });
     };
     const rulesetVersion = project.ruleset?.version;
-    const objects = project.objects ?? [];
+    const objects = Array.isArray(project.objects) ? project.objects : [];
 
     const parcels = objects.filter(object => object.type === 'parcel' && isUsablePolygon(object.points));
     const roads = objects.filter(object => object.type === 'road' && isUsableLine(object.points));
