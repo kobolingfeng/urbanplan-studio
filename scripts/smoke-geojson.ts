@@ -227,6 +227,24 @@ const trimmedScenarioExport = buildGeoJsonFeatureCollection({
 const trimmedScenarioExportParcel = trimmedScenarioExport.features.find(feature => feature.id === 'parcel_trimmed_scenario_export');
 assert(trimmedScenarioExportParcel?.properties.far === 3.4, 'GeoJSON export should trim scenario value keys before exporting properties');
 
+const malformedScenarioValuesExport = buildGeoJsonFeatureCollection({
+    project: { name: 'Malformed Scenario Values Export', crs: 'DemoCanvasMetric' },
+    objects: [{
+        id: 'parcel_malformed_values_export',
+        type: 'parcel',
+        name: 'Malformed Values Export Parcel',
+        points: [
+            { x: 0, y: 0 },
+            { x: 10, y: 0 },
+            { x: 10, y: 10 },
+            { x: 0, y: 10 },
+        ],
+        scenarioValues: [{ far: 4.2, buildingCoverage: 0.4, greenRatio: 0.2 }],
+    }],
+} as unknown as typeof project, 'base', UNIT_SYSTEM);
+const malformedScenarioValuesExportParcel = malformedScenarioValuesExport.features.find(feature => feature.id === 'parcel_malformed_values_export');
+assert(malformedScenarioValuesExportParcel?.properties.far === undefined, 'GeoJSON export should ignore malformed scenario value collections');
+
 const typeAliasGeoJson = {
     type: 'FeatureCollection',
     name: 'Type Alias',

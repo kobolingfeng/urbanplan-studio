@@ -249,7 +249,8 @@ function geoJsonProperties(object: PlanningObjectLike, activeScenarioId: string)
 }
 
 function parcelScenario(object: PlanningObjectLike, activeScenarioId: string): ScenarioValueLike {
-    return scenarioValueFor(object.scenarioValues, activeScenarioId) ?? Object.values(object.scenarioValues ?? {})[0] ?? {};
+    const values = scenarioValueMap(object.scenarioValues);
+    return scenarioValueFor(values, activeScenarioId) ?? Object.values(values)[0] ?? {};
 }
 
 function closedCoordinates(points: Point[]): number[][] {
@@ -494,9 +495,13 @@ function identifierText(value: unknown): string | undefined {
 
 function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
     const target = identifierText(scenarioId);
-    if (!values || !target) return undefined;
-    if (values[target]) return values[target];
+    if (!values || typeof values !== 'object' || Array.isArray(values) || !target) return undefined;
+    if (Object.prototype.hasOwnProperty.call(values, target)) return values[target];
     return Object.entries(values).find(([key]) => identifierText(key) === target)?.[1];
+}
+
+function scenarioValueMap<T>(values: Record<string, T> | undefined): Record<string, T> {
+    return values && typeof values === 'object' && !Array.isArray(values) ? values : {};
 }
 
 function booleanOr(value: unknown, fallback: boolean): boolean {
