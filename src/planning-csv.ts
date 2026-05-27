@@ -109,7 +109,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
     if (!hasAny(headers, ['parcel_id', 'object_id', 'id']) || !hasAny(headers, ['scenario_id', 'scenario'])) return undefined;
 
     const scenarios = [...(fallbackProject.scenarios ?? [])];
-    const scenarioIds = new Set(scenarios.map(scenario => scenario.id));
+    const scenarioIds = new Set(scenarios.map(scenario => csvIdentifierText(scenario.id)).filter((id): id is string => Boolean(id)));
     const objects = (fallbackProject.objects ?? []).map(object => ({
         ...object,
         scenarioValues: object.type === 'parcel' ? { ...(object.scenarioValues ?? {}) } : object.scenarioValues,
@@ -157,7 +157,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
             scenarioIds.add(scenarioId);
         }
         activeScenarioId = scenarioId;
-        const current = parcel.scenarioValues?.[scenarioId] ?? {};
+        const current = scenarioValueFor(parcel.scenarioValues, scenarioId) ?? {};
         parcel.scenarioValues = parcel.scenarioValues ?? {};
         parcel.scenarioValues[scenarioId] = {
             ...current,
@@ -312,6 +312,13 @@ function csvIdentifierText(value: unknown): string | undefined {
     if (typeof value !== 'string' && typeof value !== 'number') return undefined;
     const text = String(value).trim();
     return text || undefined;
+}
+
+function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: string): T | undefined {
+    const target = csvIdentifierText(scenarioId);
+    if (!values || !target) return undefined;
+    if (values[target]) return values[target];
+    return Object.entries(values).find(([key]) => csvIdentifierText(key) === target)?.[1];
 }
 
 function numberField(

@@ -156,6 +156,26 @@ const parsedNumericId = parseParcelIndicatorCsv([
 assert(parsedNumericId?.importSummary.updatedRows === 1, 'CSV import should match numeric zero parcel ids');
 assert(parsedNumericId?.project.objects[0].scenarioValues?.zero_update?.far === 2.4, 'CSV import should update numeric zero parcel ids');
 
+const trimmedScenarioFallback = {
+    scenarios: [{ id: ' update ', name: 'Update', description: 'Existing scenario with whitespace' }],
+    objects: [{
+        id: 'parcel_a',
+        type: 'parcel',
+        name: 'Parcel A',
+        scenarioValues: {
+            ' update ': { far: 1.1, notes: 'existing note' },
+        },
+    }],
+} as unknown as typeof fallback;
+const parsedTrimmedScenario = parseParcelIndicatorCsv([
+    'parcel_id,scenario_id,far',
+    'parcel_a,update,2.4',
+].join('\n'), trimmedScenarioFallback);
+assert(parsedTrimmedScenario?.project.scenarios.length === 1, 'CSV import should not duplicate scenarios whose ids differ only by whitespace');
+assert(parsedTrimmedScenario?.importSummary.scenarioIds.join(',') === 'update', 'CSV import summary should normalize scenario ids');
+assert(parsedTrimmedScenario?.project.objects[0].scenarioValues?.update?.far === 2.4, 'CSV import should update trimmed scenario keys');
+assert(parsedTrimmedScenario?.project.objects[0].scenarioValues?.update?.notes === 'existing note', 'CSV import should merge existing trimmed scenario values');
+
 const exampleCsv = readFileSync(join(ROOT, 'examples', 'parcel-indicators.csv'), 'utf8');
 const exampleFallback = {
     scenarios: [{ id: 'scenario_public', name: 'Public', description: 'Existing scenario' }],
