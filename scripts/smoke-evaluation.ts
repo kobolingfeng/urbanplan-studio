@@ -180,6 +180,34 @@ assert(degenerateEvaluation.parcels.length === 0, 'evaluation should exclude deg
 assert(!buildScenarioEvaluationReport(degenerateGeometryProject, 'scenario_update').includes('Line Parcel'), 'evaluation report should not allocate service demand to degenerate parcels');
 assert(!buildScenarioEvaluationReport(degenerateGeometryProject, 'scenario_update').includes('Collinear Parcel'), 'evaluation report should not allocate service demand to zero-area parcels');
 
+const invalidRoadEvaluation = evaluateScenario({
+    project: { name: 'Invalid Road Evaluation' },
+    ruleset: { version: 'Invalid Road Rules', basis: ['fixture'] },
+    scenarios: [{ id: 'scenario_update', name: 'Update' }],
+    objects: [{
+        id: 'parcel_valid_for_invalid_road',
+        type: 'parcel',
+        name: 'Valid Parcel For Invalid Road',
+        evidence: ['smoke fixture'],
+        points: [
+            { x: 0, y: 0 },
+            { x: 120, y: 0 },
+            { x: 120, y: 100 },
+            { x: 0, y: 100 },
+        ],
+        scenarioValues: {
+            scenario_update: { far: 2, buildingCoverage: 0.3, greenRatio: 0.3, residentialGfaSqm: 12000, publicServiceGfaSqm: 300 },
+        },
+    }, {
+        id: 'road_hex_coordinate',
+        type: 'road',
+        name: 'Hex Coordinate Road',
+        points: [{ x: 0, y: 0 }, { x: '0x10', y: 0 }],
+    }],
+} as unknown as typeof project, 'scenario_update', [], []);
+const invalidRoadMobility = invalidRoadEvaluation.dimensions.find(item => item.id === 'mobility');
+assert(invalidRoadMobility?.reason.includes('路网密度约 0 m/ha'), 'evaluation should ignore roads with string-coerced coordinates');
+
 const stringNumericProject = {
     project: { name: 'String Numeric Evaluation' },
     ruleset: { version: 'String Numeric Rules', basis: ['fixture'] },

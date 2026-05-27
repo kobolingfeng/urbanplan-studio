@@ -689,15 +689,15 @@ function isParcel(object: PlanningObjectLike): boolean {
 }
 
 function isRoad(object: PlanningObjectLike): boolean {
-    return object.type === 'road' && (object.points?.length ?? 0) >= 2;
+    return object.type === 'road' && isUsableLine(object.points);
 }
 
 function isFacility(object: PlanningObjectLike): boolean {
-    return object.type === 'facility' && Boolean(object.point);
+    return object.type === 'facility' && isFinitePoint(object.point);
 }
 
 function isEntrance(object: PlanningObjectLike): boolean {
-    return object.type === 'entrance' && Boolean(object.point);
+    return object.type === 'entrance' && isFinitePoint(object.point);
 }
 
 function isOpenSpace(object: PlanningObjectLike): boolean {
@@ -706,4 +706,16 @@ function isOpenSpace(object: PlanningObjectLike): boolean {
 
 function isUsablePolygon(points: Point[] | undefined): boolean {
     return (points?.length ?? 0) >= 3 && areaSqm(points ?? []) > 0.0001;
+}
+
+function isUsableLine(points: Point[] | undefined): boolean {
+    if (!points || points.length < 2 || !points.every(isFinitePoint)) return false;
+    return points.slice(1).some((point, index) => {
+        const previous = points[index];
+        return point.x !== previous.x || point.y !== previous.y;
+    });
+}
+
+function isFinitePoint(point: Point | undefined): point is Point {
+    return !!point && Number.isFinite(point.x) && Number.isFinite(point.y);
 }

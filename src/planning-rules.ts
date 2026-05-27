@@ -368,8 +368,8 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
     };
 
     const parcels = project.objects.filter(object => object.type === 'parcel' && isUsablePolygon(object.points));
-    const roads = project.objects.filter(object => object.type === 'road' && (object.points?.length ?? 0) >= 2);
-    const facilities = project.objects.filter(object => object.type === 'facility' && object.point);
+    const roads = project.objects.filter(object => object.type === 'road' && isUsableLine(object.points));
+    const facilities = project.objects.filter(object => object.type === 'facility' && isFinitePoint(object.point));
 
     for (const parcel of parcels) {
         const value = parcelValue(parcel, scenarioId);
@@ -495,7 +495,7 @@ export function runPlanningRules(project: RuleProject, scenarioId: string) {
         }
     }
 
-    for (const entrance of project.objects.filter(object => object.type === 'entrance' && object.point)) {
+    for (const entrance of project.objects.filter(object => object.type === 'entrance' && isFinitePoint(object.point))) {
         const parcelId = identifierText((entrance as unknown as AnyRecord).parcelId);
         const roadId = identifierText((entrance as unknown as AnyRecord).roadId);
         if (!parcelId || !allParcelIds.has(parcelId)) {
@@ -759,6 +759,18 @@ function number(value: unknown, fallback = 0): number {
 
 function isUsablePolygon(points: Point[] | undefined): boolean {
     return (points?.length ?? 0) >= 3 && areaSqm(points ?? []) > 0.0001;
+}
+
+function isUsableLine(points: Point[] | undefined): boolean {
+    if (!points || points.length < 2 || !points.every(isFinitePoint)) return false;
+    return points.slice(1).some((point, index) => {
+        const previous = points[index];
+        return point.x !== previous.x || point.y !== previous.y;
+    });
+}
+
+function isFinitePoint(point: Point | undefined): point is Point {
+    return !!point && Number.isFinite(point.x) && Number.isFinite(point.y);
 }
 
 function normalizedObjectId(object: RuleObject): string | undefined {

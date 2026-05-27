@@ -258,6 +258,28 @@ const entranceWithSinglePointRoad = [
 assertTriggers('entrance single-point road geometry gap', entranceWithSinglePointRoad, ['entrance_road_geometry_missing']);
 assertDoesNotTrigger('entrance single-point road geometry gap', entranceWithSinglePointRoad, ['entrance_road_distance', 'entrance_dangling_road']);
 
+const entranceWithInvalidCoordinateRoad = [
+    badParcel,
+    {
+        id: 'road_hex_coordinate',
+        type: 'road',
+        name: 'Hex Coordinate Road',
+        level: '支路',
+        points: [{ x: 10, y: 10 }, { x: '0x10', y: 10 }],
+    } as unknown as FixtureObject,
+    {
+        id: 'entrance_to_hex_coordinate_road',
+        type: 'entrance',
+        name: 'Entrance To Hex Coordinate Road',
+        entranceType: '机动车',
+        parcelId: 'parcel_bad_controls',
+        roadId: 'road_hex_coordinate',
+        point: { x: 20, y: 20 },
+    },
+];
+assertTriggers('entrance invalid-coordinate road geometry gap', entranceWithInvalidCoordinateRoad, ['entrance_road_geometry_missing']);
+assertDoesNotTrigger('entrance invalid-coordinate road geometry gap', entranceWithInvalidCoordinateRoad, ['entrance_road_distance', 'entrance_dangling_road']);
+
 const normalizedReferenceChecks = run([{
     ...badParcel,
     id: 0,
