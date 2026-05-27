@@ -219,7 +219,7 @@ export function evaluateScenario(
     recommendations: RecommendationLike[] = [],
     weightProfile: EvaluationWeightProfile = EVALUATION_WEIGHT_PROFILES[0],
 ): ScenarioEvaluation {
-    const safeChecks = recordItems<CheckLike>(checks);
+    const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
     const safeRecommendations = recordItems<RecommendationLike>(recommendations);
     const safeWeightProfile = normalizeWeightProfile(weightProfile);
     const objects = projectObjects(project);

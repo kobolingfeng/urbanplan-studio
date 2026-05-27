@@ -86,7 +86,7 @@ export function createUpfDocument<TProject extends ProjectLike>(
     recommendations: RecommendationLike[],
     evaluation?: unknown,
 ) {
-    const safeChecks = recordItems<CheckLike>(checks);
+    const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
     const safeRecommendations = recordItems<RecommendationLike>(recommendations);
     return {
         format: project.format ?? 'UPF',
@@ -338,7 +338,7 @@ export function calculateDataQuality(
     checks: CheckLike[],
     recommendations: RecommendationLike[] = [],
 ) {
-    const safeChecks = recordItems<CheckLike>(checks);
+    const safeChecks = recordItems<CheckLike>(checks).filter(check => identifierText(check.ruleId));
     const safeRecommendations = recordItems<RecommendationLike>(recommendations);
     const objects = projectObjects(project);
     const evidenceByObject = new Map(objects.map(object => [object, objectEvidence(object)]));

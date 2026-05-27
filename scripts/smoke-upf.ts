@@ -216,6 +216,12 @@ const malformedSignalQuality = calculateDataQuality(
     'not an array' as unknown as Parameters<typeof calculateDataQuality>[2],
 );
 assert(malformedSignalQuality.ruleCatalog.length === 0, 'data quality should ignore non-array checks');
+const unidentifiedCheckQuality = calculateDataQuality(
+    analyticsFixture,
+    [{ severity: 'error' }] as unknown as Parameters<typeof calculateDataQuality>[1],
+    [],
+);
+assert(unidentifiedCheckQuality.ruleCatalog.length === 0, 'data quality should ignore checks without rule ids');
 const malformedSignalReport = buildDataQualityReport(
     analyticsFixture,
     'not an array' as unknown as Parameters<typeof buildDataQualityReport>[1],

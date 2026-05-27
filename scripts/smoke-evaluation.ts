@@ -246,6 +246,13 @@ const malformedSignalEvaluation = evaluateScenario(
 );
 assert(malformedSignalEvaluation.riskRegister.length === 0, 'evaluation should ignore non-array checks');
 assert(!malformedSignalEvaluation.highlights.some(item => item.includes('系统生成')), 'evaluation should ignore non-array recommendations');
+const unidentifiedCheckEvaluation = evaluateScenario(
+    project,
+    'scenario_update',
+    [{ severity: 'error' }] as unknown as Parameters<typeof evaluateScenario>[2],
+    [],
+);
+assert(unidentifiedCheckEvaluation.dimensions.find(item => item.id === 'compliance')?.score === 100, 'evaluation should ignore checks without rule ids');
 const malformedSignalEvaluationReport = buildScenarioEvaluationReport(
     project,
     'scenario_update',
