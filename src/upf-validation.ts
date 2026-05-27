@@ -159,11 +159,16 @@ function validateEvidenceList(
     path: string,
     add: (severity: UpfValidationSeverity, path: string, message: string) => void,
 ) {
-    if (!Array.isArray(value) || !value.length) {
+    const items = Array.isArray(value)
+        ? value
+        : value === undefined || value === null
+            ? []
+            : [value];
+    if (!items.length) {
         add('warning', path, '对象缺少证据来源，会降低可信度。');
         return;
     }
-    value.forEach((item, index) => {
+    items.forEach((item, index) => {
         const itemPath = `${path}[${index}]`;
         const normalized = normalizeEvidenceItem(item);
         if (!normalized) {

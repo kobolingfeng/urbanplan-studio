@@ -108,6 +108,12 @@ const sparseBasisIssues = validateUpfDocument({
 });
 assert(sparseBasisIssues.some(issue => issue.path === 'ruleset.basis' && issue.message.includes('缺少')), 'UPF validation should require at least one valid basis entry');
 assert(sparseBasisIssues.some(issue => issue.path === 'ruleset.basis[0]'), 'UPF validation should report malformed basis entries');
+const scalarEvidenceIssues = validateUpfDocument({
+    ...minimalRaw,
+    objects: [{ ...minimalRaw.objects[0], evidence: 'legacy scalar evidence' }],
+});
+assert(!scalarEvidenceIssues.some(issue => issue.path === 'objects[0].evidence' && issue.message.includes('缺少证据')), 'UPF validation should treat scalar evidence as a compatible single source');
+assert(scalarEvidenceIssues.some(issue => issue.path === 'objects[0].evidence[0]' && issue.message.includes('旧版字符串证据')), 'UPF validation should still recommend upgrading scalar legacy evidence');
 
 const roundTrip = createUpfDocument(minimal.project, minimal.activeScenarioId, [], [], {
     scenarioId: minimal.activeScenarioId,
