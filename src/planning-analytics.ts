@@ -479,7 +479,7 @@ function isComparableParcel(object: PlanningObjectLike): boolean {
 }
 
 function rawPolygonArea(points: Array<{ x: number; y: number }>): number {
-    if (points.length < 3) return 0;
+    if (points.length < 3 || !points.every(isFinitePoint)) return 0;
     let sum = 0;
     for (let i = 0; i < points.length; i++) {
         const a = points[i];
@@ -487,6 +487,10 @@ function rawPolygonArea(points: Array<{ x: number; y: number }>): number {
         sum += a.x * b.y - b.x * a.y;
     }
     return Math.abs(sum / 2);
+}
+
+function isFinitePoint(point: { x: number; y: number } | undefined): point is { x: number; y: number } {
+    return !!point && Number.isFinite(point.x) && Number.isFinite(point.y);
 }
 
 function average(values: number[]): number {
