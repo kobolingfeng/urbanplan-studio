@@ -57,7 +57,11 @@ export function validateUpfDocument(input: unknown): UpfValidationIssue[] {
     else {
         if (!isNonEmptyString(ruleset.jurisdiction)) add('warning', 'ruleset.jurisdiction', '缺少规则适用地区。');
         if (!isNonEmptyString(ruleset.version)) add('warning', 'ruleset.version', '缺少规则版本。');
-        if (!Array.isArray(ruleset.basis) || !ruleset.basis.length) add('warning', 'ruleset.basis', '缺少规则依据清单。');
+        const basis = Array.isArray(ruleset.basis) ? ruleset.basis : [];
+        if (!basis.some(isNonEmptyString)) add('warning', 'ruleset.basis', '缺少规则依据清单。');
+        basis.forEach((item, index) => {
+            if (!isNonEmptyString(item)) add('warning', `ruleset.basis[${index}]`, '规则依据必须是非空字符串。');
+        });
     }
 
     const scenarios = Array.isArray(data.scenarios) ? data.scenarios : [];

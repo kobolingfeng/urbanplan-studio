@@ -96,6 +96,12 @@ percentSignConfidenceRaw.objects[0].evidence[0].confidence = '86%';
 const percentSignConfidenceIssues = validateUpfDocument(percentSignConfidenceRaw);
 assert(percentSignConfidenceIssues.some(issue => issue.severity === 'info' && issue.path.endsWith('.confidence')), 'percent-suffixed confidence strings should be reported as compatible');
 assert(!percentSignConfidenceIssues.some(issue => issue.severity === 'warning' && issue.path.endsWith('.confidence')), 'percent-suffixed confidence strings should not be warned as invalid');
+const sparseBasisIssues = validateUpfDocument({
+    ...minimalRaw,
+    ruleset: { ...minimalRaw.ruleset, basis: [null, ' '] },
+});
+assert(sparseBasisIssues.some(issue => issue.path === 'ruleset.basis' && issue.message.includes('缺少')), 'UPF validation should require at least one valid basis entry');
+assert(sparseBasisIssues.some(issue => issue.path === 'ruleset.basis[0]'), 'UPF validation should report malformed basis entries');
 
 const roundTrip = createUpfDocument(minimal.project, minimal.activeScenarioId, [], [], {
     scenarioId: minimal.activeScenarioId,
