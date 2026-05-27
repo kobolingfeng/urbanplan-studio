@@ -205,6 +205,22 @@ const parsedNumericId = parseParcelIndicatorCsv([
 assert(parsedNumericId?.importSummary.updatedRows === 1, 'CSV import should match numeric zero parcel ids');
 assert(parsedNumericId?.project.objects[0].scenarioValues?.zero_update?.far === 2.4, 'CSV import should update numeric zero parcel ids');
 
+const malformedScenarioValuesFallback = {
+    scenarios: [{ id: 0, name: 'Zero', description: 'Existing numeric scenario' }],
+    objects: [{
+        id: 'parcel_a',
+        type: 'parcel',
+        name: 'Parcel A',
+        scenarioValues: 'bad',
+    }],
+} as unknown as typeof fallback;
+const parsedMalformedScenarioValues = parseParcelIndicatorCsv([
+    'parcel_id,scenario_id,far',
+    'parcel_a,0,2.4',
+].join('\n'), malformedScenarioValuesFallback);
+const malformedScenarioValue = parsedMalformedScenarioValues?.project.objects[0].scenarioValues?.['0'] as { far?: number; 0?: unknown } | undefined;
+assert(malformedScenarioValue?.far === 2.4 && malformedScenarioValue[0] === undefined, 'CSV import should ignore malformed fallback scenario value maps');
+
 const trimmedScenarioFallback = {
     scenarios: [{ id: ' update ', name: 'Update', description: 'Existing scenario with whitespace' }],
     objects: [{

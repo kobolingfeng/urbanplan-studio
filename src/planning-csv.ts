@@ -115,7 +115,7 @@ export function parseParcelIndicatorCsv<TProject extends CsvProjectLike>(
     const scenarioIds = new Set(scenarios.map(scenario => csvIdentifierText(scenario.id)).filter((id): id is string => Boolean(id)));
     const objects = fallbackObjects.map(object => ({
         ...object,
-        scenarioValues: object.type === 'parcel' ? { ...(object.scenarioValues ?? {}) } : object.scenarioValues,
+        scenarioValues: object.type === 'parcel' ? { ...scenarioValueMap(object.scenarioValues) } : object.scenarioValues,
     }));
     const parcels = new Map<string, CsvObjectLike>();
     for (const object of objects) {
@@ -338,9 +338,13 @@ function csvIdentifierText(value: unknown): string | undefined {
 
 function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: string): T | undefined {
     const target = csvIdentifierText(scenarioId);
-    if (!values || !target) return undefined;
-    if (values[target]) return values[target];
+    if (!values || typeof values !== 'object' || Array.isArray(values) || !target) return undefined;
+    if (Object.prototype.hasOwnProperty.call(values, target)) return values[target];
     return Object.entries(values).find(([key]) => csvIdentifierText(key) === target)?.[1];
+}
+
+function scenarioValueMap<T>(values: Record<string, T> | undefined): Record<string, T> {
+    return values && typeof values === 'object' && !Array.isArray(values) ? values : {};
 }
 
 function numberField(
