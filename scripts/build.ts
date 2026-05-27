@@ -70,8 +70,8 @@ function configText(value: unknown, fallback: string): string {
 
 try {
     const cfg = await Bun.file(join(ROOT, 'app.config.json')).json();
-    buildCommand = cfg?.build?.command;
-    buildOutDir  = cfg?.build?.outDir;
+    buildCommand = typeof cfg?.build?.command === 'string' && cfg.build.command.trim() ? cfg.build.command.trim() : undefined;
+    buildOutDir  = typeof cfg?.build?.outDir === 'string' && cfg.build.outDir.trim() ? cfg.build.outDir.trim() : undefined;
     appName = configText(cfg?.app?.name ?? cfg?.window?.title, appName);
     appVersion = configText(cfg?.app?.version, appVersion);
 } catch {}
