@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, watch } from 'fs';
 import { join, resolve } from 'path';
 import { createServer } from 'net';
-import { resolveDevServerPath, splitCommandLine, withResolvedDevServerPort } from './dev-utils';
+import { resolveDevPort, resolveDevServerPath, splitCommandLine, withResolvedDevServerPort } from './dev-utils';
 
 const ROOT = resolve(import.meta.dir, '..');
 const DIST = join(ROOT, 'dist');
@@ -16,7 +16,7 @@ let devCommand: string | undefined;
 let waitForPort = true;
 try {
     const cfg = await Bun.file(join(ROOT, 'app.config.json')).json();
-    PORT       = Number(process.env.PORT || cfg?.dev?.port || 3000);
+    PORT       = resolveDevPort(process.env.PORT ?? cfg?.dev?.port, 3000);
     devCommand = cfg?.dev?.command;
     waitForPort = cfg?.dev?.waitForPort ?? true;
 } catch {}

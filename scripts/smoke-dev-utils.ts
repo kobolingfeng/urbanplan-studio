@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { resolveDevServerPath, splitCommandLine, withResolvedDevServerPort } from './dev-utils';
+import { resolveDevPort, resolveDevServerPath, splitCommandLine, withResolvedDevServerPort } from './dev-utils';
 
 function fail(message: string): never {
     console.error(`dev utils smoke failed: ${message}`);
@@ -25,6 +25,12 @@ assert(!existing.includes('4173'), 'existing port should not be overwritten');
 
 const nonVite = withResolvedDevServerPort('webpack-dev-server', ['--hot'], 4173);
 assert(JSON.stringify(nonVite) === JSON.stringify(['--hot']), 'non-vite commands should not be modified');
+
+assert(resolveDevPort('4173') === 4173, 'dev port parser should accept numeric strings');
+assert(resolveDevPort(5173) === 5173, 'dev port parser should accept numeric values');
+assert(resolveDevPort('abc') === 3000, 'dev port parser should reject non-numeric strings');
+assert(resolveDevPort('70000', 3001) === 3001, 'dev port parser should reject out-of-range ports');
+assert(resolveDevPort('3000.5', 3001) === 3001, 'dev port parser should reject fractional ports');
 
 const distRoot = join(import.meta.dir, '..', 'dist');
 assert(resolveDevServerPath(distRoot, '/') === join(distRoot, 'index.html'), 'dev server root should resolve to index.html');
