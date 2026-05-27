@@ -121,6 +121,17 @@ const sparseObjectResult = runPlanningRules({
     objects: [null, ...project.objects],
 } as unknown as typeof project, 's1');
 assert(sparseObjectResult.checks.some(check => check.ruleId === 'parcel_far_max'), 'rules should ignore malformed object entries');
+const malformedRoadResult = runPlanningRules({
+    project: { name: 'Malformed Road Rules' },
+    ruleset: { version: 'Malformed Road Rules' },
+    objects: [{
+        id: 'road_string_points',
+        type: 'road',
+        name: 'String Points Road',
+        points: 'bad',
+    }],
+} as unknown as typeof project, 's1');
+assert(!malformedRoadResult.checks.some(check => check.objectId === 'road_string_points'), 'rules should ignore roads with non-array point collections');
 
 for (const id of [
     'parcel_far_max',

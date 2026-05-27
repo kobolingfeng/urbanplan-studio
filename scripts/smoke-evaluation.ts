@@ -216,6 +216,19 @@ const invalidRoadEvaluation = evaluateScenario({
 } as unknown as typeof project, 'scenario_update', [], []);
 const invalidRoadMobility = invalidRoadEvaluation.dimensions.find(item => item.id === 'mobility');
 assert(invalidRoadMobility?.reason.includes('路网密度约 0 m/ha'), 'evaluation should ignore roads with string-coerced coordinates');
+const nonArrayRoadEvaluation = evaluateScenario({
+    project: { name: 'Non Array Road Evaluation' },
+    ruleset: { version: 'Non Array Road Rules', basis: ['fixture'] },
+    scenarios: [{ id: 'scenario_update', name: 'Update' }],
+    objects: [{
+        id: 'road_string_points',
+        type: 'road',
+        name: 'String Points Road',
+        points: 'bad',
+    }],
+} as unknown as typeof project, 'scenario_update', [], []);
+const nonArrayRoadMobility = nonArrayRoadEvaluation.dimensions.find(item => item.id === 'mobility');
+assert(nonArrayRoadMobility?.reason.includes('路网密度约 0 m/ha'), 'evaluation should ignore roads with non-array point collections');
 
 const malformedBasisEvaluation = evaluateScenario({
     project: { name: 'Malformed Basis Evaluation' },

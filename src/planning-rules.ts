@@ -762,20 +762,22 @@ function number(value: unknown, fallback = 0): number {
     return finiteNumberOr(value, fallback);
 }
 
-function isUsablePolygon(points: Point[] | undefined): boolean {
-    return (points?.length ?? 0) >= 3 && areaSqm(points ?? []) > 0.0001;
+function isUsablePolygon(points: unknown): boolean {
+    const source = Array.isArray(points) ? points : [];
+    return source.length >= 3 && areaSqm(source) > 0.0001;
 }
 
-function isUsableLine(points: Point[] | undefined): boolean {
-    if (!points || points.length < 2 || !points.every(isFinitePoint)) return false;
-    return points.slice(1).some((point, index) => {
-        const previous = points[index];
+function isUsableLine(points: unknown): boolean {
+    const source = Array.isArray(points) ? points : [];
+    if (source.length < 2 || !source.every(isFinitePoint)) return false;
+    return source.slice(1).some((point, index) => {
+        const previous = source[index];
         return point.x !== previous.x || point.y !== previous.y;
     });
 }
 
-function isFinitePoint(point: Point | undefined): point is Point {
-    return !!point && Number.isFinite(point.x) && Number.isFinite(point.y);
+function isFinitePoint(point: unknown): point is Point {
+    return isRecord(point) && Number.isFinite(point.x) && Number.isFinite(point.y);
 }
 
 function normalizedObjectId(object: RuleObject): string | undefined {
