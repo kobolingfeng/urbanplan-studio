@@ -3,6 +3,7 @@ import {
     areaSqm,
     centroid,
     distance,
+    distanceToPolyline,
     pointInPolygon,
     polygonsOverlap,
     rect,
@@ -39,6 +40,13 @@ assert(areaSqm(coercedPolygon) === 0, 'area should reject string-coerced polygon
 assert(!pointInPolygon({ x: 5, y: 5 }, coercedPolygon), 'point-in-polygon should reject string-coerced polygon coordinates');
 assert(!polygonsOverlap(coercedPolygon, square), 'polygon overlap should reject string-coerced polygon coordinates');
 assert(!Number.isFinite(distance({ x: 0, y: 0 }, { x: '0x10', y: 0 } as unknown as typeof square[number])), 'distance should reject string-coerced coordinates');
+const malformedPoints = 'not an array' as unknown as typeof square;
+assert(areaSqm(malformedPoints) === 0, 'area should ignore malformed point collections');
+const malformedCentroid = centroid(malformedPoints);
+assert(malformedCentroid.x === 0 && malformedCentroid.y === 0, 'centroid should ignore malformed point collections');
+assert(!pointInPolygon({ x: 5, y: 5 }, malformedPoints), 'point-in-polygon should ignore malformed point collections');
+assert(!polygonsOverlap(malformedPoints, square), 'polygon overlap should ignore malformed point collections');
+assert(!Number.isFinite(distanceToPolyline({ x: 5, y: 5 }, malformedPoints)), 'polyline distance should ignore malformed point collections');
 
 const intersection = segmentIntersection({ x: 0, y: 5 }, { x: 10, y: 5 }, { x: 5, y: 0 }, { x: 5, y: 10 });
 assert(intersection?.x === 5 && intersection.y === 5, 'segment intersection mismatch');

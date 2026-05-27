@@ -21,11 +21,11 @@ export function rect(x: number, y: number, width: number, height: number): Point
 }
 
 export function areaSqm(points: Point[]): number {
-    return rawPolygonArea(points) * AREA_FACTOR;
+    return rawPolygonArea(pointList(points)) * AREA_FACTOR;
 }
 
 export function centroid(points: Point[]): Point {
-    const finitePoints = points.filter(isFinitePoint);
+    const finitePoints = pointList(points).filter(isFinitePoint);
     if (!finitePoints.length) return { x: 0, y: 0 };
     const areaRaw = finitePoints.reduce((sum, point, index) => {
         const next = finitePoints[(index + 1) % finitePoints.length];
@@ -64,22 +64,24 @@ export function distanceToSegment(point: Point, a: Point, b: Point): number {
 }
 
 export function distanceToPolyline(point: Point, points: Point[]): number {
+    const source = pointList(points);
     let best = Number.POSITIVE_INFINITY;
-    for (let i = 0; i < points.length - 1; i++) {
-        best = Math.min(best, distanceToSegment(point, points[i], points[i + 1]));
+    for (let i = 0; i < source.length - 1; i++) {
+        best = Math.min(best, distanceToSegment(point, source[i], source[i + 1]));
     }
     return best;
 }
 
 export function pointInPolygon(point: Point, points: Point[]): boolean {
-    if (!isFinitePoint(point) || !isUsablePolygon(points)) return false;
-    for (let index = 0; index < points.length; index++) {
-        if (onSegment(points[index], points[(index + 1) % points.length], point)) return true;
+    const source = pointList(points);
+    if (!isFinitePoint(point) || !isUsablePolygon(source)) return false;
+    for (let index = 0; index < source.length; index++) {
+        if (onSegment(source[index], source[(index + 1) % source.length], point)) return true;
     }
     let inside = false;
-    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-        const pi = points[i];
-        const pj = points[j];
+    for (let i = 0, j = source.length - 1; i < source.length; j = i++) {
+        const pi = source[i];
+        const pj = source[j];
         const intersects = ((pi.y > point.y) !== (pj.y > point.y))
             && point.x < ((pj.x - pi.x) * (point.y - pi.y)) / (pj.y - pi.y) + pi.x;
         if (intersects) inside = !inside;
@@ -88,26 +90,30 @@ export function pointInPolygon(point: Point, points: Point[]): boolean {
 }
 
 export function polygonsOverlap(a: Point[], b: Point[]): boolean {
-    if (!isUsablePolygon(a) || !isUsablePolygon(b)) return false;
-    if (a.some(point => pointInPolygon(point, b)) || b.some(point => pointInPolygon(point, a))) return true;
-    for (let i = 0; i < a.length; i++) {
-        for (let j = 0; j < b.length; j++) {
-            if (segmentsIntersect(a[i], a[(i + 1) % a.length], b[j], b[(j + 1) % b.length])) return true;
+    const first = pointList(a);
+    const second = pointList(b);
+    if (!isUsablePolygon(first) || !isUsablePolygon(second)) return false;
+    if (first.some(point => pointInPolygon(point, second)) || second.some(point => pointInPolygon(point, first))) return true;
+    for (let i = 0; i < first.length; i++) {
+        for (let j = 0; j < second.length; j++) {
+            if (segmentsIntersect(first[i], first[(i + 1) % first.length], second[j], second[(j + 1) % second.length])) return true;
         }
     }
     return false;
 }
 
 function isUsablePolygon(points: Point[]): boolean {
-    return points.length >= 3 && rawPolygonArea(points) > 0.0001;
+    const source = pointList(points);
+    return source.length >= 3 && rawPolygonArea(source) > 0.0001;
 }
 
 function rawPolygonArea(points: Point[]): number {
-    if (points.length < 3 || !points.every(isFinitePoint)) return 0;
+    const source = pointList(points);
+    if (source.length < 3 || !source.every(isFinitePoint)) return 0;
     let sum = 0;
-    for (let index = 0; index < points.length; index++) {
-        const current = points[index];
-        const next = points[(index + 1) % points.length];
+    for (let index = 0; index < source.length; index++) {
+        const current = source[index];
+        const next = source[(index + 1) % source.length];
         sum += current.x * next.y - next.x * current.y;
     }
     return Math.abs(sum / 2);
@@ -141,6 +147,10 @@ function onSegment(a: Point, b: Point, p: Point): boolean {
 
 function isFinitePoint(point: Point | undefined): point is Point {
     return !!point && Number.isFinite(point.x) && Number.isFinite(point.y);
+}
+
+function pointList(points: Point[] | undefined): Point[] {
+    return Array.isArray(points) ? points : [];
 }
 
 export function segmentIntersection(a: Point, b: Point, c: Point, d: Point): Point | null {
