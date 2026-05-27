@@ -410,7 +410,7 @@ function ecologyDimension(
 }
 
 function renewalValueDimension(project: ProjectLike, parcels: PlanningObjectLike[], scenarioId: string, weight: number): DimensionScore {
-    const baselineId = (project.scenarios ?? []).find(scenario => scenario.id.includes('baseline'))?.id;
+    const baselineId = (project.scenarios ?? []).find(scenario => identifierText(scenario.id)?.toLowerCase().includes('baseline'))?.id;
     const fitScores = parcels.map(parcel => {
         const value = parcelValue(parcel, scenarioId);
         const farMax = number(parcel.controls?.farMax, 4);

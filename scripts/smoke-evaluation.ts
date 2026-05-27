@@ -248,4 +248,29 @@ const trimmedScenarioValueReport = buildScenarioEvaluationReport(trimmedScenario
 assert(trimmedScenarioValueReport.includes('当前方案：Update'), 'evaluation should trim scenario ids before finding scenario names');
 assert(trimmedScenarioValueReport.includes('| Trimmed Scenario Key Parcel | 1455 |'), 'evaluation should trim scenario value keys before lookup');
 
+const mixedCaseBaselineEvaluation = evaluateScenario({
+    project: { name: 'Mixed Case Baseline Evaluation' },
+    ruleset: { version: 'Mixed Case Baseline Rules', basis: ['fixture'] },
+    scenarios: [{ id: ' Scenario_Baseline ', name: 'Baseline' }, { id: 'scenario_update', name: 'Update' }],
+    objects: [{
+        id: 'parcel_mixed_case_baseline',
+        type: 'parcel',
+        name: 'Mixed Case Baseline Parcel',
+        evidence: ['smoke fixture'],
+        points: [
+            { x: 0, y: 0 },
+            { x: 120, y: 0 },
+            { x: 120, y: 100 },
+            { x: 0, y: 100 },
+        ],
+        controls: { farMax: 4, buildingCoverageMax: 0.35, greenRatioMin: 0.30 },
+        scenarioValues: {
+            Scenario_Baseline: { far: 2.2, buildingCoverage: 0.34, greenRatio: 0.25, residentialGfaSqm: 30000, publicServiceGfaSqm: 200, updateMode: '综合整治' },
+            scenario_update: { far: 3.8, buildingCoverage: 0.33, greenRatio: 0.32, residentialGfaSqm: 48000, publicServiceGfaSqm: 1600, updateMode: '综合整治' },
+        },
+    }],
+} as unknown as typeof project, 'scenario_update', [], []);
+const mixedCaseRenewal = mixedCaseBaselineEvaluation.dimensions.find(item => item.id === 'renewalValue');
+assert(mixedCaseRenewal?.reason.includes('比较现状基准'), 'evaluation should detect mixed-case baseline scenario ids');
+
 console.log('evaluation smoke passed');
