@@ -103,6 +103,12 @@ const multilineParcel = parsedMultiline?.project.objects.find(object => object.i
 assert(parsedMultiline?.importSummary.rowCount === 1, 'CSV import should treat quoted newlines as one row');
 assert(multilineParcel?.scenarioValues?.multiline?.notes === 'line 1\nline 2, with comma and "quote"', 'CSV import should parse quoted multiline notes');
 
+const unclosedQuoteCsv = [
+    'parcel_id,scenario_id,notes',
+    'parcel_a,broken,"unterminated note',
+].join('\n');
+assert(parseParcelIndicatorCsv(unclosedQuoteCsv, fallback) === undefined, 'CSV import should reject unclosed quoted cells');
+
 const formattedNumberCsv = [
     'parcel_id,scenario_id,far,building_coverage,green_ratio,residential_gfa_sqm,public_service_gfa_sqm',
     'parcel_a,formatted,2.8,31%,36%,"42,000","1,200"',

@@ -281,6 +281,7 @@ function parseCsvRecords(text: string): string[][] {
             cell += char;
         }
     }
+    if (quoted) return [];
     pushRow();
     return records;
 
