@@ -41,6 +41,8 @@ assert(resolveDevPort('1e3', 3001) === 3001, 'dev port parser should reject expo
 const distRoot = join(import.meta.dir, '..', 'dist');
 assert(resolveDevServerPath(distRoot, '/') === join(distRoot, 'index.html'), 'dev server root should resolve to index.html');
 assert(resolveDevServerPath(distRoot, '/main.js') === join(distRoot, 'main.js'), 'dev server should resolve files inside dist');
+assert(resolveDevServerPath(distRoot, '/main.js?v=123#bundle') === join(distRoot, 'main.js'), 'dev server should ignore URL query and hash suffixes');
+assert(resolveDevServerPath(distRoot, '/?v=123') === join(distRoot, 'index.html'), 'dev server should resolve root paths with URL suffixes to index.html');
 assert(resolveDevServerPath(distRoot, '/../package.json') === undefined, 'dev server should reject path traversal');
 assert(resolveDevServerPath(distRoot, '/%2e%2e/package.json') === undefined, 'dev server should reject encoded path traversal');
 assert(resolveDevServerPath(distRoot, '/%E0%A4%A') === undefined, 'dev server should reject malformed URI paths');

@@ -52,7 +52,7 @@ export function splitCommandLine(command: string): string[] {
 
 export function resolveDevServerPath(root: string, urlPath: string): string | undefined {
     if (typeof root !== 'string' || !root) return undefined;
-    const sourcePath = typeof urlPath === 'string' ? urlPath : '/';
+    const sourcePath = typeof urlPath === 'string' ? urlPath.split(/[?#]/, 1)[0] || '/' : '/';
     let decodedPath: string;
     try {
         decodedPath = decodeURIComponent(sourcePath === '/' ? '/index.html' : sourcePath);
