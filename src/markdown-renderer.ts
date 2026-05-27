@@ -1,12 +1,14 @@
 import { splitMarkdownTableRow } from './markdown-table';
 
 export function renderModalContent(text: string, defaultName: string): string {
-    if (!defaultName.toLowerCase().endsWith('.md')) return `<pre class="modal-raw">${escapeHtml(text)}</pre>`;
-    return markdownToHtml(text);
+    const source = String(text ?? '');
+    const name = String(defaultName ?? '');
+    if (!name.toLowerCase().endsWith('.md')) return `<pre class="modal-raw">${escapeHtml(source)}</pre>`;
+    return markdownToHtml(source);
 }
 
 export function markdownToHtml(markdown: string): string {
-    const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
+    const lines = String(markdown ?? '').replace(/\r\n?/g, '\n').split('\n');
     const html: string[] = [];
     let inList = false;
     let inCode = false;

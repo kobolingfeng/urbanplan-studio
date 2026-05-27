@@ -36,6 +36,8 @@ assert(!html.includes('<script>') && !html.includes('<img'), 'markdown renderer 
 
 const raw = renderModalContent('<svg onload=alert(1)>', 'export.CSV');
 assert(raw === '<pre class="modal-raw">&lt;svg onload=alert(1)&gt;</pre>', 'raw modal content should be escaped case-insensitively');
+assert(renderModalContent(42 as unknown as string, null as unknown as string) === '<pre class="modal-raw">42</pre>', 'raw modal content should tolerate non-string inputs');
+assert(markdownToHtml(null as unknown as string) === '', 'markdown renderer should tolerate non-string markdown');
 
 const escapedRow = markdownTableRow(['A|B', 'line 1\nline 2', '<unsafe>']);
 assert(escapedRow === '| A\\|B | line 1 / line 2 | <unsafe> |', 'table row helper should escape pipes and flatten newlines');
