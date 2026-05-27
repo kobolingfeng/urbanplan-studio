@@ -200,6 +200,12 @@ const malformedObjectsComparison = buildScenarioComparisonReport({
     objects: 'not an array',
 } as unknown as Parameters<typeof buildScenarioComparisonReport>[0], 'base');
 assert(malformedObjectsComparison.includes('| Base | 0/0 | 0 |'), 'scenario comparison should ignore non-array object collections');
+const malformedScenariosComparison = buildScenarioComparisonReport({
+    project: { name: 'Malformed Scenarios Comparison' },
+    scenarios: 'not an array',
+    objects: [],
+} as unknown as Parameters<typeof buildScenarioComparisonReport>[0], 'base');
+assert(malformedScenariosComparison.includes('所有方案均覆盖全部地块'), 'scenario comparison should ignore non-array scenario collections');
 
 const malformedNumericComparison = buildScenarioComparisonReport({
     project: { name: 'Malformed Numeric Comparison' },

@@ -182,7 +182,7 @@ export function buildScenarioComparisonReport(
     activeScenarioId: string,
     options: { headingLevel?: number } = {},
 ): string {
-    const scenarios = project.scenarios ?? [];
+    const scenarios = projectScenarios(project);
     const parcels = projectObjects(project).filter(isComparableParcel);
     const titleLevel = Math.max(1, Math.min(6, options.headingLevel ?? 1));
     const rows = scenarios.map((scenario) => {
@@ -347,7 +347,7 @@ export function calculateDataQuality(
     const entranceReferenceIssues = entranceReferenceDiagnostics.issues;
     const unboundEntrances = objects.filter(object => object.type === 'entrance'
         && entranceReferenceDiagnostics.objectKeys.has(referenceObjectKey(object)));
-    const scenarioIds = new Set((project.scenarios ?? []).map(scenario => identifierText(scenario.id)).filter((id): id is string => Boolean(id)));
+    const scenarioIds = new Set(projectScenarios(project).map(scenario => identifierText(scenario.id)).filter((id): id is string => Boolean(id)));
     const parcelScenarioGaps = objects
         .filter(object => object.type === 'parcel')
         .flatMap(object => [...scenarioIds].filter(id => !scenarioValueFor(object.scenarioValues, id)).map(id => `${object.name ?? object.id} 缺少 ${id}`));
@@ -405,6 +405,10 @@ function buildEntranceReferenceDiagnostics(objects: PlanningObjectLike[]): { iss
 
 function projectObjects(project: ProjectLike): PlanningObjectLike[] {
     return Array.isArray(project.objects) ? project.objects : [];
+}
+
+function projectScenarios(project: ProjectLike): ScenarioLike[] {
+    return Array.isArray(project.scenarios) ? project.scenarios : [];
 }
 
 function countBasis(project: ProjectLike): number {
