@@ -159,6 +159,22 @@ const malformedObjectsQuality = calculateDataQuality({
     objects: 'not an array',
 } as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
 assert(malformedObjectsQuality.objectCount === 0, 'data quality should ignore non-array object collections');
+const scalarEvidenceQuality = calculateDataQuality({
+    project: { name: 'Scalar Evidence Quality' },
+    objects: [{
+        id: 'legacy_evidence',
+        type: 'parcel',
+        name: 'Legacy Evidence',
+        evidence: 'single legacy evidence',
+    }, {
+        id: 'structured_evidence',
+        type: 'parcel',
+        name: 'Structured Evidence',
+        evidence: { title: 'single structured evidence', type: 'survey', collectedAt: '2026-05-26', precision: 'parcel', license: 'test', confidence: 0.8 },
+    }],
+} as unknown as Parameters<typeof calculateDataQuality>[0], [], []);
+assert(scalarEvidenceQuality.evidenceCoverage === 100, 'data quality should count scalar evidence values as evidence');
+assert(scalarEvidenceQuality.structuredEvidenceObjects === 1, 'data quality should count scalar structured evidence objects');
 const comparison = buildScenarioComparisonReport(analyticsFixture, 'update');
 assert(comparison.includes('参与地块') && comparison.includes('Update 缺失 1 个地块'), 'scenario comparison should expose missing values');
 assert(comparison.includes(String(Math.round(14000 / SERVICE_DEMAND_ASSUMPTIONS.sqmPerResident))), 'scenario comparison should use shared resident assumptions');

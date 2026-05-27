@@ -2,6 +2,7 @@ import {
     evidenceCompletenessScore,
     evidenceKind,
     isStructuredEvidence,
+    normalizeEvidenceItem,
     type EvidenceItem,
 } from './evidence';
 import { markdownTableRow } from './markdown-table';
@@ -326,16 +327,17 @@ export function calculateDataQuality(
     recommendations: RecommendationLike[] = [],
 ) {
     const objects = projectObjects(project);
-    const missingEvidence = objects.filter(object => !object.evidence?.length);
+    const evidenceByObject = new Map(objects.map(object => [object, objectEvidence(object)]));
+    const missingEvidence = objects.filter(object => !evidenceByObject.get(object)?.length);
     const evidenceCoverage = objects.length ? (objects.length - missingEvidence.length) / objects.length * 100 : 100;
-    const structuredEvidenceObjects = objects.filter(object => object.evidence?.some(isStructuredEvidence)).length;
+    const structuredEvidenceObjects = objects.filter(object => evidenceByObject.get(object)?.some(isStructuredEvidence)).length;
     const structuredEvidenceCoverage = objects.length ? structuredEvidenceObjects / objects.length * 100 : 100;
-    const evidenceItems = objects.flatMap(object => object.evidence ?? []);
+    const evidenceItems = objects.flatMap(object => evidenceByObject.get(object) ?? []);
     const averageEvidenceConfidence = evidenceItems.length
         ? Math.round(average(evidenceItems.map(evidenceCompletenessScore)))
         : 0;
     const evidenceTypeCounts = objects
-        .flatMap(object => object.evidence ?? [])
+        .flatMap(object => evidenceByObject.get(object) ?? [])
         .reduce<Record<string, number>>((counts, item) => {
             const kind = evidenceKind(item);
             counts[kind] = (counts[kind] ?? 0) + 1;
@@ -409,6 +411,15 @@ function projectObjects(project: ProjectLike): PlanningObjectLike[] {
 
 function projectScenarios(project: ProjectLike): ScenarioLike[] {
     return Array.isArray(project.scenarios) ? project.scenarios : [];
+}
+
+function objectEvidence(object: PlanningObjectLike): EvidenceItem[] {
+    const value = (object as AnyRecord).evidence;
+    const values = Array.isArray(value) ? value : [value];
+    return values.flatMap((item) => {
+        const normalized = normalizeEvidenceItem(item);
+        return normalized ? [normalized] : [];
+    });
 }
 
 function countBasis(project: ProjectLike): number {
