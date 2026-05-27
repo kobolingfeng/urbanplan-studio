@@ -699,7 +699,8 @@ function buildRecommendations(results: PlanningRuleResult[]): PlanningRecommenda
 }
 
 function parcelValue(parcel: RuleObject, scenarioId: string) {
-    return scenarioValueFor(parcel.scenarioValues, scenarioId) ?? Object.values(parcel.scenarioValues ?? {})[0] ?? {};
+    const values = scenarioValueMap(parcel.scenarioValues);
+    return scenarioValueFor(values, scenarioId) ?? Object.values(values)[0] ?? {};
 }
 
 function parcelResidents(parcel: RuleObject, scenarioId: string): number {
@@ -787,11 +788,15 @@ function identifierText(value: unknown): string | undefined {
 }
 
 function scenarioValueFor<T>(values: Record<string, T> | undefined, scenarioId: unknown): T | undefined {
-    if (!values) return undefined;
+    if (!values || typeof values !== 'object' || Array.isArray(values)) return undefined;
     const target = identifierText(scenarioId);
     if (!target) return undefined;
-    if (values[target]) return values[target];
+    if (Object.prototype.hasOwnProperty.call(values, target)) return values[target];
     return Object.entries(values).find(([key]) => identifierText(key) === target)?.[1];
+}
+
+function scenarioValueMap<T>(values: Record<string, T> | undefined): Record<string, T> {
+    return values && typeof values === 'object' && !Array.isArray(values) ? values : {};
 }
 
 function buildStructuredRuleSource(rule: RuleCatalogDraft): RuleSource {

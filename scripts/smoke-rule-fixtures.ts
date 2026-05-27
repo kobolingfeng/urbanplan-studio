@@ -135,6 +135,17 @@ assertTriggers('trimmed scenario value keys', [{
     'parcel_public_service_ratio',
 ]);
 
+assertDoesNotTrigger('malformed scenario values', [{
+    ...badParcel,
+    id: 'parcel_malformed_scenario_values',
+    name: 'Malformed Scenario Values',
+    scenarioValues: [{ far: 4, buildingCoverage: 0.42, greenRatio: 0.18, residentialGfaSqm: 48000, publicServiceGfaSqm: 50 }],
+} as unknown as FixtureObject], [
+    'parcel_far_max',
+    'parcel_coverage_max',
+    'parcel_public_service_ratio',
+]);
+
 assertTriggers('heritage overlap', [
     {
         ...badParcel,
