@@ -131,6 +131,12 @@ assert(!degenerateExport.features.some(feature => feature.id === 'road_point_exp
 assert(!degenerateExport.features.some(feature => feature.id === 'facility_nan_export'), 'GeoJSON export should skip non-finite points');
 assert(!degenerateExport.features.some(feature => feature.id === 'road_invalid_coordinate_export'), 'GeoJSON export should skip lines with invalid coordinates');
 
+const malformedObjectsExport = buildGeoJsonFeatureCollection({
+    project: { name: 'Malformed Objects Export', crs: 'DemoCanvasMetric' },
+    objects: 'bad',
+} as unknown as typeof project, 'base', UNIT_SYSTEM);
+assert(malformedObjectsExport.features.length === 0, 'GeoJSON export should ignore malformed object collections');
+
 const text = buildGeoJsonText(project, 'base', UNIT_SYSTEM);
 assert(text.includes('"FeatureCollection"') && text.includes('"parcel_a"'), 'GeoJSON text export mismatch');
 

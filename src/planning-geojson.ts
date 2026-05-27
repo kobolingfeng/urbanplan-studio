@@ -102,7 +102,8 @@ export function buildGeoJsonFeatureCollection(
     activeScenarioId: string,
     unitSystem: UnitSystemLike,
 ) {
-    const features = (project.objects ?? [])
+    const objects = Array.isArray(project.objects) ? project.objects : [];
+    const features = objects
         .map(object => ({
             type: 'Feature',
             id: object.id,
