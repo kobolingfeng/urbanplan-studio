@@ -51,4 +51,9 @@ const loosePipes = markdownToHtml(['| just a paragraph |', '| maybe --- text |']
 assert(!loosePipes.includes('<table>'), 'pipe paragraphs with loose dashes should not render as a table');
 assert(loosePipes.includes('<p>| just a paragraph |</p>'), 'loose pipe lines should remain paragraphs');
 
+const crlfMarkdown = markdownToHtml('## Windows Title\r\n  - indented item\r\n- second item\r\n  ```\r\n  <unsafe>\r\n  ```');
+assert(crlfMarkdown.includes('<h2>Windows Title</h2>'), 'markdown renderer should normalize CRLF line endings');
+assert(crlfMarkdown.includes('<li>indented item</li>') && crlfMarkdown.includes('<li>second item</li>'), 'markdown renderer should accept lightly indented list items');
+assert(crlfMarkdown.includes('&lt;unsafe&gt;'), 'markdown renderer should accept lightly indented code fences safely');
+
 console.log('markdown smoke passed');

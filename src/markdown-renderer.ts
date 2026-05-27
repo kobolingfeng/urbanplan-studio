@@ -6,14 +6,14 @@ export function renderModalContent(text: string, defaultName: string): string {
 }
 
 export function markdownToHtml(markdown: string): string {
-    const lines = markdown.split('\n');
+    const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
     const html: string[] = [];
     let inList = false;
     let inCode = false;
     let codeLines: string[] = [];
     for (let index = 0; index < lines.length; index++) {
         const line = lines[index];
-        if (line.startsWith('```')) {
+        if (/^\s{0,3}```/.test(line)) {
             if (inCode) {
                 html.push(`<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
                 codeLines = [];
@@ -46,12 +46,13 @@ export function markdownToHtml(markdown: string): string {
             html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
             continue;
         }
-        if (line.startsWith('- ')) {
+        const listItem = /^\s{0,3}-\s+(.+)$/.exec(line);
+        if (listItem) {
             if (!inList) {
                 html.push('<ul>');
                 inList = true;
             }
-            html.push(`<li>${inlineMarkdown(line.slice(2))}</li>`);
+            html.push(`<li>${inlineMarkdown(listItem[1])}</li>`);
             continue;
         }
         if (!line.trim()) {
